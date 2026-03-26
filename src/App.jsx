@@ -7,7 +7,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Volunteers from "./pages/Volunteers";
 import Landing from "./pages/Landing";
 import Verify from "./pages/Verify";
-
+import Surplus from "./pages/surplus";
 function App() {
   return (
     <BrowserRouter>
@@ -19,6 +19,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/volunteers" element={<Volunteers />} />
         <Route path="/verify" element={<Verify />} />
+        <Route path="/surplus" element={<Surplus />} />
       </Routes>
     </BrowserRouter>
   );
