@@ -145,6 +145,37 @@ const Volunteers = () => {
                 {v.trust_tier}
               </span>
 
+              {/* 🔥 Telegram Status */}
+              <p className="text-sm mt-2">
+                Telegram:{" "}
+                {v.telegram_active ? (
+                  <span className="text-green-600 font-semibold">
+                    Connected
+                  </span>
+                ) : (
+                  <span className="text-red-500">Not Connected</span>
+                )}
+              </p>
+
+              {/* 🔥 Debug Chat ID (optional) */}
+              {v.telegram_chat_id && (
+                <p className="text-xs text-gray-400">
+                  Chat ID: {v.telegram_chat_id}
+                </p>
+              )}
+
+              {/* 🔥 Connect Telegram Button */}
+              {!v.telegram_active && (
+                <a
+                  href="https://t.me/sahyog_setu_bot"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block mt-2 text-center bg-blue-400 text-white p-1 rounded hover:bg-blue-500"
+                >
+                  Connect Telegram
+                </a>
+              )}
+
               {/* Actions */}
               <div className="mt-3 flex gap-2">
                 <button
