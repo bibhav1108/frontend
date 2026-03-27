@@ -3,23 +3,91 @@ import Dashboard from "./pages/Dashboard";
 import CreateNeed from "./pages/CreateNeed";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
-import ProtectedRoute from "./components/ProtectedRoute";
 import Volunteers from "./pages/Volunteers";
 import Landing from "./pages/Landing";
 import Verify from "./pages/Verify";
 import Surplus from "./pages/surplus";
+import Inventory from "./pages/Inventory";
+import Layout from "./components/Layout";
+import ActiveNeeds from "./pages/ActiveNeeds";
+import DispatchHistory from "./pages/DispatchHistory";
 function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Public */}
         <Route path="/" element={<Landing />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/create" element={<CreateNeed />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/volunteers" element={<Volunteers />} />
-        <Route path="/verify" element={<Verify />} />
-        <Route path="/surplus" element={<Surplus />} />
+        <Route path="/register" element={<Register />} />
+
+        <Route
+          path="/dashboard"
+          element={
+            <Layout>
+              <Dashboard />
+            </Layout>
+          }
+        />
+
+        <Route
+          path="/create"
+          element={
+            <Layout>
+              <CreateNeed />
+            </Layout>
+          }
+        />
+
+        <Route
+          path="/volunteers"
+          element={
+            <Layout>
+              <Volunteers />
+            </Layout>
+          }
+        />
+
+        <Route
+          path="/verify"
+          element={
+            <Layout>
+              <Verify />
+            </Layout>
+          }
+        />
+
+        <Route
+          path="/surplus"
+          element={
+            <Layout>
+              <Surplus />
+            </Layout>
+          }
+        />
+        <Route
+          path="/inventory"
+          element={
+            <Layout>
+              <Inventory />
+            </Layout>
+          }
+        />
+        <Route
+          path="/needs"
+          element={
+            <Layout>
+              <ActiveNeeds />
+            </Layout>
+          }
+        />
+        <Route
+          path="/dispatches"
+          element={
+            <Layout>
+              <DispatchHistory />
+            </Layout>
+          }
+        />
       </Routes>
     </BrowserRouter>
   );
