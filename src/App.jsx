@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+
 import Dashboard from "./pages/Dashboard";
 import CreateNeed from "./pages/CreateNeed";
 import Login from "./pages/auth/Login";
@@ -10,72 +11,92 @@ import Inventory from "./pages/Inventory";
 import Layout from "./components/Layout";
 import ActiveNeeds from "./pages/ActiveNeeds";
 import DispatchHistory from "./pages/DispatchHistory";
+import ProtectedRoute from "./components/ProtectedRoute";
+
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Public */}
+        {/* 🌐 Public routes */}
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
+        {/* 🔐 Protected routes */}
         <Route
           path="/dashboard"
           element={
-            <Layout>
-              <Dashboard />
-            </Layout>
+            <ProtectedRoute>
+              <Layout>
+                <Dashboard />
+              </Layout>
+            </ProtectedRoute>
           }
         />
 
         <Route
           path="/create"
           element={
-            <Layout>
-              <CreateNeed />
-            </Layout>
+            <ProtectedRoute>
+              <Layout>
+                <CreateNeed />
+              </Layout>
+            </ProtectedRoute>
           }
         />
 
         <Route
           path="/volunteers"
           element={
-            <Layout>
-              <Volunteers />
-            </Layout>
+            <ProtectedRoute>
+              <Layout>
+                <Volunteers />
+              </Layout>
+            </ProtectedRoute>
           }
         />
 
         <Route
           path="/surplus"
           element={
-            <Layout>
-              <Surplus />
-            </Layout>
+            <ProtectedRoute>
+              <Layout>
+                <Surplus />
+              </Layout>
+            </ProtectedRoute>
           }
         />
+
         <Route
           path="/inventory"
           element={
-            <Layout>
-              <Inventory />
-            </Layout>
+            <ProtectedRoute>
+              <Layout>
+                <Inventory />
+              </Layout>
+            </ProtectedRoute>
           }
         />
+
         <Route
           path="/needs"
           element={
-            <Layout>
-              <ActiveNeeds />
-            </Layout>
+            <ProtectedRoute>
+              <Layout>
+                <ActiveNeeds />
+              </Layout>
+            </ProtectedRoute>
           }
         />
+
         <Route
           path="/dispatches"
           element={
-            <Layout>
-              <DispatchHistory />
-            </Layout>
+            <ProtectedRoute>
+              <Layout>
+                <DispatchHistory />
+              </Layout>
+            </ProtectedRoute>
           }
         />
       </Routes>
