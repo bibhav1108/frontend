@@ -4,6 +4,8 @@ import API from "../services/api";
 
 const Surplus = () => {
   const [alerts, setAlerts] = useState([]);
+  const [loadingId, setLoadingId] = useState(null);
+  const [error, setError] = useState("");
 
   // 🔥 Load alerts
   const loadAlerts = async () => {
@@ -12,6 +14,7 @@ const Surplus = () => {
       setAlerts(res.data || []);
     } catch (err) {
       console.error("Failed to load alerts", err);
+      setError("Failed to load alerts");
     }
   };
 
@@ -22,20 +25,34 @@ const Surplus = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // 🔥 Claim (mark processed)
+  // 🔥 Claim → convert to Need
   const claimAlert = async (id) => {
     try {
-      await API.patch(`/needs/surplus-alerts/${id}/processed`);
-      loadAlerts(); // refresh list
+      setLoadingId(id);
+      setError("");
+
+      await API.post(`/needs/surplus-alerts/${id}/convert`);
+
+      // remove instantly for smooth UX (no wait for reload)
+      setAlerts((prev) => prev.filter((a) => a.id !== id));
     } catch (err) {
       console.error("Failed to claim alert", err);
-      alert("Failed to claim alert");
+      setError(err?.response?.data?.detail || "Failed to claim alert");
+    } finally {
+      setLoadingId(null);
     }
   };
 
   return (
-    <Layout>
+    <>
       <h2 className="text-2xl font-bold mb-6">Surplus Alerts</h2>
+
+      {/* 🔥 Error message */}
+      {error && (
+        <div className="mb-4 text-red-500 text-sm bg-red-50 p-2 rounded">
+          {error}
+        </div>
+      )}
 
       {alerts.length === 0 ? (
         <p className="text-gray-500">No surplus alerts</p>
@@ -54,10 +71,6 @@ const Surplus = () => {
                 <p className="text-xs text-gray-500 mt-1">👤 {a.donor_name}</p>
               )}
 
-              {a.phone_number && (
-                <p className="text-xs text-gray-500">📞 {a.phone_number}</p>
-              )}
-
               <p className="text-[10px] text-gray-400 mt-2">
                 {new Date(a.created_at).toLocaleString()}
               </p>
@@ -65,17 +78,18 @@ const Surplus = () => {
               {/* 🔥 Claim Button */}
               <div className="mt-3">
                 <button
-                  className="w-full bg-purple-500 text-white p-2 rounded hover:bg-purple-600 text-sm"
+                  disabled={loadingId === a.id}
+                  className="w-full bg-purple-500 text-white p-2 rounded hover:bg-purple-600 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={() => claimAlert(a.id)}
                 >
-                  Claim
+                  {loadingId === a.id ? "Processing..." : "Claim"}
                 </button>
               </div>
             </div>
           ))}
         </div>
       )}
-    </Layout>
+    </>
   );
 };
 
