@@ -15,7 +15,7 @@ const Layout = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const [showNotifications, setShowNotifications] = useState(true);
+  const [showNotifications, setShowNotifications] = useState(false);
   const [panelWidth, setPanelWidth] = useState(340);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -130,11 +130,20 @@ const Layout = ({ children }) => {
     };
   }, [isDragging]);
 
-  // Close dropdown on outside click
+  // Close dropdowns on outside click
   useEffect(() => {
     const handleClickOutside = (e) => {
+      // Handle Org Dropdown
       if (!e.target.closest("[data-org-dropdown]")) {
         setOrgMenuOpen(false);
+      }
+      
+      // Handle Notification Panel (if not clicking toggle or panel itself)
+      if (
+        !e.target.closest("[data-notifications-panel]") && 
+        !e.target.closest("[data-notifications-toggle]")
+      ) {
+        setShowNotifications(false);
       }
     };
 
@@ -251,8 +260,12 @@ const Layout = ({ children }) => {
         <div className="flex items-center gap-4">
           {/* Notifications with count */}
           <button
-            onClick={() => setShowNotifications((prev) => !prev)}
-            className="relative p-2 text-slate-600"
+            data-notifications-toggle
+            onClick={() => {
+              setShowNotifications((prev) => !prev);
+              setOrgMenuOpen(false);
+            }}
+            className="relative p-2 text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
           >
             <span className="material-symbols-outlined">
               notifications_active
@@ -269,7 +282,10 @@ const Layout = ({ children }) => {
           {org && (
             <div className="relative" data-org-dropdown>
               <button
-                onClick={() => setOrgMenuOpen((prev) => !prev)}
+                onClick={() => {
+                  setOrgMenuOpen((prev) => !prev);
+                  setShowNotifications(false);
+                }}
                 className="flex items-center gap-3 rounded-xl px-3 py-2 hover:bg-slate-100"
               >
                 <div className="flex h-9 w-9 items-center justify-center rounded-full bg-purple-600 font-semibold text-white">
@@ -337,6 +353,7 @@ const Layout = ({ children }) => {
 
       {/* Notification panel */}
       <div
+        data-notifications-panel
         className="fixed right-0 top-20 z-50 h-[calc(100vh-5rem)] bg-white shadow-lg border-l"
         style={{
           width: showNotifications ? panelWidth : 0,
