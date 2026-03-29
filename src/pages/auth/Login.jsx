@@ -93,7 +93,7 @@ const Login = () => {
               <label
                 className="absolute left-3 px-1 bg-white text-gray-500 text-sm transition-all 
                 peer-focus:-top-2 peer-focus:text-xs peer-focus:text-indigo-600
-                peer-not-placeholder-shown:-top-2 peer-not-placeholder-shown:text-xs"
+                peer-[:not(:placeholder-shown)]:-top-2 peer-[:not(:placeholder-shown)]:text-xs"
               >
                 Email Address
               </label>
@@ -111,7 +111,7 @@ const Login = () => {
               <label
                 className="absolute left-3 px-1 bg-white text-gray-500 text-sm transition-all 
                 peer-focus:-top-2 peer-focus:text-xs peer-focus:text-indigo-600
-                peer-not-placeholder-shown:-top-2 peer-not-placeholder-shown:text-xs"
+                peer-[:not(:placeholder-shown)]:-top-2 peer-[:not(:placeholder-shown)]:text-xs"
               >
                 Password
               </label>

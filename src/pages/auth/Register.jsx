@@ -105,7 +105,7 @@ const Register = () => {
                 <label
                   className="absolute left-4 top-4 text-gray-500 text-sm transition-all 
                   peer-focus:-top-2 peer-focus:text-xs peer-focus:bg-white peer-focus:px-1
-                  peer-not-placeholder-shown:-top-2 peer-not-placeholder-shown:text-xs peer-not-placeholder-shown:bg-white peer-not-placeholder-shown:px-1"
+                  peer-[:not(:placeholder-shown)]:-top-2 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:bg-white peer-[:not(:placeholder-shown)]:px-1"
                 >
                   NGO Name
                 </label>
@@ -122,7 +122,7 @@ const Register = () => {
                 <label
                   className="absolute left-4 top-4 text-gray-500 text-sm transition-all 
                   peer-focus:-top-2 peer-focus:text-xs peer-focus:bg-white peer-focus:px-1
-                  peer-not-placeholder-shown:-top-2 peer-not-placeholder-shown:text-xs peer-not-placeholder-shown:bg-white peer-not-placeholder-shown:px-1"
+                  peer-[:not(:placeholder-shown)]:-top-2 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:bg-white peer-[:not(:placeholder-shown)]:px-1"
                 >
                   Phone
                 </label>
@@ -140,7 +140,7 @@ const Register = () => {
               <label
                 className="absolute left-4 top-4 text-gray-500 text-sm transition-all 
                 peer-focus:-top-2 peer-focus:text-xs peer-focus:bg-white peer-focus:px-1
-                peer-not-placeholder-shown:-top-2 peer-not-placeholder-shown:text-xs peer-not-placeholder-shown:bg-white peer-not-placeholder-shown:px-1"
+                peer-[:not(:placeholder-shown)]:-top-2 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:bg-white peer-[:not(:placeholder-shown)]:px-1"
               >
                 Organization Email
               </label>
@@ -159,7 +159,7 @@ const Register = () => {
                 <label
                   className="absolute left-4 top-4 text-gray-500 text-sm transition-all 
                   peer-focus:-top-2 peer-focus:text-xs peer-focus:bg-white peer-focus:px-1
-                  peer-not-placeholder-shown:-top-2 peer-not-placeholder-shown:text-xs peer-not-placeholder-shown:bg-white peer-not-placeholder-shown:px-1"
+                  peer-[:not(:placeholder-shown)]:-top-2 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:bg-white peer-[:not(:placeholder-shown)]:px-1"
                 >
                   Your Name
                 </label>
@@ -176,7 +176,7 @@ const Register = () => {
                 <label
                   className="absolute left-4 top-4 text-gray-500 text-sm transition-all 
                   peer-focus:-top-2 peer-focus:text-xs peer-focus:bg-white peer-focus:px-1
-                  peer-not-placeholder-shown:-top-2 peer-not-placeholder-shown:text-xs peer-not-placeholder-shown:bg-white peer-not-placeholder-shown:px-1"
+                  peer-[:not(:placeholder-shown)]:-top-2 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:bg-white peer-[:not(:placeholder-shown)]:px-1"
                 >
                   Your Email
                 </label>
@@ -194,7 +194,7 @@ const Register = () => {
               <label
                 className="absolute left-4 top-4 text-gray-500 text-sm transition-all 
                 peer-focus:-top-2 peer-focus:text-xs peer-focus:bg-white peer-focus:px-1
-                peer-not-placeholder-shown:-top-2 peer-not-placeholder-shown:text-xs peer-not-placeholder-shown:bg-white peer-not-placeholder-shown:px-1"
+                peer-[:not(:placeholder-shown)]:-top-2 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:bg-white peer-[:not(:placeholder-shown)]:px-1"
               >
                 Password
               </label>
