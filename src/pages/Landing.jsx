@@ -376,7 +376,7 @@ const Landing = () => {
         </section>
 
         {/* IMPACT STATS */}
-        <section className="bg-indigo-950 py-24 px-6 text-white">
+        {/*<section className="bg-indigo-950 py-24 px-6 text-white">
           <div className="max-w-7xl mx-auto grid md:grid-cols-3 gap-12 text-center">
             <div className="space-y-2">
               <div className="text-6xl font-bold tracking-tighter text-emerald-300">
@@ -405,7 +405,7 @@ const Landing = () => {
               </div>
             </div>
           </div>
-        </section>
+        </section> */}
 
         {/* FINAL CTA */}
         <section className="py-24 px-6">
