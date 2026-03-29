@@ -75,7 +75,7 @@ const Login = () => {
             </h1>
 
             <p className="text-sm text-gray-500 mt-1">
-              Kinetic Curator Logistics
+              Connecting Surplus to Need
             </p>
           </div>
 
@@ -143,19 +143,6 @@ const Login = () => {
               {loading ? "Logging in..." : "Sign In"}
             </button>
           </form>
-
-          {/* DIVIDER */}
-          <div className="flex items-center gap-4 my-7">
-            <div className="flex-1 h-px bg-gray-200" />
-            <span className="text-xs text-gray-400">Or continue with</span>
-            <div className="flex-1 h-px bg-gray-200" />
-          </div>
-
-          {/* 🔥 TELEGRAM BUTTON */}
-          <button className="w-full flex items-center justify-center gap-2 py-3.5 bg-[#229ED9] hover:bg-[#1d8cc2] text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition active:scale-[0.98]">
-            <span className="material-symbols-outlined text-[20px]">send</span>
-            Continue with Telegram
-          </button>
 
           {/* FOOTER */}
           <div className="mt-6 text-center text-sm text-gray-500">
