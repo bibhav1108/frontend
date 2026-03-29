@@ -428,7 +428,7 @@ const Landing = () => {
                 <span className="material-symbols-outlined">
                   volunteer_activism
                 </span>
-                Join as Volunteer
+                Join Us
               </Link>
 
               <Link
