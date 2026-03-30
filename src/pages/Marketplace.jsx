@@ -2,15 +2,15 @@ import { useState, useEffect } from "react";
 import Layout from "../components/Layout";
 import API from "../services/api";
 
-const Surplus = () => {
+const Marketplace = () => {
   const [alerts, setAlerts] = useState([]);
   const [loadingId, setLoadingId] = useState(null);
   const [error, setError] = useState("");
 
-  // 🔥 Load alerts
+  // 🔥 Load alerts (UPDATED API)
   const loadAlerts = async () => {
     try {
-      const res = await API.get("/needs/surplus-alerts");
+      const res = await API.get("/marketplace/needs/alerts");
       setAlerts(res.data || []);
     } catch (err) {
       console.error("Failed to load alerts", err);
@@ -25,15 +25,15 @@ const Surplus = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // 🔥 Claim → convert to Need
+  // 🔥 Claim → convert to Need (UPDATED API)
   const claimAlert = async (id) => {
     try {
       setLoadingId(id);
       setError("");
 
-      await API.post(`/needs/surplus-alerts/${id}/convert`);
+      await API.post(`/marketplace/needs/alerts/${id}/convert`);
 
-      // remove instantly for smooth UX (no wait for reload)
+      // remove instantly for smooth UX
       setAlerts((prev) => prev.filter((a) => a.id !== id));
     } catch (err) {
       console.error("Failed to claim alert", err);
@@ -45,7 +45,7 @@ const Surplus = () => {
 
   return (
     <>
-      <h2 className="text-2xl font-bold mb-6">Surplus Alerts</h2>
+      <h2 className="text-2xl font-bold mb-6">Marketplace</h2>
 
       {/* 🔥 Error message */}
       {error && (
@@ -55,7 +55,7 @@ const Surplus = () => {
       )}
 
       {alerts.length === 0 ? (
-        <p className="text-gray-500">No surplus alerts</p>
+        <p className="text-gray-500">No donor alerts</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {alerts.map((a) => (
@@ -93,4 +93,4 @@ const Surplus = () => {
   );
 };
 
-export default Surplus;
+export default Marketplace;
