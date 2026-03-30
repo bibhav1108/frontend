@@ -6,12 +6,13 @@ import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import Volunteers from "./pages/Volunteers";
 import Landing from "./pages/Landing";
-import Surplus from "./pages/surplus";
+import Marketplace from "./pages/Marketplace";
 import Inventory from "./pages/Inventory";
 import Layout from "./components/Layout";
 import ActiveNeeds from "./pages/ActiveNeeds";
 import DispatchHistory from "./pages/DispatchHistory";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Campaigns from "./pages/Campaigns";
 
 function App() {
   return (
@@ -57,11 +58,11 @@ function App() {
         />
 
         <Route
-          path="/surplus"
+          path="/marketplace"
           element={
             <ProtectedRoute>
               <Layout>
-                <Surplus />
+                <Marketplace />
               </Layout>
             </ProtectedRoute>
           }
@@ -95,6 +96,17 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <DispatchHistory />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/campaigns"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <Campaigns />
               </Layout>
             </ProtectedRoute>
           }
