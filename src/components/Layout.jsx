@@ -32,7 +32,6 @@ const Layout = ({ children }) => {
     notifications: false,
   });
 
-  // Load user + org profile
   useEffect(() => {
     const loadProfile = async () => {
       try {
@@ -53,7 +52,6 @@ const Layout = ({ children }) => {
     loadProfile();
   }, []);
 
-  // Load alerts + detect new
   const loadNotifications = async () => {
     if (loadingRef.current.notifications) return;
     loadingRef.current.notifications = true;
@@ -93,11 +91,11 @@ const Layout = ({ children }) => {
 
   useEffect(() => {
     loadNotifications();
+
     const interval = setInterval(loadNotifications, 5000);
     return () => clearInterval(interval);
   }, []);
 
-  // Auto remove toasts
   useEffect(() => {
     if (toasts.length === 0) return;
 
@@ -110,7 +108,6 @@ const Layout = ({ children }) => {
     return () => timers.forEach(clearTimeout);
   }, [toasts]);
 
-  // Resize notification panel
   useEffect(() => {
     const handleMove = (e) => {
       if (!isDragging) return;
@@ -131,7 +128,6 @@ const Layout = ({ children }) => {
     };
   }, [isDragging]);
 
-  // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (!e.target.closest("[data-org-dropdown]")) {
@@ -151,7 +147,7 @@ const Layout = ({ children }) => {
   return (
     <div className="min-h-screen bg-[#f7f9fc] text-[#191c1e] antialiased">
       {/* Toast stack */}
-      <div className="fixed left-[17rem] top-24 z-[999] space-y-3">
+      <div className="fixed left-[17rem] top-20 z-[9999] space-y-3">
         {toasts.map((t) => (
           <div
             key={t.toastId}
@@ -159,14 +155,14 @@ const Layout = ({ children }) => {
               navigate("/marketplace");
               setToasts((prev) => prev.filter((x) => x.toastId !== t.toastId));
             }}
-            className="cursor-pointer bg-white shadow-xl border-l-4 border-purple-500 rounded-xl p-4 w-80"
+            className="animate-slide-in cursor-pointer rounded-xl border-l-4 border-purple-500 bg-white p-4 shadow-xl transition hover:scale-[1.02] w-80"
           >
             <p className="text-sm font-semibold text-purple-600">
-              📦 New Surplus Alert
+              📦 New Donor Alert
             </p>
-            <p className="text-xs mt-1 text-gray-700">{t.message_body}</p>
+            <p className="mt-1 text-xs text-gray-700">{t.message_body}</p>
             {t.donor_name && (
-              <p className="text-[11px] mt-1 text-gray-500">
+              <p className="mt-1 text-[11px] text-gray-500">
                 👤 {t.donor_name}
               </p>
             )}
@@ -175,12 +171,12 @@ const Layout = ({ children }) => {
       </div>
 
       {/* Sidebar */}
-      <aside className="fixed left-0 top-0 z-50 flex h-screen w-64 flex-col border-r border-white/40 bg-white/70 px-6 pt-4 pb-6 shadow backdrop-blur-2xl">
+      <aside className="fixed left-0 top-0 z-50 flex h-screen w-64 flex-col border-r border-white/40 bg-white/70 px-5 pt-5 pb-6 shadow backdrop-blur-2xl">
         <div className="mb-6 flex justify-center">
-          <img src="/sahyog_setu.png" className="w-36" alt="Sahyog Setu" />
+          <img src="/sahyog_setu.png" className="w-32" alt="Sahyog Setu" />
         </div>
 
-        <nav className="flex-1 space-y-2 text-sm font-medium">
+        <nav className="flex-1 space-y-1 text-sm">
           {NAV_ITEMS.map((item) => {
             const active = location.pathname === item.to;
 
@@ -188,31 +184,28 @@ const Layout = ({ children }) => {
               <Link
                 key={item.to}
                 to={item.to}
-                className={`flex items-center gap-3 rounded-xl px-4 py-3 ${
+                className={`flex items-center gap-3 rounded-xl px-3 py-2.5 transition ${
                   active
-                    ? "bg-indigo-50 text-indigo-700"
-                    : "text-slate-500 hover:bg-slate-100"
+                    ? "bg-indigo-50 text-indigo-700 shadow-sm"
+                    : "text-slate-500 hover:bg-slate-100 hover:text-slate-800"
                 }`}
               >
-                <span className="material-symbols-outlined">{item.icon}</span>
-                {item.label}
+                <span className="material-symbols-outlined text-[20px]">
+                  {item.icon}
+                </span>
+                <span className={`${active ? "font-semibold" : "font-medium"}`}>
+                  {item.label}
+                </span>
               </Link>
             );
           })}
         </nav>
 
-        <div className="mt-auto space-y-4">
-          <Link
-            to="/create"
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 py-3 text-white font-semibold"
-          >
-            <span className="material-symbols-outlined">add_circle</span>
-            Create Relief Request
-          </Link>
-
-          {user && (
-            <div className="flex items-center gap-3 rounded-xl bg-slate-100 p-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-600 font-semibold text-white">
+        {/* User profile back at bottom-left */}
+        {user && (
+          <div className="mt-auto rounded-xl bg-slate-100 p-3">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-600 font-semibold text-white shadow">
                 {user.full_name
                   ? user.full_name
                       .split(" ")
@@ -224,36 +217,36 @@ const Layout = ({ children }) => {
               </div>
 
               <div className="min-w-0 flex-1 overflow-hidden">
-                <p className="truncate text-sm font-semibold">
+                <p className="truncate text-sm font-semibold text-slate-800">
                   {user.full_name || "User"}
                 </p>
                 <p className="truncate text-xs text-slate-500">{user.email}</p>
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </aside>
 
       {/* Top bar */}
       <header
-        className="fixed top-0 z-40 flex h-20 items-center justify-between border-b bg-white/70 px-8 backdrop-blur"
+        className="fixed top-0 z-40 flex h-16 items-center justify-between border-b bg-white/80 px-6 shadow-sm backdrop-blur-md"
         style={{ left: "16rem", right: 0 }}
       >
-        <div className="relative flex-1 max-w-xl">
+        <div className="relative flex-1 max-w-md">
           <span className="material-symbols-outlined absolute left-3 top-2 text-slate-400">
             search
           </span>
           <input
-            className="w-full rounded-xl bg-gray-100 py-2 pl-10 pr-3 text-sm outline-none"
+            className="w-full rounded-xl bg-gradient-to-r from-gray-100 to-gray-50 py-2 pl-10 pr-3 text-sm outline-none transition focus:ring-2 focus:ring-indigo-300"
             placeholder="Search..."
           />
         </div>
 
         <div className="flex items-center gap-4">
-          {/* Notifications with count */}
+          {/* Notifications */}
           <button
             onClick={() => setShowNotifications((prev) => !prev)}
-            className="relative p-2 text-slate-600"
+            className="relative rounded-lg p-2 text-slate-600 transition hover:bg-slate-100"
           >
             <span className="material-symbols-outlined">
               notifications_active
@@ -266,14 +259,14 @@ const Layout = ({ children }) => {
             )}
           </button>
 
-          {/* Org profile dropdown */}
+          {/* Org dropdown */}
           {org && (
             <div className="relative" data-org-dropdown>
               <button
                 onClick={() => setOrgMenuOpen((prev) => !prev)}
-                className="flex items-center gap-3 rounded-xl px-3 py-2 hover:bg-slate-100"
+                className="flex items-center gap-3 rounded-xl bg-gradient-to-r from-indigo-50 to-purple-50 px-3 py-2 shadow-sm transition hover:from-indigo-100 hover:to-purple-100"
               >
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-purple-600 font-semibold text-white">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-600 text-sm font-semibold text-white shadow">
                   {org.name
                     .split(" ")
                     .map((n) => n[0])
@@ -282,69 +275,75 @@ const Layout = ({ children }) => {
                     .toUpperCase()}
                 </div>
 
-                <span className="text-sm font-semibold">{org.name}</span>
+                <div className="text-left leading-tight">
+                  <p className="text-sm font-semibold text-slate-800">
+                    {org.name}
+                  </p>
+                  <p className="text-[10px] text-slate-500">Organization</p>
+                </div>
 
-                <span className="material-symbols-outlined text-sm">
+                <span className="material-symbols-outlined text-sm text-slate-500">
                   expand_more
                 </span>
               </button>
-
-              {orgMenuOpen && (
-                <div className="absolute right-0 mt-2 z-[60] w-72 rounded-xl bg-white p-4 text-sm shadow-xl border">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-600 font-semibold text-white">
-                      {org.name
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")
-                        .slice(0, 2)
-                        .toUpperCase()}
-                    </div>
-
-                    <div className="min-w-0">
-                      <p className="truncate font-semibold">{org.name}</p>
-                      <p className="truncate text-xs text-slate-500">
-                        {org.contact_email}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="mt-3 border-t pt-3 space-y-1">
-                    <p className="text-xs text-slate-500">
-                      {org.contact_phone}
-                    </p>
-                    <p className="text-xs text-slate-500">{org.status}</p>
-                  </div>
-
-                  <div className="mt-4 border-t pt-3">
-                    <button
-                      onClick={logout}
-                      className="text-sm font-medium text-red-500 hover:underline"
-                    >
-                      Logout
-                    </button>
-                  </div>
-                </div>
-              )}
             </div>
           )}
         </div>
       </header>
 
       {/* Main */}
-      <main style={{ marginLeft: "16rem", paddingTop: "5rem" }}>
+      <main style={{ marginLeft: "16rem", paddingTop: "4rem" }}>
         <div className="p-6">{children}</div>
       </main>
 
+      {/* Org dropdown rendered at top level so it stays above the notification panel */}
+      {orgMenuOpen && org && (
+        <div
+          className="fixed right-6 top-16 z-[9999] w-72 rounded-xl border bg-white p-4 shadow-xl animate-slide-in"
+          data-org-dropdown-panel
+        >
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-600 font-semibold text-white">
+              {org.name
+                .split(" ")
+                .map((n) => n[0])
+                .join("")
+                .slice(0, 2)
+                .toUpperCase()}
+            </div>
+
+            <div className="min-w-0">
+              <p className="truncate font-semibold">{org.name}</p>
+              <p className="truncate text-xs text-slate-500">
+                {org.contact_email}
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-3 border-t pt-3 space-y-1">
+            <p className="text-xs text-slate-500">{org.contact_phone}</p>
+            <p className="text-xs text-slate-500">{org.status}</p>
+          </div>
+
+          <div className="mt-4 border-t pt-3">
+            <button
+              onClick={logout}
+              className="text-sm font-medium text-red-500 hover:underline"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Notification panel */}
       <div
-        className="fixed right-0 top-20 z-50 h-[calc(100vh-5rem)] bg-white shadow-lg border-l"
+        className="fixed right-0 top-16 z-40 h-[calc(100vh-4rem)] bg-white shadow-lg border-l overflow-hidden transition-all duration-300"
         style={{
           width: showNotifications ? panelWidth : 0,
-          transition: "width 0.25s ease",
         }}
       >
-        <div className="h-full space-y-3 overflow-y-auto p-4">
+        <div className="relative h-full overflow-y-auto p-4 space-y-3">
           {notifications.length === 0 ? (
             <p className="text-sm text-slate-500">No alerts</p>
           ) : (
@@ -355,9 +354,9 @@ const Layout = ({ children }) => {
                   navigate("/marketplace");
                   setShowNotifications(false);
                 }}
-                className="cursor-pointer rounded-xl border-l-4 border-purple-500 bg-purple-100 p-3 transition hover:scale-[1.02]"
+                className="cursor-pointer rounded-xl border-l-4 border-purple-500 bg-purple-50 p-3 transition hover:scale-[1.02]"
               >
-                <p className="text-sm font-semibold">📦 Donor Alert</p>
+                <p className="text-sm font-semibold">📦 Alert</p>
                 <p className="mt-1 text-xs text-slate-700">{a.message_body}</p>
                 <p className="mt-1 text-[10px] text-slate-400">
                   {new Date(a.created_at).toLocaleTimeString()}
