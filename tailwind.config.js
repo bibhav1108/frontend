@@ -4,50 +4,42 @@ export default {
 
   theme: {
     extend: {
-      keyframes: {
-        // 🔥 modal / elements entry
-        "slide-in": {
-          "0%": {
-            opacity: "0",
-            transform: "translateY(-10px) scale(0.95)",
-          },
-          "100%": {
-            opacity: "1",
-            transform: "translateY(0) scale(1)",
-          },
-        },
+      // 🎨 COLORS (core system only)
+      colors: {
+        primary: "#005da9",
+        primary_container: "#0075d4",
+        azure: "#3590F3",
 
-        // 🔥 fade overlay (background dim)
-        "fade-in": {
-          "0%": { opacity: "0" },
-          "100%": { opacity: "1" },
-        },
+        surface: "#fff7fc",
+        surface_low: "#fdefff",
+        surface_lowest: "#ffffff",
+        surface_high: "#f2e4f4",
+        surface_highest: "#ecdeee",
 
-        // 🔥 loading bar (for feedback)
-        progress: {
-          "0%": { width: "100%" },
-          "100%": { width: "0%" },
-        },
-
-        // 🔥 spinner (optional if you want custom)
-        spinSlow: {
-          "0%": { transform: "rotate(0deg)" },
-          "100%": { transform: "rotate(360deg)" },
-        },
+        on_surface: "#201924",
+        on_surface_variant: "#414752",
       },
 
-      animation: {
-        // modal animation
-        "slide-in": "slide-in 0.25s ease-out",
+      fontFamily: {
+        outfit: ["Outfit", "sans-serif"],
+        inter: ["Inter", "sans-serif"],
+      },
 
-        // overlay fade
-        "fade-in": "fade-in 0.2s ease-out",
+      borderRadius: {
+        lg: "1rem",
+        xl: "1.25rem",
+      },
 
-        // loading bar
-        progress: "progress 3s linear forwards",
+      backdropBlur: {
+        glass: "20px",
+      },
 
-        // custom slow spin (optional)
-        "spin-slow": "spinSlow 1s linear infinite",
+      boxShadow: {
+        soft: "0 20px 60px rgba(0,0,0,0.05)",
+      },
+
+      backgroundImage: {
+        primaryGradient: "linear-gradient(135deg, #005da9 0%, #0075d4 100%)",
       },
     },
   },
