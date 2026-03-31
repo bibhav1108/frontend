@@ -2,245 +2,203 @@ import { useState, useEffect } from "react";
 import API from "../services/api";
 
 const Volunteers = () => {
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [zone, setZone] = useState("");
-  const [skills, setSkills] = useState("");
-
   const [volunteers, setVolunteers] = useState([]);
-  const [error, setError] = useState("");
-
-  const [showForm, setShowForm] = useState(false);
-  const [adding, setAdding] = useState(false);
-  const [initialLoading, setInitialLoading] = useState(true);
-
-  const loadVolunteers = async (isInitial = false) => {
-    try {
-      if (isInitial) setInitialLoading(true);
-
-      const res = await API.get("/volunteers");
-      setVolunteers(res.data || []);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      if (isInitial) setInitialLoading(false);
-    }
-  };
+  const [selected, setSelected] = useState(null);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
-    loadVolunteers(true);
-
-    const interval = setInterval(() => {
-      loadVolunteers();
-    }, 5000);
-
-    return () => clearInterval(interval);
+    loadVolunteers();
+    const i = setInterval(loadVolunteers, 5000);
+    return () => clearInterval(i);
   }, []);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-
-    if (!name || !phone) {
-      setError("Name and phone are required");
-      return;
-    }
-
+  const loadVolunteers = async () => {
     try {
-      setAdding(true);
-
-      await API.post("/volunteers", {
-        name,
-        phone_number: phone,
-        zone,
-        skills: skills ? skills.split(",") : [],
-      });
-
-      setName("");
-      setPhone("");
-      setZone("");
-      setSkills("");
-
-      setShowForm(false);
-      loadVolunteers();
-    } catch (err) {
-      console.error(err);
-      setError(err.response?.data?.detail || "Failed to add volunteer");
-    } finally {
-      setAdding(false);
-    }
+      const res = await API.get("/volunteers");
+      setVolunteers(res.data || []);
+    } catch {}
   };
 
-  const updateTrust = async (id, tier) => {
-    try {
-      await API.patch(`/volunteers/${id}/trust`, {
-        trust_tier: tier,
-      });
-      loadVolunteers();
-    } catch (err) {
-      console.error(err);
-    }
+  const getReliability = (v) => {
+    const total = v.completions + v.no_shows;
+    if (total === 0) return 0;
+    return Math.round((v.completions / total) * 100);
   };
 
-  const trustColor = (tier) => {
-    if (tier === "FIELD_VERIFIED") return "bg-green-100 text-green-700";
-    if (tier === "ID_VERIFIED") return "bg-yellow-100 text-yellow-700";
-    return "bg-slate-100 text-slate-600";
+  // 🔥 FILTER + SORT
+  const filtered = [...volunteers]
+    .filter((v) => v.name.toLowerCase().includes(search.toLowerCase()))
+    .sort((a, b) => {
+      // active first
+      if (a.telegram_active !== b.telegram_active) {
+        return b.telegram_active - a.telegram_active;
+      }
+
+      // reliability next
+      return getReliability(b) - getReliability(a);
+    });
+
+  const trustMap = {
+    FIELD_VERIFIED: "bg-indigo-100 text-indigo-700",
+    ID_VERIFIED: "bg-yellow-100 text-yellow-700",
+    UNVERIFIED: "bg-gray-100 text-gray-600",
   };
 
   return (
-    <div className="space-y-6">
-      {/* HEADER */}
-      <div className="flex justify-between items-center">
-        <h1 className="text-xl font-semibold">Volunteers</h1>
+    <div className="space-y-8">
+      {/* 🔥 HERO */}
+      <div className="bg-primary text-white rounded-2xl p-6 flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold">Volunteer Force</h1>
+          <p className="text-sm opacity-80">
+            Manage and deploy your human network
+          </p>
+        </div>
 
-        <button
-          onClick={() => setShowForm(true)}
-          className="bg-indigo-600 hover:bg-indigo-700 active:scale-95 transition text-white px-4 py-2 rounded"
-        >
-          + Add Volunteer
-        </button>
+        <div className="text-right">
+          <p className="text-3xl font-bold">{volunteers.length}</p>
+          <p className="text-xs opacity-70">Active Volunteers</p>
+        </div>
       </div>
 
-      {/* MODAL */}
-      {showForm && (
-        <div className="fixed inset-0 bg-black/40 animate-fade-in flex items-center justify-center z-50">
-          <div className="bg-white w-full max-w-lg p-6 rounded-xl shadow space-y-4 animate-slide-in">
-            <div className="flex justify-between">
-              <h2 className="font-semibold">Register Volunteer</h2>
-              <button onClick={() => setShowForm(false)}>✕</button>
-            </div>
+      {/* SEARCH */}
+      <input
+        placeholder="Search volunteers..."
+        className="w-full max-w-md px-4 py-3 rounded-xl bg-surface_high"
+        onChange={(e) => setSearch(e.target.value)}
+      />
 
-            <form onSubmit={handleSubmit} className="space-y-3">
-              <input
-                className="w-full border px-3 py-2 rounded"
-                placeholder="Name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-              <input
-                className="w-full border px-3 py-2 rounded"
-                placeholder="Phone"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-              />
-              <input
-                className="w-full border px-3 py-2 rounded"
-                placeholder="Zone"
-                value={zone}
-                onChange={(e) => setZone(e.target.value)}
-              />
-              <input
-                className="w-full border px-3 py-2 rounded"
-                placeholder="Skills"
-                value={skills}
-                onChange={(e) => setSkills(e.target.value)}
-              />
+      <div className="grid grid-cols-12 gap-8">
+        {/* LEFT */}
+        <div className="col-span-12 lg:col-span-8 space-y-4">
+          {filtered.map((v) => (
+            <div
+              key={v.id}
+              onClick={() => setSelected(v)}
+              className="bg-surface_high p-5 rounded-xl flex gap-5 cursor-pointer hover:scale-[1.01] transition"
+            >
+              {/* AVATAR */}
+              <div className="w-14 h-14 rounded-xl bg-primary text-white flex items-center justify-center font-bold">
+                {v.name?.[0]}
+              </div>
 
-              {error && <p className="text-red-500 text-sm">{error}</p>}
+              <div className="flex-1">
+                {/* TOP */}
+                <div className="flex justify-between">
+                  <div>
+                    <p className="font-bold">{v.name}</p>
+                    <p className="text-xs text-on_surface_variant">
+                      {v.phone_number}
+                    </p>
 
-              <button
-                disabled={adding}
-                className={`w-full py-2 rounded text-white flex items-center justify-center gap-2 ${
-                  adding ? "bg-gray-400" : "bg-indigo-600 hover:bg-indigo-700"
-                }`}
-              >
-                {adding && (
-                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                )}
-                {adding ? "Adding..." : "Add Volunteer"}
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* TABLE */}
-      <div className="bg-white rounded-xl shadow overflow-hidden">
-        {initialLoading ? (
-          <div className="p-6 text-center space-y-2">
-            <div className="animate-pulse text-slate-400">
-              Loading volunteers...
-            </div>
-            <div className="h-1 bg-slate-200 rounded overflow-hidden">
-              <div className="h-full bg-indigo-500 animate-progress"></div>
-            </div>
-          </div>
-        ) : volunteers.length === 0 ? (
-          <div className="p-6 text-center text-slate-500">
-            No volunteers yet
-          </div>
-        ) : (
-          <table className="w-full text-sm">
-            <thead className="bg-slate-100 text-left">
-              <tr>
-                <th className="p-3">Name</th>
-                <th>Zone</th>
-                <th>Stats</th>
-                <th>Trust</th>
-                <th>Telegram</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {volunteers.map((v) => (
-                <tr
-                  key={v.id}
-                  className="border-t hover:bg-slate-50 transition animate-slide-in"
-                >
-                  <td className="p-3">
-                    <p className="font-medium">{v.name}</p>
-                    <p className="text-xs text-slate-500">{v.phone_number}</p>
-                  </td>
-
-                  <td>{v.zone || "-"}</td>
-
-                  <td className="text-xs text-slate-500">
-                    ✔ {v.completions} | ❌ {v.no_shows}
-                  </td>
-
-                  <td>
-                    <span
-                      className={`px-2 py-1 text-xs rounded-full ${trustColor(v.trust_tier)}`}
-                    >
-                      {v.trust_tier}
-                    </span>
-                  </td>
-
-                  <td>
-                    {v.telegram_active ? (
-                      <span className="text-green-600 text-xs">Connected</span>
-                    ) : (
-                      <span className="text-red-500 text-xs">
-                        Not Connected
+                    <div className="flex gap-2 mt-2 flex-wrap">
+                      <span
+                        className={`text-xs px-2 py-1 rounded-full ${trustMap[v.trust_tier]}`}
+                      >
+                        {v.trust_tier}
                       </span>
-                    )}
-                  </td>
 
-                  <td className="space-x-2">
-                    <button
-                      className="text-green-600 hover:underline text-xs"
-                      onClick={() => updateTrust(v.id, "FIELD_VERIFIED")}
-                    >
-                      Verify
-                    </button>
+                      <span className="text-xs bg-surface px-2 py-1 rounded">
+                        📍 {v.zone || "No Zone"}
+                      </span>
+                    </div>
+                  </div>
 
-                    <button
-                      className="text-yellow-600 hover:underline text-xs"
-                      onClick={() => updateTrust(v.id, "ID_VERIFIED")}
+                  <span
+                    className={`text-xs px-2 py-1 rounded-full ${
+                      v.telegram_active
+                        ? "bg-green-100 text-green-600"
+                        : "bg-gray-200 text-gray-600"
+                    }`}
+                  >
+                    {v.telegram_active ? "Available" : "Offline"}
+                  </span>
+                </div>
+
+                {/* STATS */}
+                <div className="mt-4 grid grid-cols-3 gap-3">
+                  <Stat label="Missions" value={v.completions} />
+                  <Stat label="No Shows" value={v.no_shows} />
+                  <Stat label="Reliability" value={`${getReliability(v)}%`} />
+                </div>
+
+                {/* SKILLS */}
+                <div className="mt-3 flex gap-2 flex-wrap">
+                  {v.skills?.slice(0, 4).map((s, i) => (
+                    <span
+                      key={i}
+                      className="text-xs bg-primary/10 text-primary px-2 py-1 rounded"
                     >
-                      ID Check
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+                      {s}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* RIGHT PANEL */}
+        <div className="col-span-12 lg:col-span-4">
+          {selected ? (
+            <div className="bg-surface_high p-6 rounded-xl sticky top-10">
+              <div className="text-center">
+                <div className="w-20 h-20 mx-auto bg-primary text-white rounded-xl flex items-center justify-center text-xl font-bold">
+                  {selected.name?.[0]}
+                </div>
+
+                <h2 className="mt-3 font-bold">{selected.name}</h2>
+                <p className="text-sm text-on_surface_variant">
+                  {selected.phone_number}
+                </p>
+              </div>
+
+              <div className="mt-6 space-y-4">
+                <Stat label="Missions" value={selected.completions} />
+                <Stat label="No Shows" value={selected.no_shows} />
+                <Stat
+                  label="Reliability"
+                  value={`${getReliability(selected)}%`}
+                />
+
+                <div>
+                  <p className="text-sm font-semibold mb-2">Skills</p>
+                  <div className="flex flex-wrap gap-2">
+                    {selected.skills?.map((s, i) => (
+                      <span
+                        key={i}
+                        className="text-xs bg-primary/10 px-2 py-1 rounded"
+                      >
+                        {s}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="text-sm">
+                  Status:{" "}
+                  <span className="font-semibold">
+                    {selected.telegram_active ? "Available" : "Offline"}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center text-on_surface_variant mt-20">
+              Select a volunteer
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
 };
+
+const Stat = ({ label, value }) => (
+  <div className="bg-surface p-3 rounded-lg">
+    <p className="text-xs text-on_surface_variant">{label}</p>
+    <p className="font-bold">{value}</p>
+  </div>
+);
 
 export default Volunteers;
