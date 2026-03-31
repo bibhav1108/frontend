@@ -1,18 +1,37 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import API from "../services/api";
+
+const TYPE_OPTIONS = [
+  "HEALTH",
+  "EDUCATION",
+  "BASIC_NEEDS",
+  "AWARENESS",
+  "EMERGENCY",
+  "ENVIRONMENT",
+  "SKILLS",
+  "OTHER",
+];
+
+const STATUS_ORDER = {
+  ACTIVE: 0,
+  PLANNED: 1,
+  COMPLETED: 2,
+};
 
 const Campaigns = () => {
   const [campaigns, setCampaigns] = useState([]);
   const [inventory, setInventory] = useState([]);
   const [filterType, setFilterType] = useState("ALL");
+  const [searchTerm, setSearchTerm] = useState("");
 
   const [selectedCampaign, setSelectedCampaign] = useState(null);
   const [pool, setPool] = useState([]);
   const [loadingPool, setLoadingPool] = useState(false);
 
   const [showForm, setShowForm] = useState(false);
+  const [creating, setCreating] = useState(false);
 
-  // FORM STATE
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [type, setType] = useState("OTHER");
@@ -23,8 +42,8 @@ const Campaigns = () => {
   const [endTime, setEndTime] = useState("");
   const [location, setLocation] = useState("");
   const [skills, setSkills] = useState("");
+  const [formError, setFormError] = useState("");
 
-  // ================= LOAD =================
   const loadCampaigns = async () => {
     try {
       const res = await API.get("/campaigns/");
@@ -48,62 +67,78 @@ const Campaigns = () => {
     loadInventory();
   }, []);
 
-  // ================= CREATE =================
-  const createCampaign = async () => {
-    const formattedItems = {};
+  const resetForm = () => {
+    setName("");
+    setDescription("");
+    setTargetQuantity("");
+    setItems([{ key: "", value: "" }]);
+    setVolunteersRequired("");
+    setStartTime("");
+    setEndTime("");
+    setLocation("");
+    setSkills("");
+    setType("OTHER");
+    setFormError("");
+  };
 
+  const createCampaign = async () => {
+    const trimmedName = name.trim();
+    const trimmedDescription = description.trim();
+    const trimmedLocation = location.trim();
+
+    if (!trimmedName || !trimmedDescription) {
+      setFormError("Name and description are required.");
+      return;
+    }
+
+    const formattedItems = {};
     items.forEach((i) => {
       if (!i.key || !i.value) return;
 
       const qty = Number(i.value);
-      if (isNaN(qty) || qty <= 0) return;
+      if (Number.isNaN(qty) || qty <= 0) return;
 
-      if (formattedItems[i.key]) {
-        formattedItems[i.key] += qty;
-      } else {
-        formattedItems[i.key] = qty;
-      }
+      formattedItems[i.key] = (formattedItems[i.key] || 0) + qty;
     });
 
     if (Object.keys(formattedItems).length === 0) {
-      alert("Add at least one valid item");
+      setFormError("Add at least one valid item.");
       return;
     }
 
     try {
+      setCreating(true);
+      setFormError("");
+
       await API.post("/campaigns/", {
-        name,
-        description,
+        name: trimmedName,
+        description: trimmedDescription,
         type,
         target_quantity: targetQuantity,
         items: formattedItems,
         volunteers_required: Number(volunteersRequired) || 0,
         start_time: startTime || null,
         end_time: endTime || null,
-        location_address: location || null,
-        required_skills: skills ? skills.split(",").map((s) => s.trim()) : [],
+        location_address: trimmedLocation || null,
+        required_skills: skills
+          ? skills
+              .split(",")
+              .map((s) => s.trim())
+              .filter(Boolean)
+          : [],
       });
 
       setShowForm(false);
-      setName("");
-      setDescription("");
-      setTargetQuantity("");
-      setItems([{ key: "", value: "" }]);
-      setVolunteersRequired("");
-      setStartTime("");
-      setEndTime("");
-      setLocation("");
-      setSkills("");
-      setType("OTHER");
-
+      resetForm();
       loadCampaigns();
     } catch (err) {
-      console.error(err.response?.data);
-      alert(err.response?.data?.detail || "Error creating campaign");
+      console.error(err.response?.data || err);
+      setFormError(err?.response?.data?.detail || "Error creating campaign");
+    } finally {
+      setCreating(false);
     }
   };
 
-  // ================= DETAILS =================
   const openDetails = async (campaign) => {
     setSelectedCampaign(campaign);
 
@@ -119,326 +154,1057 @@ const Campaigns = () => {
   };
 
   const approve = async (campaignId, volId) => {
-    await API.post(`/campaigns/${campaignId}/approve-volunteer/${volId}`);
-    openDetails(selectedCampaign);
+    try {
+      await API.post(`/campaigns/${campaignId}/approve-volunteer/${volId}`);
+      if (selectedCampaign) {
+        openDetails(selectedCampaign);
+      }
+      loadCampaigns();
+    } catch (err) {
+      console.error(err);
+      alert(err?.response?.data?.detail || "Failed to approve volunteer");
+    }
   };
 
   const completeCampaign = async (id) => {
-    await API.post(`/campaigns/${id}/complete`);
-    setSelectedCampaign(null);
-    loadCampaigns();
+    try {
+      await API.post(`/campaigns/${id}/complete`);
+      setSelectedCampaign(null);
+      setPool([]);
+      loadCampaigns();
+    } catch (err) {
+      console.error(err);
+      alert(err?.response?.data?.detail || "Failed to complete campaign");
+    }
   };
 
-  const getStatusStyle = (s) => {
+  const getStatusClass = (s) => {
     if (s === "ACTIVE") return "bg-blue-100 text-blue-700";
-    if (s === "COMPLETED") return "bg-green-100 text-green-700";
-    if (s === "PLANNED") return "bg-yellow-100 text-yellow-700";
-    return "bg-gray-200";
+    if (s === "COMPLETED") return "bg-emerald-100 text-emerald-700";
+    if (s === "PLANNED") return "bg-amber-100 text-amber-700";
+    return "bg-slate-100 text-slate-600";
   };
 
-  // ================= UI =================
+  const getStatusDot = (s) => {
+    if (s === "ACTIVE") return "bg-blue-500";
+    if (s === "COMPLETED") return "bg-emerald-500";
+    if (s === "PLANNED") return "bg-amber-500";
+    return "bg-slate-400";
+  };
+
+  const getTypeTone = (t) => {
+    if (t === "HEALTH") return "bg-rose-50 text-rose-700";
+    if (t === "EMERGENCY") return "bg-orange-50 text-orange-700";
+    if (t === "BASIC_NEEDS") return "bg-sky-50 text-sky-700";
+    if (t === "EDUCATION") return "bg-violet-50 text-violet-700";
+    if (t === "ENVIRONMENT") return "bg-emerald-50 text-emerald-700";
+    if (t === "SKILLS") return "bg-cyan-50 text-cyan-700";
+    if (t === "AWARENESS") return "bg-fuchsia-50 text-fuchsia-700";
+    return "bg-slate-100 text-slate-700";
+  };
+
+  const campaignList = useMemo(() => {
+    const q = searchTerm.trim().toLowerCase();
+
+    return [...campaigns]
+      .filter((c) => filterType === "ALL" || c.type === filterType)
+      .filter((c) => {
+        if (!q) return true;
+        const haystack = [
+          c.name,
+          c.description,
+          c.location_address,
+          c.type,
+          c.status,
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+        return haystack.includes(q);
+      })
+      .sort((a, b) => {
+        const rankA = STATUS_ORDER[a.status] ?? 99;
+        const rankB = STATUS_ORDER[b.status] ?? 99;
+        if (rankA !== rankB) return rankA - rankB;
+
+        const aTime = new Date(a.start_time || a.created_at || 0).getTime();
+        const bTime = new Date(b.start_time || b.created_at || 0).getTime();
+        return bTime - aTime;
+      });
+  }, [campaigns, filterType, searchTerm]);
+
+  const stats = useMemo(() => {
+    const active = campaigns.filter((c) => c.status === "ACTIVE").length;
+    const planned = campaigns.filter((c) => c.status === "PLANNED").length;
+    const completed = campaigns.filter((c) => c.status === "COMPLETED").length;
+
+    return { active, planned, completed, total: campaigns.length };
+  }, [campaigns]);
+
+  const selectedPreview = selectedCampaign || campaignList[0] || null;
+
+  const momentumFromStatus = (status) => {
+    if (status === "ACTIVE") return 72;
+    if (status === "PLANNED") return 34;
+    if (status === "COMPLETED") return 100;
+    return 18;
+  };
+
+  const updateItem = (index, field, value) => {
+    setItems((prev) =>
+      prev.map((item, i) => (i === index ? { ...item, [field]: value } : item)),
+    );
+  };
+
   return (
-    <div className="p-6 space-y-8">
+    <div className="space-y-8">
       {/* HEADER */}
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-indigo-700">
-          Campaign Intelligence
-        </h1>
+      <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+        <div className="space-y-1">
+          <p className="text-xs font-bold uppercase tracking-[0.22em] text-blue-600">
+            Operational Hub
+          </p>
+          <h1 className="text-4xl font-black tracking-tight text-slate-900">
+            Mission Control
+          </h1>
+          <p className="max-w-2xl text-sm text-slate-500">
+            Launch campaigns, inspect volunteer readiness, and keep live mission
+            flow organized in one place.
+          </p>
+        </div>
 
-        <div className="flex gap-3">
-          {/* FILTER */}
-          <select
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
-            className="border p-2 rounded-lg"
+        <div className="flex flex-wrap gap-3">
+          <Link
+            to="/dispatches"
+            className="rounded-xl bg-slate-100 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-200"
           >
-            <option value="ALL">All</option>
-            <option value="HEALTH">Health</option>
-            <option value="EDUCATION">Education</option>
-            <option value="BASIC_NEEDS">Basic Needs</option>
-            <option value="AWARENESS">Awareness</option>
-            <option value="EMERGENCY">Emergency</option>
-            <option value="ENVIRONMENT">Environment</option>
-            <option value="SKILLS">Skills</option>
-            <option value="OTHER">Other</option>
-          </select>
-
+            View Past Deployments
+          </Link>
           <button
             onClick={() => setShowForm(true)}
-            className="bg-indigo-600 text-white px-6 py-3 rounded-xl"
+            className="inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white shadow-lg transition hover:opacity-95 active:scale-[0.98]"
+            style={{
+              background: "linear-gradient(135deg, #005da9 0%, #0075d4 100%)",
+            }}
           >
-            + Launch Campaign
+            <span className="material-symbols-outlined text-[18px]">add</span>
+            New Mission Blueprint
           </button>
         </div>
       </div>
 
-      {/* GRID */}
-      <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
-        {campaigns
-          .filter((c) => filterType === "ALL" || c.type === filterType)
-          .map((c) => (
-            <div key={c.id} className="bg-white rounded-2xl p-6 shadow">
-              <div className="flex justify-between mb-2">
-                <span className="font-bold">{c.name}</span>
-                <span
-                  className={`px-2 py-1 text-xs rounded ${getStatusStyle(c.status)}`}
-                >
-                  {c.status}
-                </span>
+      {/* STATS */}
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-4">
+        <StatCard
+          label="Total Campaigns"
+          value={stats.total}
+          hint="All records"
+          icon="rocket_launch"
+        />
+        <StatCard
+          label="Active Missions"
+          value={stats.active}
+          hint="Currently running"
+          icon="play_circle"
+        />
+        <StatCard
+          label="Planned Missions"
+          value={stats.planned}
+          hint="Awaiting launch"
+          icon="event_upcoming"
+        />
+        <StatCard
+          label="Completed"
+          value={stats.completed}
+          hint="Closed campaigns"
+          icon="check_circle"
+        />
+      </div>
+
+      {/* MAIN GRID */}
+      <div className="grid grid-cols-12 gap-6 items-start">
+        {/* LEFT COLUMN */}
+        <section className="col-span-12 lg:col-span-7 space-y-6">
+          <div className="rounded-2xl border border-white/30 bg-white/70 p-6 shadow-[0_40px_60px_-20px_rgba(32,25,36,0.08)] backdrop-blur-xl">
+            <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <h2 className="text-xl font-bold text-slate-900">Campaigns</h2>
+                <p className="text-sm text-slate-500">
+                  Browse, sort, and inspect campaign details.
+                </p>
               </div>
 
-              <p className="text-sm text-gray-500 mb-2">{c.description}</p>
-
-              <div className="text-xs mb-1">🏷 Type: {c.type || "OTHER"}</div>
-              <div className="text-xs mb-1">
-                🎯 Goal: {c.target_quantity || "N/A"}
-              </div>
-              <div className="text-xs mb-1">
-                📍 {c.location_address || "No location"}
-              </div>
-              <div className="text-xs mb-2">
-                👥 Required: {c.volunteers_required}
-              </div>
-
-              {c.items && (
-                <div className="text-xs mb-2">
-                  {Object.entries(c.items).map(([k, v]) => (
-                    <div key={k}>
-                      {v} {k}
-                    </div>
-                  ))}
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+                <div className="relative">
+                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">
+                    search
+                  </span>
+                  <input
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Search campaigns..."
+                    className="w-full rounded-full border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-sm outline-none transition focus:border-blue-300 focus:bg-white lg:w-72"
+                  />
                 </div>
-              )}
 
-              <button
-                onClick={() => openDetails(c)}
-                className="text-indigo-600 text-sm font-semibold"
-              >
-                View Details →
-              </button>
+                <select
+                  value={filterType}
+                  onChange={(e) => setFilterType(e.target.value)}
+                  className="rounded-full border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm outline-none transition focus:border-blue-300 focus:bg-white"
+                >
+                  <option value="ALL">All types</option>
+                  {TYPE_OPTIONS.map((t) => (
+                    <option key={t} value={t}>
+                      {t.replaceAll("_", " ")}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
-          ))}
+
+            {campaignList.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-10 text-center">
+                <p className="text-sm font-medium text-slate-600">
+                  No campaigns found.
+                </p>
+                <p className="mt-1 text-xs text-slate-400">
+                  Launch a new mission blueprint to get started.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                {campaignList.map((c) => {
+                  const isSelected = selectedCampaign?.id === c.id;
+                  const itemsCount = c.items
+                    ? Object.values(c.items).reduce(
+                        (sum, v) => sum + (Number(v) || 0),
+                        0,
+                      )
+                    : 0;
+
+                  return (
+                    <button
+                      key={c.id}
+                      onClick={() => openDetails(c)}
+                      className={`text-left rounded-2xl border bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg ${
+                        isSelected
+                          ? "border-blue-300 ring-2 ring-blue-100"
+                          : "border-slate-200"
+                      }`}
+                    >
+                      <div className="mb-4 flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">
+                            Mission #{c.id}
+                          </p>
+                          <h3 className="mt-1 truncate text-lg font-bold text-slate-900">
+                            {c.name}
+                          </h3>
+                        </div>
+
+                        <span
+                          className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${getStatusClass(
+                            c.status,
+                          )}`}
+                        >
+                          {c.status}
+                        </span>
+                      </div>
+
+                      <p className="line-clamp-3 text-sm text-slate-500">
+                        {c.description}
+                      </p>
+
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        <span
+                          className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${getTypeTone(
+                            c.type,
+                          )}`}
+                        >
+                          {c.type || "OTHER"}
+                        </span>
+                        <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-700">
+                          Goal: {c.target_quantity || "N/A"}
+                        </span>
+                        <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-700">
+                          Volunteers: {c.volunteers_required || 0}
+                        </span>
+                      </div>
+
+                      <div className="mt-4 space-y-2 text-sm text-slate-600">
+                        <div className="flex items-start gap-2">
+                          <span className="material-symbols-outlined text-[18px] text-slate-400">
+                            location_on
+                          </span>
+                          <span className="line-clamp-2">
+                            {c.location_address || "No location"}
+                          </span>
+                        </div>
+
+                        <div className="flex items-start gap-2">
+                          <span className="material-symbols-outlined text-[18px] text-slate-400">
+                            inventory_2
+                          </span>
+                          <span>
+                            {itemsCount
+                              ? `${itemsCount} item units`
+                              : "No items listed"}
+                          </span>
+                        </div>
+                      </div>
+
+                      {c.items && Object.keys(c.items).length > 0 && (
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          {Object.entries(c.items)
+                            .slice(0, 3)
+                            .map(([k, v]) => (
+                              <span
+                                key={k}
+                                className="rounded-full bg-slate-50 px-2.5 py-1 text-[11px] font-medium text-slate-600"
+                              >
+                                {k}: {v}
+                              </span>
+                            ))}
+                        </div>
+                      )}
+
+                      <div className="mt-5 flex items-center justify-between">
+                        <span className="text-xs font-semibold text-blue-600">
+                          View details →
+                        </span>
+                        <span className="text-[10px] text-slate-400">
+                          {c.start_time
+                            ? new Date(c.start_time).toLocaleDateString()
+                            : "No start date"}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="rounded-2xl border border-white/30 bg-white/70 p-6 shadow-[0_40px_60px_-20px_rgba(32,25,36,0.08)] backdrop-blur-xl">
+            <div className="mb-5 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">
+                  Mission Readiness
+                </h3>
+                <p className="text-sm text-slate-500">
+                  Visual stage tracking for the selected campaign.
+                </p>
+              </div>
+              <span className="text-xs font-bold uppercase tracking-widest text-blue-600">
+                Live
+              </span>
+            </div>
+
+            {selectedPreview ? (
+              <>
+                <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                  <div>
+                    <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">
+                      {selectedPreview.type || "OTHER"}
+                    </p>
+                    <h4 className="mt-1 text-2xl font-black text-slate-900">
+                      {selectedPreview.name}
+                    </h4>
+                    <p className="mt-2 max-w-xl text-sm text-slate-500">
+                      {selectedPreview.description}
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl bg-slate-50 px-4 py-3">
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                      Current Status
+                    </p>
+                    <p className="mt-1 text-sm font-semibold text-slate-800">
+                      {selectedPreview.status || "PLANNED"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-6 grid gap-4 md:grid-cols-3">
+                  <div className="rounded-2xl bg-slate-50 p-4">
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                      Location
+                    </p>
+                    <p className="mt-2 text-sm font-semibold text-slate-800">
+                      {selectedPreview.location_address || "No location"}
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl bg-slate-50 p-4">
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                      Volunteers Required
+                    </p>
+                    <p className="mt-2 text-sm font-semibold text-slate-800">
+                      {selectedPreview.volunteers_required || 0}
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl bg-slate-50 p-4">
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                      Skills
+                    </p>
+                    <p className="mt-2 text-sm font-semibold text-slate-800">
+                      {selectedPreview?.required_skills?.length
+                        ? selectedPreview.required_skills.join(", ")
+                        : "General"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-6">
+                  <div className="mb-2 flex items-center justify-between text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                    <span>Operational stage</span>
+                    <span>{momentumFromStatus(selectedPreview.status)}%</span>
+                  </div>
+                  <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                    <div
+                      className="h-full rounded-full"
+                      style={{
+                        width: `${momentumFromStatus(selectedPreview.status)}%`,
+                        background:
+                          "linear-gradient(135deg, #005da9 0%, #0075d4 100%)",
+                      }}
+                    />
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-10 text-center">
+                <p className="text-sm font-medium text-slate-600">
+                  Select a campaign to inspect its mission readiness.
+                </p>
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* RIGHT COLUMN */}
+        <section className="col-span-12 lg:col-span-5 space-y-6">
+          <div className="rounded-2xl border border-white/30 bg-white/70 p-6 shadow-[0_40px_60px_-20px_rgba(32,25,36,0.08)] backdrop-blur-xl">
+            <div className="mb-5 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">
+                  Volunteer Pool
+                </h3>
+                <p className="text-sm text-slate-500">
+                  Approve volunteers for the selected campaign.
+                </p>
+              </div>
+              <span className="rounded-full bg-rose-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-rose-700">
+                {pool.length || 0} pending
+              </span>
+            </div>
+
+            {!selectedCampaign ? (
+              <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center">
+                <p className="text-sm text-slate-600">
+                  Open a campaign to see its volunteer pool.
+                </p>
+              </div>
+            ) : loadingPool ? (
+              <div className="space-y-3">
+                <div className="h-20 animate-pulse rounded-2xl bg-slate-100" />
+                <div className="h-20 animate-pulse rounded-2xl bg-slate-100" />
+              </div>
+            ) : pool.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center">
+                <p className="text-sm text-slate-600">No volunteers yet.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {pool.map((v) => (
+                  <div
+                    key={v.volunteer_id}
+                    className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:shadow-md"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate font-semibold text-slate-900">
+                          {v.volunteer_name}
+                        </p>
+                        <p className="mt-1 text-xs text-slate-500">
+                          {v.skills?.length ? v.skills.join(", ") : "No skills"}
+                        </p>
+                      </div>
+
+                      <button
+                        onClick={() =>
+                          approve(selectedCampaign.id, v.volunteer_id)
+                        }
+                        className="shrink-0 rounded-full bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-700"
+                      >
+                        Approve
+                      </button>
+                    </div>
+
+                    {v.match_score != null && (
+                      <div className="mt-3">
+                        <div className="mb-1 flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                          <span>Match score</span>
+                          <span>{v.match_score}%</span>
+                        </div>
+                        <div className="h-1.5 rounded-full bg-slate-100">
+                          <div
+                            className="h-1.5 rounded-full bg-blue-500"
+                            style={{
+                              width: `${Math.max(0, Math.min(100, v.match_score))}%`,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="rounded-2xl border border-white/30 bg-white/70 p-6 shadow-[0_40px_60px_-20px_rgba(32,25,36,0.08)] backdrop-blur-xl">
+            <div className="mb-5 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">
+                  Quick Actions
+                </h3>
+                <p className="text-sm text-slate-500">
+                  Fast navigation for mission ops.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid gap-3">
+              <Link
+                to="/inventory"
+                className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+              >
+                <span className="flex items-center gap-3">
+                  <span className="material-symbols-outlined text-blue-600">
+                    inventory_2
+                  </span>
+                  Inventory
+                </span>
+                <span className="material-symbols-outlined text-[18px] text-slate-400">
+                  chevron_right
+                </span>
+              </Link>
+
+              <Link
+                to="/volunteers"
+                className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+              >
+                <span className="flex items-center gap-3">
+                  <span className="material-symbols-outlined text-blue-600">
+                    groups
+                  </span>
+                  Volunteers
+                </span>
+                <span className="material-symbols-outlined text-[18px] text-slate-400">
+                  chevron_right
+                </span>
+              </Link>
+
+              <Link
+                to="/marketplace"
+                className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+              >
+                <span className="flex items-center gap-3">
+                  <span className="material-symbols-outlined text-blue-600">
+                    storefront
+                  </span>
+                  Marketplace
+                </span>
+                <span className="material-symbols-outlined text-[18px] text-slate-400">
+                  chevron_right
+                </span>
+              </Link>
+            </div>
+
+            {selectedCampaign && (
+              <button
+                onClick={() => completeCampaign(selectedCampaign.id)}
+                className="mt-5 w-full rounded-xl px-4 py-3 text-sm font-semibold text-white transition hover:opacity-95 active:scale-[0.98]"
+                style={{
+                  background:
+                    "linear-gradient(135deg, #005da9 0%, #0075d4 100%)",
+                }}
+              >
+                Mark Campaign Completed
+              </button>
+            )}
+          </div>
+        </section>
       </div>
 
       {/* DETAILS MODAL */}
       {selectedCampaign && (
-        <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded-xl w-full max-w-xl space-y-4">
-            <h2 className="text-lg font-bold">{selectedCampaign.name}</h2>
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/45 px-4 py-10">
+          <div className="w-full max-w-5xl rounded-3xl border border-white/20 bg-white p-6 shadow-2xl">
+            <div className="mb-6 flex items-start justify-between gap-4">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">
+                  Mission Details
+                </p>
+                <h2 className="mt-1 text-2xl font-black text-slate-900">
+                  {selectedCampaign.name}
+                </h2>
+                <p className="mt-2 max-w-3xl text-sm text-slate-500">
+                  {selectedCampaign.description}
+                </p>
+              </div>
 
-            <p className="text-sm text-gray-500">
-              {selectedCampaign.description}
-            </p>
-
-            <div className="text-xs">🏷 {selectedCampaign.type}</div>
-            <div className="text-xs">
-              📍 {selectedCampaign.location_address}
+              <button
+                onClick={() => {
+                  setSelectedCampaign(null);
+                  setPool([]);
+                }}
+                className="rounded-full bg-slate-100 p-2 text-slate-500 transition hover:bg-slate-200"
+                aria-label="Close details"
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
             </div>
 
-            <div className="text-xs">
-              🧠 Skills:{" "}
-              {selectedCampaign?.required_skills?.length
-                ? selectedCampaign.required_skills.join(", ")
-                : "General"}
-            </div>
+            <div className="grid gap-6 lg:grid-cols-2">
+              <div className="space-y-5">
+                <div className="rounded-2xl bg-slate-50 p-5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span
+                      className={`rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-widest ${getStatusClass(
+                        selectedCampaign.status,
+                      )}`}
+                    >
+                      {selectedCampaign.status}
+                    </span>
+                    <span
+                      className={`rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-widest ${getTypeTone(
+                        selectedCampaign.type,
+                      )}`}
+                    >
+                      {selectedCampaign.type || "OTHER"}
+                    </span>
+                  </div>
 
-            {/* POOL */}
-            <div>
-              <h3 className="font-semibold text-sm mb-2">Volunteer Pool</h3>
-
-              {loadingPool ? (
-                <p>Loading...</p>
-              ) : pool.length === 0 ? (
-                <p className="text-gray-400 text-sm">No volunteers yet</p>
-              ) : (
-                pool.map((v) => (
-                  <div
-                    key={v.volunteer_id}
-                    className="flex justify-between items-center border p-2 rounded mb-2"
-                  >
+                  <div className="mt-5 grid gap-4 md:grid-cols-2">
                     <div>
-                      <p className="text-sm font-medium">{v.volunteer_name}</p>
-                      <p className="text-xs text-gray-400">
-                        {v.skills?.join(", ") || "No skills"}
+                      <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                        Location
+                      </p>
+                      <p className="mt-1 text-sm font-semibold text-slate-800">
+                        {selectedCampaign.location_address || "No location"}
                       </p>
                     </div>
-
-                    <button
-                      onClick={() =>
-                        approve(selectedCampaign.id, v.volunteer_id)
-                      }
-                      className="bg-green-600 text-white px-3 py-1 text-xs rounded"
-                    >
-                      Approve
-                    </button>
+                    <div>
+                      <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                        Volunteers Required
+                      </p>
+                      <p className="mt-1 text-sm font-semibold text-slate-800">
+                        {selectedCampaign.volunteers_required || 0}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                        Goal
+                      </p>
+                      <p className="mt-1 text-sm font-semibold text-slate-800">
+                        {selectedCampaign.target_quantity || "N/A"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                        Skills
+                      </p>
+                      <p className="mt-1 text-sm font-semibold text-slate-800">
+                        {selectedCampaign?.required_skills?.length
+                          ? selectedCampaign.required_skills.join(", ")
+                          : "General"}
+                      </p>
+                    </div>
                   </div>
-                ))
-              )}
+                </div>
+
+                <div className="rounded-2xl border border-slate-200 bg-white p-5">
+                  <div className="mb-3 flex items-center justify-between">
+                    <h3 className="font-bold text-slate-900">Items</h3>
+                    <span className="text-xs text-slate-400">
+                      {selectedCampaign.items
+                        ? Object.keys(selectedCampaign.items).length
+                        : 0}{" "}
+                      entries
+                    </span>
+                  </div>
+
+                  {selectedCampaign.items &&
+                  Object.keys(selectedCampaign.items).length > 0 ? (
+                    <div className="space-y-2">
+                      {Object.entries(selectedCampaign.items).map(([k, v]) => (
+                        <div
+                          key={k}
+                          className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3"
+                        >
+                          <span className="font-medium text-slate-700">
+                            {k}
+                          </span>
+                          <span className="text-sm font-bold text-slate-900">
+                            {v}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-slate-500">
+                      No item breakdown available.
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <div className="mb-2 flex items-center justify-between text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                    <span>Mission stage</span>
+                    <span>{momentumFromStatus(selectedCampaign.status)}%</span>
+                  </div>
+                  <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                    <div
+                      className="h-full rounded-full"
+                      style={{
+                        width: `${momentumFromStatus(selectedCampaign.status)}%`,
+                        background:
+                          "linear-gradient(135deg, #005da9 0%, #0075d4 100%)",
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => completeCampaign(selectedCampaign.id)}
+                  className="w-full rounded-xl px-4 py-3 text-sm font-semibold text-white transition hover:opacity-95"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, #005da9 0%, #0075d4 100%)",
+                  }}
+                >
+                  Mark Completed
+                </button>
+              </div>
+
+              <div className="space-y-5">
+                <div className="rounded-2xl border border-slate-200 bg-white p-5">
+                  <div className="mb-4 flex items-center justify-between">
+                    <h3 className="font-bold text-slate-900">Volunteer Pool</h3>
+                    <span className="text-xs font-bold uppercase tracking-widest text-blue-600">
+                      {loadingPool ? "Loading..." : `${pool.length} candidates`}
+                    </span>
+                  </div>
+
+                  {loadingPool ? (
+                    <div className="space-y-3">
+                      <div className="h-16 animate-pulse rounded-2xl bg-slate-100" />
+                      <div className="h-16 animate-pulse rounded-2xl bg-slate-100" />
+                    </div>
+                  ) : pool.length === 0 ? (
+                    <div className="rounded-2xl bg-slate-50 p-8 text-center">
+                      <p className="text-sm text-slate-500">
+                        No volunteers yet.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {pool.map((v) => (
+                        <div
+                          key={v.volunteer_id}
+                          className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="truncate font-semibold text-slate-900">
+                                {v.volunteer_name}
+                              </p>
+                              <p className="mt-1 text-xs text-slate-500">
+                                {v.skills?.length
+                                  ? v.skills.join(", ")
+                                  : "No skills"}
+                              </p>
+                            </div>
+
+                            <button
+                              onClick={() =>
+                                approve(selectedCampaign.id, v.volunteer_id)
+                              }
+                              className="shrink-0 rounded-full bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-700"
+                            >
+                              Approve
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="rounded-2xl bg-slate-900 p-5 text-white">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/60">
+                    Ops note
+                  </p>
+                  <p className="mt-2 text-sm leading-relaxed text-white/80">
+                    Once volunteers are approved, keep this campaign open until
+                    coordination is complete. Closing the mission will archive
+                    it from the active board.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CREATE FORM MODAL */}
+      {showForm && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/45 px-4 py-10">
+          <div className="mb-10 w-full max-w-4xl rounded-3xl border border-white/20 bg-white p-6 shadow-2xl">
+            <div className="mb-6 flex items-start justify-between gap-4">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">
+                  Mission Blueprint
+                </p>
+                <h2 className="mt-1 text-2xl font-black text-slate-900">
+                  Create Campaign
+                </h2>
+                <p className="mt-2 text-sm text-slate-500">
+                  Define the campaign scope, inventory requirements, timeline,
+                  and volunteer needs.
+                </p>
+              </div>
+
+              <button
+                onClick={() => {
+                  setShowForm(false);
+                  setFormError("");
+                }}
+                className="rounded-full bg-slate-100 p-2 text-slate-500 transition hover:bg-slate-200"
+                aria-label="Close form"
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
             </div>
 
-            <button
-              onClick={() => completeCampaign(selectedCampaign.id)}
-              className="w-full bg-indigo-600 text-white py-2 rounded"
-            >
-              Mark Completed
-            </button>
-
-            <button
-              onClick={() => setSelectedCampaign(null)}
-              className="w-full text-gray-500 text-sm"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* CREATE FORM */}
-      {showForm && (
-        <div className="fixed inset-0 bg-black/40 flex justify-center items-start pt-24 z-50 overflow-y-auto">
-          <div className="bg-white p-6 rounded-2xl shadow-xl w-full max-w-lg space-y-4 mb-10">
-            <h2 className="font-bold text-xl text-indigo-700">
-              Create Campaign
-            </h2>
-
-            <input
-              className="input"
-              placeholder="Name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-            <input
-              className="input"
-              placeholder="Description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-
-            <select
-              value={type}
-              onChange={(e) => setType(e.target.value)}
-              className="input"
-            >
-              <option value="HEALTH">Health</option>
-              <option value="EDUCATION">Education</option>
-              <option value="BASIC_NEEDS">Basic Needs</option>
-              <option value="AWARENESS">Awareness</option>
-              <option value="EMERGENCY">Emergency</option>
-              <option value="ENVIRONMENT">Environment</option>
-              <option value="SKILLS">Skills</option>
-              <option value="OTHER">Other</option>
-            </select>
-
-            <input
-              className="input"
-              placeholder="Goal (e.g. 100 meals)"
-              value={targetQuantity}
-              onChange={(e) => setTargetQuantity(e.target.value)}
-            />
-
-            <input
-              type="datetime-local"
-              className="input"
-              value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
-            />
-            <input
-              type="datetime-local"
-              className="input"
-              value={endTime}
-              onChange={(e) => setEndTime(e.target.value)}
-            />
-
-            <input
-              className="input"
-              placeholder="Location"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-            />
-            <input
-              className="input"
-              placeholder="Required Skills (comma separated)"
-              value={skills}
-              onChange={(e) => setSkills(e.target.value)}
-            />
-            <input
-              className="input"
-              placeholder="Volunteers Required"
-              value={volunteersRequired}
-              onChange={(e) => setVolunteersRequired(e.target.value)}
-            />
-
-            <p className="text-sm font-semibold text-gray-600">
-              Item Breakdown
-            </p>
-
-            {items.map((i, idx) => (
-              <div key={idx} className="flex gap-2">
-                <select
-                  value={i.key}
-                  onChange={(e) => {
-                    const updated = [...items];
-                    updated[idx].key = e.target.value;
-                    setItems(updated);
-                  }}
-                  className="input w-1/2"
-                >
-                  <option value="">Select Item</option>
-                  {inventory.map((inv) => (
-                    <option key={inv.id} value={inv.item_name}>
-                      {inv.item_name} ({inv.quantity} {inv.unit})
-                    </option>
-                  ))}
-                </select>
-
-                <input
-                  type="number"
-                  placeholder="Qty"
-                  value={i.value}
-                  onChange={(e) => {
-                    const updated = [...items];
-                    updated[idx].value = e.target.value;
-                    setItems(updated);
-                  }}
-                  className="input w-1/2"
-                />
+            {formError && (
+              <div className="mb-5 rounded-2xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
+                {formError}
               </div>
-            ))}
+            )}
 
-            <button
-              onClick={() => setItems([...items, { key: "", value: "" }])}
-              className="text-indigo-600 text-sm"
-            >
-              + Add Item
-            </button>
+            <div className="grid gap-6 lg:grid-cols-2">
+              <div className="space-y-4">
+                <Field label="Name">
+                  <input
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-blue-300 focus:bg-white"
+                    placeholder="Operation Azure Shield"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                  />
+                </Field>
 
-            <button
-              onClick={createCampaign}
-              className="w-full bg-indigo-600 text-white py-2 rounded-lg"
-            >
-              Create Campaign
-            </button>
+                <Field label="Description">
+                  <textarea
+                    className="min-h-[120px] w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-blue-300 focus:bg-white"
+                    placeholder="Describe the mission"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                  />
+                </Field>
 
-            <button
-              onClick={() => setShowForm(false)}
-              className="w-full text-gray-500 text-sm"
-            >
-              Cancel
-            </button>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Field label="Type">
+                    <select
+                      value={type}
+                      onChange={(e) => setType(e.target.value)}
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-blue-300 focus:bg-white"
+                    >
+                      {TYPE_OPTIONS.map((opt) => (
+                        <option key={opt} value={opt}>
+                          {opt.replaceAll("_", " ")}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+
+                  <Field label="Goal">
+                    <input
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-blue-300 focus:bg-white"
+                      placeholder="100 meals"
+                      value={targetQuantity}
+                      onChange={(e) => setTargetQuantity(e.target.value)}
+                    />
+                  </Field>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Field label="Start Time">
+                    <input
+                      type="datetime-local"
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-blue-300 focus:bg-white"
+                      value={startTime}
+                      onChange={(e) => setStartTime(e.target.value)}
+                    />
+                  </Field>
+
+                  <Field label="End Time">
+                    <input
+                      type="datetime-local"
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-blue-300 focus:bg-white"
+                      value={endTime}
+                      onChange={(e) => setEndTime(e.target.value)}
+                    />
+                  </Field>
+                </div>
+
+                <Field label="Location">
+                  <input
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-blue-300 focus:bg-white"
+                    placeholder="Pickup / mission location"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                  />
+                </Field>
+
+                <Field label="Required Skills">
+                  <input
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-blue-300 focus:bg-white"
+                    placeholder="medical, logistics, coordination"
+                    value={skills}
+                    onChange={(e) => setSkills(e.target.value)}
+                  />
+                </Field>
+
+                <Field label="Volunteers Required">
+                  <input
+                    type="number"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-blue-300 focus:bg-white"
+                    placeholder="5"
+                    value={volunteersRequired}
+                    onChange={(e) => setVolunteersRequired(e.target.value)}
+                  />
+                </Field>
+              </div>
+
+              <div className="space-y-4">
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                  <div className="mb-4 flex items-center justify-between">
+                    <h3 className="font-bold text-slate-900">Item Breakdown</h3>
+                    <button
+                      onClick={() =>
+                        setItems([...items, { key: "", value: "" }])
+                      }
+                      className="text-sm font-semibold text-blue-600"
+                    >
+                      + Add item
+                    </button>
+                  </div>
+
+                  <div className="space-y-3">
+                    {items.map((item, idx) => (
+                      <div key={idx} className="grid gap-3 md:grid-cols-2">
+                        <select
+                          value={item.key}
+                          onChange={(e) =>
+                            updateItem(idx, "key", e.target.value)
+                          }
+                          className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-blue-300"
+                        >
+                          <option value="">Select item</option>
+                          {inventory.map((inv) => (
+                            <option key={inv.id} value={inv.item_name}>
+                              {inv.item_name} ({inv.quantity} {inv.unit})
+                            </option>
+                          ))}
+                        </select>
+
+                        <input
+                          type="number"
+                          placeholder="Qty"
+                          value={item.value}
+                          onChange={(e) =>
+                            updateItem(idx, "value", e.target.value)
+                          }
+                          className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-blue-300"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="rounded-2xl bg-white p-5 shadow-sm">
+                  <p className="text-sm font-semibold text-slate-900">
+                    Blueprint notes
+                  </p>
+                  <p className="mt-2 text-sm leading-relaxed text-slate-500">
+                    Pick items from inventory, define the volunteer load, and
+                    set a realistic timeline. Campaigns can be updated later
+                    from the mission details view.
+                  </p>
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    onClick={createCampaign}
+                    disabled={creating}
+                    className="flex-1 rounded-xl px-4 py-3 text-sm font-semibold text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-70"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, #005da9 0%, #0075d4 100%)",
+                    }}
+                  >
+                    {creating ? "Creating..." : "Create Campaign"}
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setShowForm(false);
+                      setFormError("");
+                    }}
+                    className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
-
-      <style>{`
-        .input {
-          border: 1px solid #ddd;
-          padding: 10px;
-          width: 100%;
-          border-radius: 10px;
-        }
-      `}</style>
     </div>
   );
 };
+
+const StatCard = ({ label, value, hint, icon }) => (
+  <div className="rounded-2xl border border-white/30 bg-white/70 p-5 shadow-[0_40px_60px_-20px_rgba(32,25,36,0.08)] backdrop-blur-xl">
+    <div className="flex items-start justify-between gap-4">
+      <div className="rounded-2xl bg-slate-100 p-3 text-blue-600">
+        <span className="material-symbols-outlined">{icon}</span>
+      </div>
+      <span className="text-xs font-bold uppercase tracking-widest text-slate-400">
+        Live
+      </span>
+    </div>
+
+    <p className="mt-6 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">
+      {label}
+    </p>
+    <p className="mt-1 text-3xl font-black text-slate-900">{value}</p>
+    <p className="mt-2 text-xs text-slate-500">{hint}</p>
+  </div>
+);
+
+const Field = ({ label, children }) => (
+  <label className="block space-y-2">
+    <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">
+      {label}
+    </span>
+    {children}
+  </label>
+);
 
 export default Campaigns;
