@@ -22,8 +22,6 @@ const Inventory = () => {
       setLoading(true);
       const res = await API.get("/inventory/");
       setItems(res.data || []);
-    } catch (err) {
-      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -33,49 +31,7 @@ const Inventory = () => {
     fetchInventory();
   }, []);
 
-  const handleAddItem = async (e) => {
-    e.preventDefault();
-
-    try {
-      setAdding(true);
-
-      await API.post("/inventory/", {
-        ...newItem,
-        quantity: parseFloat(newItem.quantity),
-      });
-
-      setShowForm(false);
-      fetchInventory();
-
-      setNewItem({
-        item_name: "",
-        quantity: "",
-        unit: "",
-        category: "OTHERS",
-      });
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setAdding(false);
-    }
-  };
-
-  const adjustQuantity = async (id, current, change) => {
-    await API.patch(`/inventory/${id}`, {
-      quantity: current + change,
-    });
-    fetchInventory();
-  };
-
-  const updateExact = async (id, value) => {
-    if (!value) return;
-
-    await API.patch(`/inventory/${id}`, {
-      quantity: parseFloat(value),
-    });
-
-    fetchInventory();
-  };
+  const getAvailable = (i) => i.quantity - i.reserved_quantity;
 
   const filtered = items.filter((i) => {
     if (filter !== "ALL" && i.category !== filter) return false;
@@ -84,18 +40,46 @@ const Inventory = () => {
     return true;
   });
 
+  const total = items.reduce((a, b) => a + b.quantity, 0);
+  const reserved = items.reduce((a, b) => a + b.reserved_quantity, 0);
+
+  const adjustQuantity = async (id, current, change) => {
+    await API.patch(`/inventory/${id}`, {
+      quantity: current + change,
+    });
+    fetchInventory();
+  };
+
+  const handleAddItem = async (e) => {
+    e.preventDefault();
+    setAdding(true);
+
+    await API.post("/inventory/", {
+      ...newItem,
+      quantity: parseFloat(newItem.quantity),
+    });
+
+    setShowForm(false);
+    fetchInventory();
+    setAdding(false);
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      {/* 🔥 HERO */}
+      <div className="grid grid-cols-3 gap-4">
+        <StatCard label="Total Units" value={total} />
+        <StatCard label="Reserved" value={reserved} />
+        <StatCard label="Available" value={total - reserved} highlight />
+      </div>
+
       {/* HEADER */}
       <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-xl font-semibold">Inventory</h1>
-          <p className="text-sm text-slate-500">Manage resources</p>
-        </div>
+        <h1 className="text-2xl font-bold">Inventory HQ</h1>
 
         <button
           onClick={() => setShowForm(true)}
-          className="bg-indigo-600 hover:bg-indigo-700 active:scale-95 transition text-white px-4 py-2 rounded"
+          className="bg-primary text-white px-5 py-2 rounded-lg"
         >
           + Add Item
         </button>
@@ -107,10 +91,8 @@ const Inventory = () => {
           <button
             key={f}
             onClick={() => setFilter(f)}
-            className={`px-3 py-1.5 text-xs rounded-full transition ${
-              filter === f
-                ? "bg-indigo-600 text-white"
-                : "bg-slate-200 hover:bg-slate-300"
+            className={`px-3 py-1 rounded-full text-xs ${
+              filter === f ? "bg-primary text-white" : "bg-surface_high"
             }`}
           >
             {f}
@@ -121,173 +103,132 @@ const Inventory = () => {
       {/* SEARCH */}
       <input
         placeholder="Search inventory..."
-        value={search}
+        className="w-full max-w-md px-4 py-3 rounded-lg bg-surface_high"
         onChange={(e) => setSearch(e.target.value)}
-        className="w-full md:w-1/3 border px-3 py-2 rounded-lg"
       />
 
-      {/* 🔥 MODAL */}
+      {/* GRID */}
+      {loading ? (
+        <div className="text-center p-10">Loading...</div>
+      ) : (
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {filtered.map((i) => {
+            const available = getAvailable(i);
+            const low = available < i.quantity * 0.2;
+
+            return (
+              <div
+                key={i.id}
+                className="bg-surface_high p-5 rounded-xl space-y-4"
+              >
+                {/* HEADER */}
+                <div className="flex justify-between">
+                  <h3 className="font-bold">{i.item_name}</h3>
+
+                  <span className="text-xs bg-surface px-2 py-1 rounded">
+                    {i.category}
+                  </span>
+                </div>
+
+                {/* STATS */}
+                <div className="grid grid-cols-3 text-center">
+                  <MiniStat label="Total" value={i.quantity} />
+                  <MiniStat label="Reserved" value={i.reserved_quantity} />
+                  <MiniStat label="Available" value={available} />
+                </div>
+
+                {/* LOW STOCK */}
+                {low && (
+                  <div className="text-xs text-red-500 font-semibold">
+                    ⚠ Low Stock
+                  </div>
+                )}
+
+                {/* CONTROLS */}
+                <div className="flex justify-between items-center">
+                  <button
+                    onClick={() => adjustQuantity(i.id, i.quantity, -1)}
+                    className="px-3 py-1 bg-surface rounded"
+                  >
+                    −
+                  </button>
+
+                  <span className="font-bold">{i.quantity}</span>
+
+                  <button
+                    onClick={() => adjustQuantity(i.id, i.quantity, 1)}
+                    className="px-3 py-1 bg-primary text-white rounded"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* MODAL */}
       {showForm && (
-        <div className="fixed inset-0 bg-black/40 animate-fade-in flex items-center justify-center z-50">
-          <div className="bg-white w-full max-w-lg p-6 rounded shadow space-y-4 animate-slide-in">
-            <div className="flex justify-between">
-              <h2 className="font-semibold text-lg">Add Item</h2>
-              <button onClick={() => setShowForm(false)}>✕</button>
-            </div>
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
+          <div className="bg-surface_lowest p-6 rounded-xl w-full max-w-md space-y-4">
+            <h2 className="font-bold text-lg">Add Item</h2>
 
             <form onSubmit={handleAddItem} className="space-y-3">
               <input
                 placeholder="Item"
-                value={newItem.item_name}
+                className="w-full px-3 py-2 rounded bg-surface_high"
                 onChange={(e) =>
                   setNewItem({ ...newItem, item_name: e.target.value })
                 }
-                required
-                className="border px-3 py-2 rounded w-full"
               />
 
               <div className="grid grid-cols-2 gap-3">
                 <input
                   type="number"
                   placeholder="Qty"
-                  value={newItem.quantity}
+                  className="px-3 py-2 rounded bg-surface_high"
                   onChange={(e) =>
                     setNewItem({ ...newItem, quantity: e.target.value })
                   }
-                  required
-                  className="border px-3 py-2 rounded"
                 />
 
                 <input
                   placeholder="Unit"
-                  value={newItem.unit}
+                  className="px-3 py-2 rounded bg-surface_high"
                   onChange={(e) =>
                     setNewItem({ ...newItem, unit: e.target.value })
                   }
-                  required
-                  className="border px-3 py-2 rounded"
                 />
               </div>
 
-              <select
-                value={newItem.category}
-                onChange={(e) =>
-                  setNewItem({ ...newItem, category: e.target.value })
-                }
-                className="border px-3 py-2 rounded w-full"
-              >
-                <option value="FOOD">Food</option>
-                <option value="MEDICAL">Medical</option>
-                <option value="WATER">Water</option>
-                <option value="OTHERS">Others</option>
-              </select>
-
-              <button
-                disabled={adding}
-                className={`w-full py-2 rounded text-white flex items-center justify-center gap-2 ${
-                  adding
-                    ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-indigo-600 hover:bg-indigo-700"
-                }`}
-              >
-                {adding && (
-                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                )}
+              <button className="w-full py-2 bg-primary text-white rounded">
                 {adding ? "Adding..." : "Add Item"}
               </button>
             </form>
           </div>
         </div>
       )}
-
-      {/* 🔥 TABLE */}
-      <div className="bg-white rounded-xl shadow overflow-hidden">
-        {loading ? (
-          <div className="p-6 text-center space-y-2">
-            <div className="animate-pulse text-slate-400">
-              Loading inventory...
-            </div>
-            <div className="h-1 bg-slate-200 rounded overflow-hidden">
-              <div className="h-full bg-indigo-500 animate-progress"></div>
-            </div>
-          </div>
-        ) : filtered.length === 0 ? (
-          <div className="p-6 text-center text-slate-500">No items found</div>
-        ) : (
-          <table className="w-full text-sm">
-            <thead className="bg-slate-100 text-left">
-              <tr>
-                <th className="p-3">Item</th>
-                <th>Category</th>
-                <th>Total</th>
-                <th>Reserved</th>
-                <th>Available</th>
-                <th>Update</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {filtered.map((item) => {
-                const available = item.quantity - item.reserved_quantity;
-
-                return (
-                  <tr
-                    key={item.id}
-                    className="border-t hover:bg-slate-50 transition animate-slide-in"
-                  >
-                    <td className="p-3 font-medium">{item.item_name}</td>
-
-                    <td>
-                      <span className="px-2 py-1 text-xs rounded-full bg-slate-100">
-                        {item.category}
-                      </span>
-                    </td>
-
-                    <td>
-                      {item.quantity} {item.unit}
-                    </td>
-
-                    <td className="text-slate-500">{item.reserved_quantity}</td>
-
-                    <td className="font-medium">{available}</td>
-
-                    <td>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() =>
-                            adjustQuantity(item.id, item.quantity, -1)
-                          }
-                          className="px-2 py-1 rounded bg-slate-200 hover:bg-slate-300 transition"
-                        >
-                          −
-                        </button>
-
-                        <input
-                          type="number"
-                          defaultValue={item.quantity}
-                          onBlur={(e) => updateExact(item.id, e.target.value)}
-                          className="w-16 text-center border rounded px-1 py-1"
-                        />
-
-                        <button
-                          onClick={() =>
-                            adjustQuantity(item.id, item.quantity, 1)
-                          }
-                          className="px-2 py-1 rounded bg-indigo-600 text-white hover:bg-indigo-700 transition"
-                        >
-                          +
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
-      </div>
     </div>
   );
 };
+
+const StatCard = ({ label, value, highlight }) => (
+  <div
+    className={`p-5 rounded-xl ${
+      highlight ? "bg-primary text-white" : "bg-surface_high"
+    }`}
+  >
+    <p className="text-xs">{label}</p>
+    <p className="text-2xl font-bold">{value}</p>
+  </div>
+);
+
+const MiniStat = ({ label, value }) => (
+  <div>
+    <p className="text-xs text-on_surface_variant">{label}</p>
+    <p className="font-bold">{value}</p>
+  </div>
+);
 
 export default Inventory;
