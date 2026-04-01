@@ -6,10 +6,28 @@ const Volunteers = () => {
   const [selected, setSelected] = useState(null);
   const [search, setSearch] = useState("");
 
+  const [showForm, setShowForm] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [form, setForm] = useState({
+    name: "",
+    phone_number: "",
+    zone: "",
+    skills: "",
+  });
+
   useEffect(() => {
     loadVolunteers();
     const i = setInterval(loadVolunteers, 5000);
     return () => clearInterval(i);
+  }, []);
+
+  // ESC to close modal
+  useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === "Escape") setShowForm(false);
+    };
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
   }, []);
 
   const loadVolunteers = async () => {
@@ -19,22 +37,49 @@ const Volunteers = () => {
     } catch {}
   };
 
+  const handleCreate = async () => {
+    if (!form.name || !form.phone_number) {
+      return alert("Name and phone required");
+    }
+
+    try {
+      setCreating(true);
+
+      await API.post("/volunteers", {
+        name: form.name,
+        phone_number: form.phone_number,
+        zone: form.zone || null,
+        skills: form.skills ? form.skills.split(",").map((s) => s.trim()) : [],
+      });
+
+      setForm({
+        name: "",
+        phone_number: "",
+        zone: "",
+        skills: "",
+      });
+
+      setShowForm(false);
+      loadVolunteers();
+    } catch (err) {
+      alert(err?.response?.data?.detail || "Failed to create volunteer");
+    } finally {
+      setCreating(false);
+    }
+  };
+
   const getReliability = (v) => {
     const total = v.completions + v.no_shows;
     if (total === 0) return 0;
     return Math.round((v.completions / total) * 100);
   };
 
-  // 🔥 FILTER + SORT
   const filtered = [...volunteers]
     .filter((v) => v.name.toLowerCase().includes(search.toLowerCase()))
     .sort((a, b) => {
-      // active first
       if (a.telegram_active !== b.telegram_active) {
         return b.telegram_active - a.telegram_active;
       }
-
-      // reliability next
       return getReliability(b) - getReliability(a);
     });
 
@@ -46,7 +91,7 @@ const Volunteers = () => {
 
   return (
     <div className="space-y-8">
-      {/* 🔥 HERO */}
+      {/* HERO */}
       <div className="bg-primary text-white rounded-2xl p-6 flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold">Volunteer Force</h1>
@@ -55,11 +100,92 @@ const Volunteers = () => {
           </p>
         </div>
 
-        <div className="text-right">
-          <p className="text-3xl font-bold">{volunteers.length}</p>
-          <p className="text-xs opacity-70">Active Volunteers</p>
+        <div className="flex items-center gap-4">
+          <div className="text-right">
+            <p className="text-3xl font-bold">{volunteers.length}</p>
+            <p className="text-xs opacity-70">Active Volunteers</p>
+          </div>
+
+          <button
+            onClick={() => setShowForm(true)}
+            className="bg-white text-primary px-4 py-2 rounded-lg text-sm font-semibold"
+          >
+            + Add
+          </button>
         </div>
       </div>
+
+      {/* 🔥 MODAL */}
+      {showForm && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+          onClick={() => setShowForm(false)}
+        >
+          <div
+            className="bg-surface_high w-full max-w-md p-6 rounded-2xl space-y-4 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* HEADER */}
+            <div className="flex justify-between items-center">
+              <h2 className="text-lg font-bold">Add Volunteer</h2>
+              <button
+                onClick={() => setShowForm(false)}
+                className="text-sm opacity-60 hover:opacity-100"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* FORM */}
+            <input
+              placeholder="Name"
+              value={form.name}
+              onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+              className="w-full px-3 py-2 rounded bg-surface"
+            />
+
+            <input
+              placeholder="Phone Number"
+              value={form.phone_number}
+              onChange={(e) =>
+                setForm((p) => ({
+                  ...p,
+                  phone_number: e.target.value,
+                }))
+              }
+              className="w-full px-3 py-2 rounded bg-surface"
+            />
+
+            <input
+              placeholder="Zone (optional)"
+              value={form.zone}
+              onChange={(e) => setForm((p) => ({ ...p, zone: e.target.value }))}
+              className="w-full px-3 py-2 rounded bg-surface"
+            />
+
+            <input
+              placeholder="Skills (comma separated)"
+              value={form.skills}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, skills: e.target.value }))
+              }
+              className="w-full px-3 py-2 rounded bg-surface"
+            />
+
+            <button
+              onClick={handleCreate}
+              disabled={creating}
+              className={`w-full py-2 rounded text-sm ${
+                creating
+                  ? "bg-gray-400 text-white"
+                  : "bg-primary text-white hover:opacity-90"
+              }`}
+            >
+              {creating ? "Creating..." : "Create Volunteer"}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* SEARCH */}
       <input
@@ -77,13 +203,11 @@ const Volunteers = () => {
               onClick={() => setSelected(v)}
               className="bg-surface_high p-5 rounded-xl flex gap-5 cursor-pointer hover:scale-[1.01] transition"
             >
-              {/* AVATAR */}
               <div className="w-14 h-14 rounded-xl bg-primary text-white flex items-center justify-center font-bold">
                 {v.name?.[0]}
               </div>
 
               <div className="flex-1">
-                {/* TOP */}
                 <div className="flex justify-between">
                   <div>
                     <p className="font-bold">{v.name}</p>
@@ -115,14 +239,12 @@ const Volunteers = () => {
                   </span>
                 </div>
 
-                {/* STATS */}
                 <div className="mt-4 grid grid-cols-3 gap-3">
                   <Stat label="Missions" value={v.completions} />
                   <Stat label="No Shows" value={v.no_shows} />
                   <Stat label="Reliability" value={`${getReliability(v)}%`} />
                 </div>
 
-                {/* SKILLS */}
                 <div className="mt-3 flex gap-2 flex-wrap">
                   {v.skills?.slice(0, 4).map((s, i) => (
                     <span
