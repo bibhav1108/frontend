@@ -1,7 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Dashboard from "./pages/Dashboard";
-import CreateNeed from "./pages/CreateNeed";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import Volunteers from "./pages/Volunteers";
@@ -32,17 +31,6 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <Dashboard />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/create"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <CreateNeed />
               </Layout>
             </ProtectedRoute>
           }
