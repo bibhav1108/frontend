@@ -9,26 +9,30 @@ const Inventory = () => {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("ALL");
   const [showForm, setShowForm] = useState(false);
+  const [formError, setFormError] = useState("");
+
+  const [editingId, setEditingId] = useState(null);
+  const [editValue, setEditValue] = useState("");
 
   const [newItem, setNewItem] = useState({
     item_name: "",
     quantity: "",
-    unit: "",
+    unit: "kilogram",
     category: "OTHERS",
   });
 
-  const fetchInventory = async () => {
+  const fetchInventory = async (showLoading = true) => {
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
       const res = await API.get("/inventory/");
       setItems(res.data || []);
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchInventory();
+    fetchInventory(true);
   }, []);
 
   const getAvailable = (i) => i.quantity - i.reserved_quantity;
@@ -43,25 +47,52 @@ const Inventory = () => {
   const total = items.reduce((a, b) => a + b.quantity, 0);
   const reserved = items.reduce((a, b) => a + b.reserved_quantity, 0);
 
-  const adjustQuantity = async (id, current, change) => {
-    await API.patch(`/inventory/${id}`, {
-      quantity: current + change,
-    });
-    fetchInventory();
+  const handleUpdateQuantity = async (id, newQuantity) => {
+    const finalQuantity = Math.max(0, Number(newQuantity));
+
+    // Optimistic UI update
+    setItems((prev) =>
+      prev.map((item) =>
+        item.id === id ? { ...item, quantity: finalQuantity } : item
+      )
+    );
+
+    try {
+      await API.patch(`/inventory/${id}`, {
+        quantity: finalQuantity,
+      });
+      fetchInventory(false);
+    } catch {
+      fetchInventory(false); // Revert on failure
+    }
+    setEditingId(null);
   };
 
   const handleAddItem = async (e) => {
     e.preventDefault();
+
+    if (!newItem.item_name || !newItem.quantity || !newItem.unit) {
+      setFormError("Please add the details to initiate");
+      return;
+    }
+
+    setFormError("");
     setAdding(true);
 
-    await API.post("/inventory/", {
-      ...newItem,
-      quantity: parseFloat(newItem.quantity),
-    });
+    try {
+      await API.post("/inventory/", {
+        ...newItem,
+        quantity: parseFloat(newItem.quantity),
+      });
 
-    setShowForm(false);
-    fetchInventory();
-    setAdding(false);
+      setShowForm(false);
+      fetchInventory(false);
+      setNewItem({ item_name: "", quantity: "", unit: "kilogram", category: "OTHERS" });
+    } catch {
+      setFormError("Failed to add item. Please try again.");
+    } finally {
+      setAdding(false);
+    }
   };
 
   return (
@@ -75,7 +106,7 @@ const Inventory = () => {
 
       {/* HEADER */}
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Inventory HQ</h1>
+        <h1 className="text-2xl font-bold">Inventory </h1>
 
         <button
           onClick={() => setShowForm(true)}
@@ -91,9 +122,8 @@ const Inventory = () => {
           <button
             key={f}
             onClick={() => setFilter(f)}
-            className={`px-3 py-1 rounded-full text-xs ${
-              filter === f ? "bg-primary text-white" : "bg-surface_high"
-            }`}
+            className={`px-3 py-1 rounded-full text-xs ${filter === f ? "bg-primary text-white" : "bg-surface_high"
+              }`}
           >
             {f}
           </button>
@@ -119,7 +149,7 @@ const Inventory = () => {
             return (
               <div
                 key={i.id}
-                className="bg-surface_high p-5 rounded-xl space-y-4"
+                className="bg-surface_high p-5 rounded-xl flex flex-col gap-4"
               >
                 {/* HEADER */}
                 <div className="flex justify-between">
@@ -145,22 +175,46 @@ const Inventory = () => {
                 )}
 
                 {/* CONTROLS */}
-                <div className="flex justify-between items-center">
-                  <button
-                    onClick={() => adjustQuantity(i.id, i.quantity, -1)}
-                    className="px-3 py-1 bg-surface rounded"
-                  >
-                    −
-                  </button>
-
-                  <span className="font-bold">{i.quantity}</span>
-
-                  <button
-                    onClick={() => adjustQuantity(i.id, i.quantity, 1)}
-                    className="px-3 py-1 bg-primary text-white rounded"
-                  >
-                    +
-                  </button>
+                <div className="pt-2 mt-auto">
+                  {editingId === i.id ? (
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        min="0"
+                        autoFocus
+                        value={editValue}
+                        onChange={(e) => {
+                          if (Number(e.target.value) >= 0 || e.target.value === "") {
+                            setEditValue(e.target.value);
+                          }
+                        }}
+                        className="w-full px-3 py-1.5 rounded-lg bg-surface text-sm font-semibold outline-none focus:ring-2 focus:ring-primary/40 border border-black/5"
+                      />
+                      <button
+                        onClick={() => handleUpdateQuantity(i.id, editValue)}
+                        className="px-3 py-1.5 bg-primary text-white text-xs font-bold rounded-lg hover:opacity-90 transition"
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={() => setEditingId(null)}
+                        className="px-3 py-1.5 bg-surface text-on_surface_variant text-xs font-bold rounded-lg hover:bg-black/5 transition"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        setEditingId(i.id);
+                        setEditValue(i.quantity);
+                      }}
+                      className="w-full flex items-center justify-center gap-2 py-2 text-sm font-semibold text-primary bg-primary/10 hover:bg-primary/20 rounded-lg transition"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">edit</span>
+                      Edit Quantity
+                    </button>
+                  )}
                 </div>
               </div>
             );
@@ -170,14 +224,28 @@ const Inventory = () => {
 
       {/* MODAL */}
       {showForm && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
-          <div className="bg-surface_lowest p-6 rounded-xl w-full max-w-md space-y-4">
+        <div className="fixed inset-0 z-50 bg-transparent flex items-center justify-center">
+          <div className="bg-surface_lowest p-6 rounded-xl w-full max-w-md space-y-4 relative">
+            <button
+              onClick={() => {
+                setShowForm(false);
+                setFormError("");
+              }}
+              className="absolute top-4 right-4 text-on_surface_variant hover:text-on_surface transition"
+            >
+              <span className="material-symbols-outlined text-[20px]">close</span>
+            </button>
             <h2 className="font-bold text-lg">Add Item</h2>
+
+            {formError && (
+              <div className="text-red-500 text-sm font-semibold">{formError}</div>
+            )}
 
             <form onSubmit={handleAddItem} className="space-y-3">
               <input
                 placeholder="Item"
-                className="w-full px-3 py-2 rounded bg-surface_high"
+                value={newItem.item_name}
+                className="w-full px-3 py-2 rounded bg-surface_high outline-none focus:ring-2 focus:ring-primary/40"
                 onChange={(e) =>
                   setNewItem({ ...newItem, item_name: e.target.value })
                 }
@@ -186,23 +254,31 @@ const Inventory = () => {
               <div className="grid grid-cols-2 gap-3">
                 <input
                   type="number"
+                  min="0"
                   placeholder="Qty"
-                  className="px-3 py-2 rounded bg-surface_high"
+                  value={newItem.quantity}
+                  className="px-3 py-2 rounded bg-surface_high outline-none focus:ring-2 focus:ring-primary/40"
                   onChange={(e) =>
                     setNewItem({ ...newItem, quantity: e.target.value })
                   }
                 />
 
-                <input
-                  placeholder="Unit"
-                  className="px-3 py-2 rounded bg-surface_high"
+                <select
+                  value={newItem.unit}
+                  className="px-3 py-2 rounded bg-surface_high outline-none focus:ring-2 focus:ring-primary/40"
                   onChange={(e) =>
                     setNewItem({ ...newItem, unit: e.target.value })
                   }
-                />
+                >
+                  <option value="" disabled>Select Unit</option>
+                  <option value="kilogram">kilogram</option>
+                  <option value="pound">pound</option>
+                  <option value="ounce">ounce</option>
+                  <option value="ton">ton</option>
+                </select>
               </div>
 
-              <button className="w-full py-2 bg-primary text-white rounded">
+              <button className="w-full py-2 bg-primary text-white rounded hover:opacity-90 transition">
                 {adding ? "Adding..." : "Add Item"}
               </button>
             </form>
@@ -215,9 +291,8 @@ const Inventory = () => {
 
 const StatCard = ({ label, value, highlight }) => (
   <div
-    className={`p-5 rounded-xl ${
-      highlight ? "bg-primary text-white" : "bg-surface_high"
-    }`}
+    className={`p-5 rounded-xl ${highlight ? "bg-primary text-white" : "bg-surface_high"
+      }`}
   >
     <p className="text-xs">{label}</p>
     <p className="text-2xl font-bold">{value}</p>
