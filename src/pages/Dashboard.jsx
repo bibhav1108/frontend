@@ -4,6 +4,7 @@ import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 
 const Dashboard = () => {
   const [needs, setNeeds] = useState([]);
+  const [campaigns, setCampaigns] = useState([]);
   const [volunteers, setVolunteers] = useState([]);
 
   useEffect(() => {
@@ -11,9 +12,14 @@ const Dashboard = () => {
       try {
         const n = await API.get("/needs");
         const v = await API.get("/volunteers/");
+        const c = await API.get("/campaigns");
+
         setNeeds(n.data || []);
         setVolunteers(v.data || []);
-      } catch {}
+        setCampaigns(c.data || []);
+      } catch (err) {
+        console.error(err);
+      }
     };
 
     load();
@@ -22,6 +28,10 @@ const Dashboard = () => {
   }, []);
 
   const center = [26.8467, 80.9462];
+
+  // ✅ FILTERS
+  const activeNeeds = needs.filter((n) => n.status === "OPEN");
+  const activeCampaigns = campaigns.filter((c) => c.status !== "COMPLETED");
 
   return (
     <div className="grid grid-cols-12 gap-8">
@@ -37,12 +47,18 @@ const Dashboard = () => {
 
         {/* STATS */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card title="Active Needs" value={needs.length} icon="inventory_2" />
           <Card
-            title="Active Missions"
-            value={needs.filter((n) => n.status !== "completed").length}
-            icon="rocket_launch"
+            title="Active Needs"
+            value={activeNeeds.length}
+            icon="inventory_2"
           />
+
+          <Card
+            title="Active Campaigns"
+            value={activeCampaigns.length}
+            icon="campaign"
+          />
+
           <Card title="Volunteers" value={volunteers.length} icon="groups" />
         </div>
 
@@ -54,7 +70,9 @@ const Dashboard = () => {
             className="h-full w-full rounded-xl"
           >
             <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-            {needs.map((n) => (
+
+            {/* show ONLY active needs */}
+            {activeNeeds.map((n) => (
               <Marker
                 key={n.id}
                 position={[24 + Math.random() * 6, 78 + Math.random() * 6]}
@@ -67,7 +85,7 @@ const Dashboard = () => {
           </MapContainer>
         </div>
 
-        {/* 🔥 TOP VOLUNTEERS (MOVED HERE) */}
+        {/* TOP VOLUNTEERS */}
         <div className="bg-surface_high rounded-xl p-5 space-y-5">
           <h3 className="font-semibold">Top Volunteers</h3>
 
@@ -80,7 +98,6 @@ const Dashboard = () => {
               return (
                 <div key={v.id} className="space-y-2">
                   <div className="flex items-center gap-3">
-                    {/* avatar */}
                     <div className="w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold">
                       {v.name?.[0]}
                     </div>
@@ -92,13 +109,11 @@ const Dashboard = () => {
                       </p>
                     </div>
 
-                    {/* tier */}
                     <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
                       {v.trust_tier}
                     </span>
                   </div>
 
-                  {/* progress */}
                   <div className="w-full h-2 bg-surface rounded-full">
                     <div
                       className="h-full bg-primary rounded-full"
@@ -113,7 +128,6 @@ const Dashboard = () => {
 
       {/* ================= RIGHT ================= */}
       <div className="col-span-12 lg:col-span-4">
-        {/* 🔥 RECENT EVENTS PANEL (EMPTY FOR NOW) */}
         <div className="bg-surface_high rounded-xl p-5 h-full min-h-[500px]">
           <h3 className="font-semibold mb-4">Recent Events</h3>
 
@@ -126,7 +140,7 @@ const Dashboard = () => {
   );
 };
 
-/* ================= COMPONENTS ================= */
+/* COMPONENT */
 
 const Card = ({ title, value, icon }) => (
   <div className="bg-surface_high p-5 rounded-xl">
