@@ -279,6 +279,7 @@ const Campaigns = () => {
     const q = searchTerm.trim().toLowerCase();
 
     return [...campaigns]
+      .filter((c) => c.status === "ACTIVE" || c.status === "PLANNED")
       .filter((c) => filterType === "ALL" || c.type === filterType)
       .filter((c) => {
         if (!q) return true;
@@ -384,10 +385,10 @@ const Campaigns = () => {
 
         <div className="flex flex-wrap gap-3">
           <Link
-            to="/dispatches"
+            to="/campaign-history"
             className="rounded-xl bg-slate-100 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-200"
           >
-            View Past Deployments
+            View Past Campaigns
           </Link>
           <button
             onClick={() => setShowForm(true)}
@@ -436,13 +437,6 @@ const Campaigns = () => {
         <section className="col-span-12 space-y-6 lg:col-span-7">
           <div className="rounded-2xl border border-white/30 bg-white/70 p-6 shadow-[0_40px_60px_-20px_rgba(32,25,36,0.08)] backdrop-blur-xl">
             <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <div>
-                <h2 className="text-xl font-bold text-slate-900">Campaigns</h2>
-                <p className="text-sm text-slate-500">
-                  Browse, sort, and inspect campaign details.
-                </p>
-              </div>
-
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
                 <div className="relative">
                   <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[20px] text-slate-400">
