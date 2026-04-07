@@ -289,26 +289,61 @@ const Landing = () => {
               Join the platform and start coordinating resources more effectively today.
             </p>
 
-            <div className="flex justify-center gap-6 mt-10 flex-wrap pt-6">
-              <Link to="/register" className="bg-primary hover:bg-primary_container text-white px-10 py-5 rounded-2xl font-bold transition-all duration-300 shadow-soft hover:shadow-lg hover:-translate-y-1 text-lg">
-                Start For Free
-              </Link>
-
-              <Link className="bg-white text-primary hover:bg-surface_lowest px-10 py-5 rounded-2xl font-bold transition-all duration-300 shadow-soft border border-primary/10 hover:border-primary/30 text-lg">
-                Request Demo
-              </Link>
-            </div>
+            {/* CTA buttons removed as requested */}
           </motion.div>
         </section>
       </main>
 
       {/* ================= FOOTER ================= */}
-      <footer className="py-12 px-6 bg-surface_lowest border-t border-surface_high">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="font-outfit font-bold text-primary text-xl tracking-tight">
-            Sahyog Sync<span className="text-azure">.</span>
+      <footer className="py-20 px-6 bg-[#001b2b] text-white border-t border-white/5">
+        <div className="max-w-7xl mx-auto flex flex-col items-center text-center space-y-12">
+          
+          {/* Social Icons */}
+          <div className="flex gap-6 flex-wrap justify-center">
+            {[
+              { id: 'fb', icon: <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/> },
+              { id: 'ig', icon: <><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></> },
+              { id: 'tw', icon: <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/> },
+              { id: 'gp', icon: <path d="M12.99 6H21.5v3.62h-4.39c.35.88.58 1.83.58 2.38 0 2.87-2.33 5.2-5.2 5.2a5.18 5.18 0 0 1-5.12-4.14 5.2 5.2 0 0 1 4.05-6.04c.33-.08.68-.12 1.03-.12.37 0 .73.04 1.08.12l.14.04zM12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/> },
+              { id: 'yt', icon: <><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33 2.78 2.78 0 0 0 1.94 2C5.12 19.5 12 19.5 12 19.5s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.33 29 29 0 0 0-.46-5.33z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/></> }
+            ].map(({ id, icon }) => (
+              <a 
+                key={id} 
+                href="#" 
+                className="w-12 h-12 rounded-full bg-white flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-lg group"
+                aria-label={id}
+              >
+                <svg 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  className="w-6 h-6 text-[#001b2b] transition-transform duration-300 group-hover:rotate-6"
+                >
+                  {icon}
+                </svg>
+              </a>
+            ))}
           </div>
-          <div className="text-sm text-on_surface_variant font-medium">
+
+          {/* Navigation Links */}
+          <nav className="flex gap-10 flex-wrap justify-center uppercase tracking-widest text-sm font-bold">
+            {['Home', 'About', 'Contact Us', 'Our Team'].map((link) => (
+              <a 
+                key={link} 
+                href="#" 
+                className="hover:text-primary transition-colors duration-300 relative group"
+              >
+                {link}
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full" />
+              </a>
+            ))}
+          </nav>
+
+          {/* Copyright */}
+          <div className="pt-8 border-t border-white/5 w-full text-blue-100/40 text-sm font-medium">
             © {new Date().getFullYear()} Sahyog Sync — Platform for resource coordination
           </div>
         </div>

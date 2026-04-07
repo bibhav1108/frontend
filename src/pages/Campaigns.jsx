@@ -201,9 +201,9 @@ const Campaigns = () => {
         location_address: trimmedLocation || null,
         required_skills: skills
           ? skills
-              .split(",")
-              .map((s) => s.trim())
-              .filter(Boolean)
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)
           : [],
       });
 
@@ -481,9 +481,9 @@ const Campaigns = () => {
                     const isSelected = selectedCampaign?.id === c.id;
                     const itemsCount = c.items
                       ? Object.values(c.items).reduce(
-                          (sum, v) => sum + (Number(v) || 0),
-                          0,
-                        )
+                        (sum, v) => sum + (Number(v) || 0),
+                        0,
+                      )
                       : 0;
 
                     return (
@@ -497,11 +497,10 @@ const Campaigns = () => {
                             openDetails(c);
                           }
                         }}
-                        className={`cursor-pointer rounded-2xl border bg-white p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg ${
-                          isSelected
-                            ? "border-blue-300 ring-2 ring-blue-100"
-                            : "border-slate-200"
-                        }`}
+                        className={`cursor-pointer rounded-2xl border bg-white p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg ${isSelected
+                          ? "border-blue-300 ring-2 ring-blue-100"
+                          : "border-slate-200"
+                          }`}
                       >
                         <div className="mb-3 flex items-start justify-between gap-3">
                           <span
@@ -569,11 +568,10 @@ const Campaigns = () => {
                           <button
                             key={page}
                             onClick={() => setCurrentPage(page)}
-                            className={`min-w-10 rounded-lg px-3 py-2 text-sm font-semibold transition ${
-                              currentPage === page
-                                ? "bg-blue-600 text-white"
-                                : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                            }`}
+                            className={`min-w-10 rounded-lg px-3 py-2 text-sm font-semibold transition ${currentPage === page
+                              ? "bg-blue-600 text-white"
+                              : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                              }`}
                           >
                             {page}
                           </button>
@@ -605,7 +603,7 @@ const Campaigns = () => {
                 <h3 className="text-lg font-bold text-slate-900">
                   Volunteer Readiness
                 </h3>
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-slate-800">
                   Approved volunteers for ongoing campaigns.
                 </p>
               </div>
@@ -621,7 +619,7 @@ const Campaigns = () => {
               </div>
             ) : readiness.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center">
-                <p className="text-sm text-slate-600">
+                <p className="text-sm text-slate-800">
                   No ongoing campaigns with approved volunteers yet.
                 </p>
               </div>
@@ -652,7 +650,7 @@ const Campaigns = () => {
                 <h3 className="text-lg font-bold text-slate-900">
                   Quick Actions
                 </h3>
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-slate-800">
                   Fast navigation for mission ops.
                 </p>
               </div>
@@ -713,11 +711,10 @@ const Campaigns = () => {
                     triggerBroadcast(selectedCampaign.id);
                   }}
                   disabled={selectedCampaign.status === "COMPLETED"}
-                  className={`w-full rounded-xl px-4 py-3 text-sm font-semibold text-white transition active:scale-[0.98] ${
-                    selectedCampaign.status === "COMPLETED"
-                      ? "cursor-not-allowed bg-slate-300 opacity-70"
-                      : "hover:opacity-95"
-                  }`}
+                  className={`w-full rounded-xl px-4 py-3 text-sm font-semibold text-white transition active:scale-[0.98] ${selectedCampaign.status === "COMPLETED"
+                    ? "cursor-not-allowed bg-slate-300 opacity-70"
+                    : "hover:opacity-95"
+                    }`}
                   style={{
                     background:
                       selectedCampaign.status === "COMPLETED"
@@ -731,7 +728,7 @@ const Campaigns = () => {
                 {selectedCampaign.status === "COMPLETED" ? (
                   <button
                     disabled
-                    className="cursor-not-allowed rounded-xl bg-emerald-100 px-4 py-3 text-sm font-semibold text-emerald-700 opacity-80"
+                    className="cursor-not-allowed rounded-xl bg-emerald-100 px-4 py-3 text-sm font-semibold text-emerald-900 opacity-80"
                   >
                     Completed
                   </button>
@@ -852,7 +849,7 @@ const Campaigns = () => {
                   </div>
 
                   {selectedCampaign.items &&
-                  Object.keys(selectedCampaign.items).length > 0 ? (
+                    Object.keys(selectedCampaign.items).length > 0 ? (
                     <div className="space-y-2">
                       {Object.entries(selectedCampaign.items).map(([k, v]) => (
                         <div
@@ -907,11 +904,10 @@ const Campaigns = () => {
                       triggerBroadcast(selectedCampaign.id);
                     }}
                     disabled={selectedCampaign.status === "COMPLETED"}
-                    className={`w-full rounded-xl px-4 py-3 text-sm font-semibold text-white transition ${
-                      selectedCampaign.status === "COMPLETED"
-                        ? "cursor-not-allowed bg-slate-300 opacity-70"
-                        : "hover:opacity-95"
-                    }`}
+                    className={`w-full rounded-xl px-4 py-3 text-sm font-semibold text-white transition ${selectedCampaign.status === "COMPLETED"
+                      ? "cursor-not-allowed bg-slate-300 opacity-70"
+                      : "hover:opacity-95"
+                      }`}
                     style={{
                       background:
                         selectedCampaign.status === "COMPLETED"
@@ -985,13 +981,12 @@ const Campaigns = () => {
                               </p>
 
                               <span
-                                className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest ${
-                                  v.status === "APPROVED"
-                                    ? "bg-emerald-100 text-emerald-700"
-                                    : v.status === "REJECTED"
-                                      ? "bg-rose-100 text-rose-700"
-                                      : "bg-amber-100 text-amber-700"
-                                }`}
+                                className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest ${v.status === "APPROVED"
+                                  ? "bg-emerald-100 text-emerald-700"
+                                  : v.status === "REJECTED"
+                                    ? "bg-rose-100 text-rose-700"
+                                    : "bg-amber-100 text-amber-700"
+                                  }`}
                               >
                                 {v.status}
                               </span>
@@ -1282,22 +1277,22 @@ const StatCard = ({ label, value, hint, icon }) => (
       <div className="rounded-2xl bg-slate-100 p-3 text-blue-600">
         <span className="material-symbols-outlined">{icon}</span>
       </div>
-      <span className="text-xs font-bold uppercase tracking-widest text-slate-400">
+      <span className="text-xs font-bold uppercase tracking-widest text-slate-500">
         Live
       </span>
     </div>
 
-    <p className="mt-6 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">
+    <p className="mt-6 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-600">
       {label}
     </p>
     <p className="mt-1 text-3xl font-black text-slate-900">{value}</p>
-    <p className="mt-2 text-xs text-slate-500">{hint}</p>
+    <p className="mt-2 text-xs text-slate-600 font-medium">{hint}</p>
   </div>
 );
 
 const Field = ({ label, children }) => (
   <label className="block space-y-2">
-    <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">
+    <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-800">
       {label}
     </span>
     {children}

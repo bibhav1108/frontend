@@ -38,6 +38,7 @@ const Layout = ({ children }) => {
   const [org, setOrg] = useState(null);
 
   const [profileOpen, setProfileOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 768);
 
   const prevIdsRef = useRef(new Set());
@@ -145,6 +146,9 @@ const Layout = ({ children }) => {
     const handleClickOutside = (e) => {
       if (!e.target.closest("[data-profile-dropdown]")) {
         setProfileOpen(false);
+      }
+      if (!e.target.closest("[data-settings-dropdown]")) {
+        setSettingsOpen(false);
       }
       if (!e.target.closest("[data-org-dropdown]")) {
         // no org dropdown currently, but keeping structure safe
@@ -314,6 +318,49 @@ const Layout = ({ children }) => {
             )}
           </button>
 
+          {/* Settings dropdown */}
+          <div className="relative" data-settings-dropdown>
+            <button
+              onClick={() => {
+                setSettingsOpen((p) => !p);
+                setShowNotifications(false);
+                setProfileOpen(false);
+              }}
+              className="relative rounded-xl p-2 text-on_surface_variant transition hover:bg-white/5 hover:text-on_surface"
+              title="Settings"
+            >
+              <span className="material-symbols-outlined text-[24px]">
+                settings
+              </span>
+            </button>
+
+            {settingsOpen && (
+              <div className="absolute right-0 mt-3 w-56 rounded-xl border border-white/5 bg-surface_lowest p-2 shadow-[0_10px_30px_rgba(0,0,0,0.15)] animate-[fadeIn_0.2s_ease] z-[1000]">
+                <div className="absolute right-4 top-0 h-3 w-3 -translate-y-1/2 rotate-45 border-l border-t border-white/5 bg-surface_lowest" />
+                <div className="space-y-1">
+                  {[
+                    { label: "Profile", icon: "person" },
+                    { label: "Organisation", icon: "corporate_fare" },
+                    { label: "Review Us", icon: "star" },
+                    { label: "Contact Us", icon: "support_agent" },
+                    { label: "Help Center", icon: "help" },
+                    { label: "More", icon: "more_horiz" },
+                  ].map((item) => (
+                    <button
+                      key={item.label}
+                      className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-on_surface_variant hover:bg-white/5 hover:text-on_surface transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-[20px]">
+                        {item.icon}
+                      </span>
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* User profile dropdown */}
           {user && (
             <div className="relative" data-profile-dropdown>
@@ -321,6 +368,7 @@ const Layout = ({ children }) => {
                 onClick={() => {
                   setProfileOpen((p) => !p);
                   setShowNotifications(false);
+                  setSettingsOpen(false);
                 }}
                 className="flex items-center gap-2 rounded-xl bg-surface_high px-3 py-2 transition-all duration-200 hover:scale-[1.01] hover:bg-white/5"
               >
