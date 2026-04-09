@@ -14,7 +14,8 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Campaigns from "./pages/Campaigns";
 import MissionResponse from "./pages/MissionResponse";
 import CampaignHistory from "./pages/CampaignHistory";
-
+import MarketplaceAlerts from "./pages/MarketplaceAlerts";
+import MarketplaceStatsPage from "./pages/MarketplaceStats";
 function App() {
   return (
     <BrowserRouter>
@@ -54,6 +55,28 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <Marketplace />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/marketplace-stats"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <MarketplaceStatsPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/alerts"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <MarketplaceAlerts />
               </Layout>
             </ProtectedRoute>
           }
