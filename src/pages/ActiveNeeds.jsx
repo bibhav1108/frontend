@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import API from "../services/api";
 import { useNavigate } from "react-router-dom";
 import DispatchVolunteersModal from "../components/DispatchVolunteersModal";
+import Skeleton from "../components/Skeleton";
 
 const ActiveNeeds = ({ sidebarOpen }) => {
   const navigate = useNavigate();
@@ -47,81 +48,121 @@ const ActiveNeeds = ({ sidebarOpen }) => {
     });
 
   const urgencyBorder = (u) => {
-    if (u === "HIGH") return "border-red-500";
-    if (u === "MEDIUM") return "border-yellow-400";
-    return "border-blue-400";
+    if (u === "HIGH") return "border-red-500/70";
+    if (u === "MEDIUM") return "border-yellow-400/70";
+    return "border-blue-400/70";
+  };
+
+  const statusStyle = (status) => {
+    if (status === "OPEN") return "bg-green-500/20 text-green-400";
+    if (status === "DISPATCHED") return "bg-blue-500/20 text-blue-400";
+    return "bg-gray-500/20 text-gray-300";
   };
 
   return (
     <div className="space-y-6">
       {/* HEADER */}
-      <div className="flex items-center gap-3">
-        {/* 🔙 BACK BUTTON */}
-        <button
-          onClick={() => navigate("/marketplace")}
-          className="px-3 py-1 rounded bg-surface_high hover:bg-white/5 text-sm"
-        >
-          ← Back
-        </button>
+      <div className="rounded-2xl border border-white/10 bg-surface_high/90 p-6 shadow-lg shadow-black/10">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => navigate("/marketplace")}
+              className="px-3 py-2 text-sm rounded-xl border border-white/10 bg-surface hover:bg-white/5"
+            >
+              ← Back
+            </button>
 
-        <h1 className="text-2xl font-bold">Active Needs</h1>
+            <div>
+              <h1 className="text-2xl font-bold">Active Needs</h1>
+              <p className="text-sm text-on_surface_variant mt-1">
+                Monitor and dispatch incoming needs
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* FILTER */}
+        <div className="mt-4 flex gap-2 flex-wrap">
+          {["ALL", "OPEN", "IN_PROGRESS"].map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`px-3 py-1.5 rounded-lg text-xs transition ${
+                filter === f
+                  ? "bg-primary text-white"
+                  : "bg-surface border border-white/10 hover:bg-white/5"
+              }`}
+            >
+              {f.replace("_", " ")}
+            </button>
+          ))}
+        </div>
       </div>
 
+      {/* ERROR */}
       {error && (
-        <div className="bg-red-100 text-red-600 text-sm p-3 rounded">
+        <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
           {error}
         </div>
       )}
 
-      {/* FILTER */}
-      <div className="flex gap-2 flex-wrap">
-        {["ALL", "OPEN", "IN_PROGRESS"].map((f) => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={`px-3 py-1 rounded-full text-xs ${
-              filter === f
-                ? "bg-primary text-white"
-                : "bg-surface_high hover:bg-white/5"
-            }`}
-          >
-            {f}
-          </button>
-        ))}
-      </div>
-
       {/* CONTENT */}
       {initialLoading ? (
-        <p>Loading...</p>
+        <div className="space-y-4">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div
+              key={i}
+              className="relative overflow-hidden rounded-2xl border border-white/5 bg-surface_high p-5"
+            >
+              <div className="absolute inset-0 -translate-x-full animate-shimmer bg-shimmer pointer-events-none" />
+
+              <div className="space-y-3">
+                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-3 w-full" />
+                <Skeleton className="h-3 w-3/4" />
+
+                <div className="flex justify-between items-center pt-2">
+                  <Skeleton className="h-3 w-32" />
+                  <Skeleton className="h-8 w-24" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       ) : filtered.length === 0 ? (
-        <p>No needs</p>
+        <div className="rounded-2xl border border-white/10 bg-surface_high/90 p-10 text-center text-on_surface_variant">
+          No active needs
+        </div>
       ) : (
         <div className="space-y-4">
-          {filtered.map((n) => (
+          {filtered.map((n, i) => (
             <div
               key={n.id}
-              className={`border-l-4 ${urgencyBorder(
-                n.urgency,
-              )} bg-surface_high p-4 rounded-xl`}
+              className={`rounded-2xl border bg-surface_high p-5 transition hover:bg-white/5 animate-fadeIn
+              ${urgencyBorder(n.urgency)}
+              `}
+              style={{ animationDelay: `${i * 40}ms` }}
             >
-              {/* INFO */}
-              <div className="flex justify-between">
-                <div>
-                  <p className="font-semibold">
+              {/* TOP */}
+              <div className="flex justify-between gap-4">
+                <div className="flex-1">
+                  <p className="font-semibold text-on_surface">
                     {n.type} • {n.quantity}
                   </p>
-                  <p className="text-sm">{n.description}</p>
-                  <p className="text-xs text-on_surface_variant">
+
+                  <p className="text-sm text-on_surface_variant mt-1 line-clamp-2">
+                    {n.description}
+                  </p>
+
+                  <p className="text-xs text-on_surface_variant mt-2">
                     📍 {n.pickup_address}
                   </p>
                 </div>
 
                 <span
-                  className={`text-xs px-3 py-1.5 rounded-full font-bold h-fit inline-flex items-center justify-center shadow-sm ${
-                    n.status === "OPEN"
-                      ? "bg-green-200 text-green-900 border border-green-300"
-                      : "bg-gray-300 text-gray-900 border border-gray-400"
-                  }`}
+                  className={`text-xs px-2 py-1 rounded-lg h-fit ${statusStyle(
+                    n.status,
+                  )}`}
                 >
                   {n.status === "OPEN"
                     ? "Open"
@@ -133,24 +174,26 @@ const ActiveNeeds = ({ sidebarOpen }) => {
 
               {/* ACTION */}
               {n.status === "OPEN" && (
-                <button
-                  onClick={() =>
-                    setDispatchModal({
-                      open: true,
-                      needId: n.id,
-                    })
-                  }
-                  className="mt-3 text-xs px-4 py-2 rounded bg-primary text-white hover:opacity-90"
-                >
-                  Dispatch Volunteers
-                </button>
+                <div className="mt-4 flex justify-end">
+                  <button
+                    onClick={() =>
+                      setDispatchModal({
+                        open: true,
+                        needId: n.id,
+                      })
+                    }
+                    className="px-4 py-2 rounded-xl text-sm bg-primary text-white hover:opacity-90"
+                  >
+                    Dispatch Volunteers
+                  </button>
+                </div>
               )}
             </div>
           ))}
         </div>
       )}
 
-      {/* 🔥 MODAL */}
+      {/* MODAL */}
       <DispatchVolunteersModal
         open={dispatchModal.open}
         needId={dispatchModal.needId}
