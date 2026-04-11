@@ -28,6 +28,7 @@ const Login = () => {
       params.append("username", email);
       params.append("password", password);
 
+      // 🔐 LOGIN
       const res = await API.post("/auth/login", params, {
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
@@ -36,11 +37,26 @@ const Login = () => {
 
       const data = res.data;
 
+      // ✅ STORE EVERYTHING
       localStorage.setItem("token", data.access_token);
-      localStorage.setItem("org_id", data.org_id);
-      localStorage.setItem("org_name", data.org_name);
+      localStorage.setItem("role", data.role);
+      localStorage.setItem("org_id", data.org_id || "");
+      localStorage.setItem("org_name", data.org_name || "");
 
-      navigate("/dashboard");
+      // 🚀 REDIRECT BASED ON ROLE
+      switch (data.role) {
+        case "VOLUNTEER":
+          navigate("/volunteer/profile");
+          break;
+
+        case "NGO_ADMIN":
+        case "NGO_COORDINATOR":
+          navigate("/dashboard");
+          break;
+
+        default:
+          navigate("/");
+      }
     } catch (err) {
       setError(err.response?.data?.detail || "Login failed");
     } finally {
@@ -50,28 +66,23 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-surface flex items-center justify-center px-6 relative overflow-hidden">
-      {/* background glow */}
       <div className="absolute top-[-10%] right-[-10%] w-[400px] h-[400px] bg-primary/10 blur-[100px] rounded-full" />
 
       <div className="w-full max-w-md relative z-10">
-        {/* CARD */}
         <div className="bg-surface_lowest p-10 rounded-xl shadow-soft">
-          {/* HEADER */}
-          <div className="text-center mb-8 space-y-0">
+          <div className="text-center mb-8">
             <img src={logo} className="w-40 h-40 mx-auto" />
-
             <p className="text-sm text-on_surface_variant">
               Sign in to continue
             </p>
           </div>
 
-          {/* FORM */}
           <form onSubmit={handleLogin} className="space-y-6">
             <Input
               label="Email Address"
               value={email}
               setValue={setEmail}
-              type="email"
+              type="text"
             />
 
             <Input
@@ -81,12 +92,10 @@ const Login = () => {
               type="password"
             />
 
-            {/* ERROR */}
             {error && (
               <p className="text-red-500 text-sm text-center">{error}</p>
             )}
 
-            {/* BUTTON */}
             <button
               type="submit"
               disabled={loading}
@@ -96,7 +105,6 @@ const Login = () => {
             </button>
           </form>
 
-          {/* FOOTER */}
           <p className="text-sm text-center mt-6">
             Don’t have an account?{" "}
             <span
@@ -108,7 +116,6 @@ const Login = () => {
           </p>
         </div>
 
-        {/* bottom links */}
         <div className="mt-6 text-center text-xs text-on_surface_variant">
           <span className="cursor-pointer hover:text-primary">Privacy</span>
           {" • "}
@@ -119,7 +126,7 @@ const Login = () => {
   );
 };
 
-/* ✅ FIXED INPUT COMPONENT (no overlap after blur) */
+/* INPUT COMPONENT */
 const Input = ({ label, value, setValue, type = "text" }) => {
   const isActive = value && value.length > 0;
 
@@ -140,13 +147,7 @@ const Input = ({ label, value, setValue, type = "text" }) => {
         className={`
           absolute left-3 transition-all duration-200
           pointer-events-none text-on_surface_variant
-
-          ${
-            isActive
-              ? "top-1 text-xs"
-              : "top-1/2 -translate-y-1/2 text-sm"
-          }
-
+          ${isActive ? "top-1 text-xs" : "top-1/2 -translate-y-1/2 text-sm"}
           peer-focus:top-1 peer-focus:translate-y-0
           peer-focus:text-xs
         `}
