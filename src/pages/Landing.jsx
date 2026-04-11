@@ -29,7 +29,7 @@ const Landing = () => {
           <div className="absolute bottom-[-10%] left-[-5%] w-[400px] h-[400px] bg-azure/10 blur-[100px] rounded-full -z-10" />
 
           <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
-            <motion.div 
+            <motion.div
               initial="hidden"
               animate="visible"
               variants={staggerContainer}
@@ -59,7 +59,7 @@ const Landing = () => {
             </motion.div>
 
             {/* Hero Image */}
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, x: 50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8, delay: 0.2 }}
@@ -72,7 +72,7 @@ const Landing = () => {
                   className="rounded-xl w-full h-[500px] object-cover shadow-inner"
                 />
 
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 1 }}
@@ -92,9 +92,9 @@ const Landing = () => {
         {/* ================= PROBLEM ================= */}
         <section className="py-32 px-6 md:px-16 bg-surface_lowest relative overflow-hidden">
           <div className="absolute top-0 right-0 w-full h-px bg-gradient-to-r from-transparent via-primary/10 to-transparent"></div>
-          
+
           <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-20 items-center">
-            <motion.div 
+            <motion.div
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true, margin: "-100px" }}
@@ -113,7 +113,7 @@ const Landing = () => {
                   className="bg-surface p-6 rounded-2xl shadow-soft hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border border-primary/5 hover:border-primary/20 group"
                 >
                   <div className="w-10 h-10 rounded-full bg-azure/10 flex items-center justify-center mb-4 group-hover:bg-primary transition-colors duration-300">
-                    <span className="text-primary group-hover:text-white font-bold text-sm">0{i+1}</span>
+                    <span className="text-primary group-hover:text-white font-bold text-sm">0{i + 1}</span>
                   </div>
                   <h4 className="font-outfit font-bold mb-2 text-on_surface group-hover:text-primary transition-colors">{item.title}</h4>
                   <p className="text-sm text-on_surface_variant leading-relaxed">
@@ -123,7 +123,7 @@ const Landing = () => {
               ))}
             </motion.div>
 
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, x: 50 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
@@ -131,7 +131,7 @@ const Landing = () => {
               className="space-y-8"
             >
               <h2 className="text-4xl lg:text-5xl font-outfit font-extrabold leading-tight">
-                Focus on <span className="text-transparent bg-clip-text bg-primaryGradient">impact</span>,<br/>not manual process.
+                Focus on <span className="text-transparent bg-clip-text bg-primaryGradient">impact</span>,<br />not manual process.
               </h2>
 
               <p className="text-lg text-on_surface_variant leading-relaxed">
@@ -150,7 +150,7 @@ const Landing = () => {
         {/* ================= FEATURES ================= */}
         <section className="py-32 px-6 md:px-16 bg-surface relative">
           <div className="max-w-7xl mx-auto">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -164,7 +164,7 @@ const Landing = () => {
               </p>
             </motion.div>
 
-            <motion.div 
+            <motion.div
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true }}
@@ -209,7 +209,7 @@ const Landing = () => {
               {/* Feature 4 */}
               <motion.div variants={fadeIn} className="md:col-span-8 bg-surface_high p-8 rounded-3xl shadow-soft hover:shadow-lg transition-all duration-300 border border-transparent hover:border-primary/10 overflow-hidden relative">
                 <div className="absolute right-0 bottom-0 opacity-10">
-                  <svg width="200" height="200" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22ZM11 15.5962L7.29289 11.8891L5.87868 13.3033L11 18.4246L18.4246 11L17.0104 9.58579L11 15.5962Z"/></svg>
+                  <svg width="200" height="200" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22ZM11 15.5962L7.29289 11.8891L5.87868 13.3033L11 18.4246L18.4246 11L17.0104 9.58579L11 15.5962Z" /></svg>
                 </div>
                 <h3 className="text-2xl font-outfit font-bold mb-3">Rapid Response Support</h3>
                 <p className="text-on_surface_variant">
@@ -221,11 +221,11 @@ const Landing = () => {
         </section>
 
         {/* ================= DARK ================= */}
-        <section className="py-32 px-6 md:px-16 bg-[#001e2d] text-white overflow-hidden relative">
+        <section className="py-32 px-6 md:px-16 bg-[#1A2F2F] text-white overflow-hidden relative">
           <div className="absolute top-0 right-0 w-96 h-96 bg-primary/20 blur-[120px] rounded-full"></div>
-          
+
           <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-20 items-center">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, x: -50 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
@@ -235,9 +235,9 @@ const Landing = () => {
               <div className="inline-block px-4 py-1.5 rounded-full border border-primary/30 text-primary_container text-xs font-bold uppercase tracking-wider">
                 Network Effect
               </div>
-              
+
               <h2 className="text-4xl md:text-5xl font-outfit font-extrabold leading-tight text-white">
-                Building Better <br/>Coordination Systems
+                Building Better <br />Coordination Systems
               </h2>
 
               <p className="text-lg text-blue-100/70 max-w-md leading-relaxed">
@@ -254,14 +254,14 @@ const Landing = () => {
               </ul>
             </motion.div>
 
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               transition={{ duration: 0.8 }}
               className="rounded-3xl overflow-hidden shadow-2xl relative"
             >
-              <div className="absolute inset-0 bg-gradient-to-t from-[#001e2d] via-transparent to-transparent z-10"></div>
+              <div className="absolute inset-0 bg-gradient-to-t from-[#1A2F2F] via-transparent to-transparent z-10"></div>
               <img
                 src="https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=1200&q=80"
                 alt="Logistics Coordination"
@@ -274,8 +274,8 @@ const Landing = () => {
         {/* ================= CTA ================= */}
         <section className="py-32 px-6 text-center bg-surface relative overflow-hidden">
           <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5 mix-blend-overlay"></div>
-          
-          <motion.div 
+
+          <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -295,32 +295,32 @@ const Landing = () => {
       </main>
 
       {/* ================= FOOTER ================= */}
-      <footer className="py-20 px-6 bg-[#001b2b] text-white border-t border-white/5">
+      <footer className="py-20 px-6 bg-[#142424] text-white border-t border-white/5">
         <div className="max-w-7xl mx-auto flex flex-col items-center text-center space-y-12">
-          
+
           {/* Social Icons */}
           <div className="flex gap-6 flex-wrap justify-center">
             {[
-              { id: 'fb', icon: <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/> },
-              { id: 'ig', icon: <><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></> },
-              { id: 'tw', icon: <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/> },
-              { id: 'gp', icon: <path d="M12.99 6H21.5v3.62h-4.39c.35.88.58 1.83.58 2.38 0 2.87-2.33 5.2-5.2 5.2a5.18 5.18 0 0 1-5.12-4.14 5.2 5.2 0 0 1 4.05-6.04c.33-.08.68-.12 1.03-.12.37 0 .73.04 1.08.12l.14.04zM12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/> },
-              { id: 'yt', icon: <><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33 2.78 2.78 0 0 0 1.94 2C5.12 19.5 12 19.5 12 19.5s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.33 29 29 0 0 0-.46-5.33z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/></> }
+              { id: 'fb', icon: <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" /> },
+              { id: 'ig', icon: <><rect x="2" y="2" width="20" height="20" rx="5" ry="5" /><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" /><line x1="17.5" y1="6.5" x2="17.51" y2="6.5" /></> },
+              { id: 'tw', icon: <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z" /> },
+              { id: 'gp', icon: <path d="M12.99 6H21.5v3.62h-4.39c.35.88.58 1.83.58 2.38 0 2.87-2.33 5.2-5.2 5.2a5.18 5.18 0 0 1-5.12-4.14 5.2 5.2 0 0 1 4.05-6.04c.33-.08.68-.12 1.03-.12.37 0 .73.04 1.08.12l.14.04zM12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" /> },
+              { id: 'yt', icon: <><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33 2.78 2.78 0 0 0 1.94 2C5.12 19.5 12 19.5 12 19.5s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.33 29 29 0 0 0-.46-5.33z" /><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" /></> }
             ].map(({ id, icon }) => (
-              <a 
-                key={id} 
-                href="#" 
+              <a
+                key={id}
+                href="#"
                 className="w-12 h-12 rounded-full bg-white flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-lg group"
                 aria-label={id}
               >
-                <svg 
-                  viewBox="0 0 24 24" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  strokeWidth="2" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  className="w-6 h-6 text-[#001b2b] transition-transform duration-300 group-hover:rotate-6"
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="w-6 h-6 text-[#142424] transition-transform duration-300 group-hover:rotate-6"
                 >
                   {icon}
                 </svg>
@@ -331,9 +331,9 @@ const Landing = () => {
           {/* Navigation Links */}
           <nav className="flex gap-10 flex-wrap justify-center uppercase tracking-widest text-sm font-bold">
             {['Home', 'About', 'Contact Us', 'Our Team'].map((link) => (
-              <a 
-                key={link} 
-                href="#" 
+              <a
+                key={link}
+                href="#"
                 className="hover:text-primary transition-colors duration-300 relative group"
               >
                 {link}

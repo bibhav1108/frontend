@@ -114,7 +114,7 @@ const MissionResponse = () => {
             onClick={handleAccept}
             className="flex-1 rounded-xl px-5 py-3 text-sm font-semibold text-white shadow-md transition hover:opacity-95 active:scale-[0.97]"
             style={{
-              background: "linear-gradient(135deg, #005da9 0%, #0075d4 100%)",
+              background: "linear-gradient(135deg, #0D7377 0%, #14919B 100%)",
             }}
           >
             Accept

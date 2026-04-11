@@ -4,20 +4,20 @@ export default {
 
   theme: {
     extend: {
-      // 🎨 COLORS (core system only)
+      // 🎨 COLORS — Theme 1: Warm Earth & Teal
       colors: {
-        primary: "#005da9",
-        primary_container: "#0075d4",
-        azure: "#3590F3",
+        primary: "#0D7377",
+        primary_container: "#14919B",
+        azure: "#14919B",
 
-        surface: "#fff7fc",
-        surface_low: "#fdefff",
-        surface_lowest: "#ffffff",
-        surface_high: "#f2e4f4",
-        surface_highest: "#ecdeee",
+        surface: "#FFF8F1",
+        surface_low: "#F9F3EB",
+        surface_lowest: "#FFFFFF",
+        surface_high: "#EEE7DF",
+        surface_highest: "#E8E1DA",
 
-        on_surface: "#201924",
-        on_surface_variant: "#414752",
+        on_surface: "#1E1B17",
+        on_surface_variant: "#5C4A3A",
       },
 
       fontFamily: {
@@ -39,7 +39,7 @@ export default {
       },
 
       backgroundImage: {
-        primaryGradient: "linear-gradient(135deg, #005da9 0%, #0075d4 100%)",
+        primaryGradient: "linear-gradient(135deg, #0D7377 0%, #14919B 100%)",
       },
     },
   },

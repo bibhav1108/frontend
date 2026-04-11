@@ -185,12 +185,12 @@ const Campaigns = () => {
   const applyAIDraftToForm = (data) => {
     const draftItems =
       data?.items &&
-      typeof data.items === "object" &&
-      !Array.isArray(data.items)
+        typeof data.items === "object" &&
+        !Array.isArray(data.items)
         ? Object.entries(data.items).map(([key, value]) => ({
-            key,
-            value: String(value ?? ""),
-          }))
+          key,
+          value: String(value ?? ""),
+        }))
         : [{ key: "", value: "" }];
 
     setName(data?.name || "");
@@ -280,9 +280,9 @@ const Campaigns = () => {
         location_address: trimmedLocation || null,
         required_skills: skills
           ? skills
-              .split(",")
-              .map((s) => s.trim())
-              .filter(Boolean)
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)
           : [],
       });
 
@@ -473,7 +473,7 @@ const Campaigns = () => {
             onClick={openAIModal}
             className="inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white shadow-lg transition hover:opacity-95 active:scale-[0.98]"
             style={{
-              background: "linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)",
+              background: "linear-gradient(135deg, #0D7377 0%, #14919B 100%)",
             }}
           >
             <span className="material-symbols-outlined text-[18px]">
@@ -485,7 +485,7 @@ const Campaigns = () => {
             onClick={() => setShowForm(true)}
             className="inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white shadow-lg transition hover:opacity-95 active:scale-[0.98]"
             style={{
-              background: "linear-gradient(135deg, #005da9 0%, #0075d4 100%)",
+              background: "linear-gradient(135deg, #0D7377 0%, #14919B 100%)",
             }}
           >
             <span className="material-symbols-outlined text-[18px]">add</span>
@@ -568,16 +568,16 @@ const Campaigns = () => {
                     const isSelected = selectedCampaign?.id === c.id;
                     const itemsCount = c.items
                       ? Object.values(c.items).reduce(
-                          (sum, v) => sum + (Number(v) || 0),
-                          0,
-                        )
+                        (sum, v) => sum + (Number(v) || 0),
+                        0,
+                      )
                       : 0;
                     const dateLabel = c.start_time
                       ? new Date(c.start_time).toLocaleDateString(undefined, {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        })
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })
                       : "No date set";
 
                     return (
@@ -591,11 +591,10 @@ const Campaigns = () => {
                             openDetails(c);
                           }
                         }}
-                        className={`cursor-pointer rounded-2xl border bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg ${
-                          isSelected
-                            ? "border-blue-300 ring-2 ring-blue-100"
-                            : "border-slate-200"
-                        }`}
+                        className={`cursor-pointer rounded-2xl border bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg ${isSelected
+                          ? "border-blue-300 ring-2 ring-blue-100"
+                          : "border-slate-200"
+                          }`}
                       >
                         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                           <div className="min-w-0 flex-1">
@@ -685,11 +684,10 @@ const Campaigns = () => {
                           <button
                             key={page}
                             onClick={() => setCurrentPage(page)}
-                            className={`min-w-10 rounded-lg px-3 py-2 text-sm font-semibold transition ${
-                              currentPage === page
-                                ? "bg-blue-600 text-white"
-                                : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                            }`}
+                            className={`min-w-10 rounded-lg px-3 py-2 text-sm font-semibold transition ${currentPage === page
+                              ? "bg-blue-600 text-white"
+                              : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                              }`}
                           >
                             {page}
                           </button>
@@ -829,11 +827,10 @@ const Campaigns = () => {
                     triggerBroadcast(selectedCampaign.id);
                   }}
                   disabled={selectedCampaign.status === "COMPLETED"}
-                  className={`w-full rounded-xl px-4 py-3 text-sm font-semibold text-white transition active:scale-[0.98] ${
-                    selectedCampaign.status === "COMPLETED"
-                      ? "cursor-not-allowed bg-slate-300 opacity-70"
-                      : "hover:opacity-95"
-                  }`}
+                  className={`w-full rounded-xl px-4 py-3 text-sm font-semibold text-white transition active:scale-[0.98] ${selectedCampaign.status === "COMPLETED"
+                    ? "cursor-not-allowed bg-slate-300 opacity-70"
+                    : "hover:opacity-95"
+                    }`}
                   style={{
                     background:
                       selectedCampaign.status === "COMPLETED"
@@ -857,7 +854,7 @@ const Campaigns = () => {
                     className="w-full rounded-xl px-4 py-3 text-sm font-semibold text-white transition hover:opacity-95 active:scale-[0.98]"
                     style={{
                       background:
-                        "linear-gradient(135deg, #005da9 0%, #0075d4 100%)",
+                        "linear-gradient(135deg, #0D7377 0%, #14919B 100%)",
                     }}
                   >
                     Mark Campaign Completed
@@ -968,7 +965,7 @@ const Campaigns = () => {
                   </div>
 
                   {selectedCampaign.items &&
-                  Object.keys(selectedCampaign.items).length > 0 ? (
+                    Object.keys(selectedCampaign.items).length > 0 ? (
                     <div className="space-y-2">
                       {Object.entries(selectedCampaign.items).map(([k, v]) => (
                         <div
@@ -1008,17 +1005,16 @@ const Campaigns = () => {
                     <div
                       className="h-full rounded-full"
                       style={{
-                        width: `${
-                          selectedCampaign.status === "ACTIVE"
-                            ? 72
-                            : selectedCampaign.status === "PLANNED"
-                              ? 34
-                              : selectedCampaign.status === "COMPLETED"
-                                ? 100
-                                : 18
-                        }%`,
+                        width: `${selectedCampaign.status === "ACTIVE"
+                          ? 72
+                          : selectedCampaign.status === "PLANNED"
+                            ? 34
+                            : selectedCampaign.status === "COMPLETED"
+                              ? 100
+                              : 18
+                          }%`,
                         background:
-                          "linear-gradient(135deg, #005da9 0%, #0075d4 100%)",
+                          "linear-gradient(135deg, #0D7377 0%, #14919B 100%)",
                       }}
                     />
                   </div>
@@ -1031,11 +1027,10 @@ const Campaigns = () => {
                       triggerBroadcast(selectedCampaign.id);
                     }}
                     disabled={selectedCampaign.status === "COMPLETED"}
-                    className={`w-full rounded-xl px-4 py-3 text-sm font-semibold text-white transition ${
-                      selectedCampaign.status === "COMPLETED"
-                        ? "cursor-not-allowed bg-slate-300 opacity-70"
-                        : "hover:opacity-95"
-                    }`}
+                    className={`w-full rounded-xl px-4 py-3 text-sm font-semibold text-white transition ${selectedCampaign.status === "COMPLETED"
+                      ? "cursor-not-allowed bg-slate-300 opacity-70"
+                      : "hover:opacity-95"
+                      }`}
                     style={{
                       background:
                         selectedCampaign.status === "COMPLETED"
@@ -1059,7 +1054,7 @@ const Campaigns = () => {
                       className="w-full rounded-xl px-4 py-3 text-sm font-semibold text-white transition hover:opacity-95"
                       style={{
                         background:
-                          "linear-gradient(135deg, #005da9 0%, #0075d4 100%)",
+                          "linear-gradient(135deg, #0D7377 0%, #14919B 100%)",
                       }}
                     >
                       Mark Completed
@@ -1109,13 +1104,12 @@ const Campaigns = () => {
                               </p>
 
                               <span
-                                className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest ${
-                                  v.status === "APPROVED"
-                                    ? "bg-emerald-100 text-emerald-700"
-                                    : v.status === "REJECTED"
-                                      ? "bg-rose-100 text-rose-700"
-                                      : "bg-amber-100 text-amber-700"
-                                }`}
+                                className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest ${v.status === "APPROVED"
+                                  ? "bg-emerald-100 text-emerald-700"
+                                  : v.status === "REJECTED"
+                                    ? "bg-rose-100 text-rose-700"
+                                    : "bg-amber-100 text-amber-700"
+                                  }`}
                               >
                                 {v.status}
                               </span>
@@ -1231,7 +1225,7 @@ const Campaigns = () => {
                 className="flex-1 rounded-xl px-4 py-3 text-sm font-semibold text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-70"
                 style={{
                   background:
-                    "linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)",
+                    "linear-gradient(135deg, #0D7377 0%, #14919B 100%)",
                 }}
               >
                 {loadingAI ? "Generating..." : "Generate Campaign Draft"}
@@ -1445,7 +1439,7 @@ const Campaigns = () => {
                     className="flex-1 rounded-xl px-4 py-3 text-sm font-semibold text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-70"
                     style={{
                       background:
-                        "linear-gradient(135deg, #005da9 0%, #0075d4 100%)",
+                        "linear-gradient(135deg, #0D7377 0%, #14919B 100%)",
                     }}
                   >
                     {creating ? "Creating..." : "Create Campaign"}
