@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import API from "../services/api";
+import Skeleton from "../components/Skeleton";
 
 const TYPE_OPTIONS = [
   "HEALTH",
@@ -19,12 +20,17 @@ const STATUS_ORDER = {
   COMPLETED: 2,
 };
 
+const MIN_CAMPAIGNS = 6;
+const MIN_READINESS = 4;
+
 const Campaigns = () => {
+  // --- STATE ---
   const [campaigns, setCampaigns] = useState([]);
   const [inventory, setInventory] = useState([]);
   const [filterType, setFilterType] = useState("ALL");
   const [searchTerm, setSearchTerm] = useState("");
 
+  const [loading, setLoading] = useState(true);
   const [selectedCampaign, setSelectedCampaign] = useState(null);
   const [pool, setPool] = useState([]);
   const [loadingPool, setLoadingPool] = useState(false);
@@ -40,6 +46,7 @@ const Campaigns = () => {
   const [aiPrompt, setAiPrompt] = useState("");
   const [loadingAI, setLoadingAI] = useState(false);
 
+  // Form State
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [type, setType] = useState("OTHER");
@@ -52,6 +59,7 @@ const Campaigns = () => {
   const [skills, setSkills] = useState("");
   const [formError, setFormError] = useState("");
 
+  // --- API METHODS ---
   const loadCampaigns = async () => {
     try {
       const res = await API.get("/campaigns/");
@@ -76,7 +84,6 @@ const Campaigns = () => {
   const loadVolunteerReadiness = async (campaignData = null) => {
     try {
       setLoadingReadiness(true);
-
       const source = campaignData ?? campaigns;
       const ongoingCampaigns = source.filter((c) => c.status === "PLANNED");
 
@@ -84,7 +91,6 @@ const Campaigns = () => {
         ongoingCampaigns.map(async (campaign) => {
           try {
             const res = await API.get(`/campaigns/${campaign.id}/pool`);
-            console.log(res.data);
             const normalizeStatus = (s) => {
               if (!s) return "";
               if (typeof s === "string") return s;
@@ -96,16 +102,10 @@ const Campaigns = () => {
               (v) => normalizeStatus(v.status) === "APPROVED",
             );
 
-            return {
-              campaign,
-              approvedVolunteers,
-            };
+            return { campaign, approvedVolunteers };
           } catch (err) {
             console.error(err);
-            return {
-              campaign,
-              approvedVolunteers: [],
-            };
+            return { campaign, approvedVolunteers: [] };
           }
         }),
       );
@@ -126,13 +126,14 @@ const Campaigns = () => {
 
   useEffect(() => {
     const init = async () => {
+      setLoading(true);
       const [campaignData] = await Promise.all([
         loadCampaigns(),
         loadInventory(),
       ]);
       await loadVolunteerReadiness(campaignData);
+      setLoading(false);
     };
-
     init();
   }, []);
 
@@ -140,6 +141,7 @@ const Campaigns = () => {
     setCurrentPage(1);
   }, [filterType, searchTerm]);
 
+  // --- ACTIONS & HANDLERS ---
   const resetForm = () => {
     setName("");
     setDescription("");
@@ -171,7 +173,6 @@ const Campaigns = () => {
       if (typeof value === "string") return value.slice(0, 16);
       return "";
     }
-
     const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
     return local.toISOString().slice(0, 16);
   };
@@ -185,12 +186,12 @@ const Campaigns = () => {
   const applyAIDraftToForm = (data) => {
     const draftItems =
       data?.items &&
-        typeof data.items === "object" &&
-        !Array.isArray(data.items)
+      typeof data.items === "object" &&
+      !Array.isArray(data.items)
         ? Object.entries(data.items).map(([key, value]) => ({
-          key,
-          value: String(value ?? ""),
-        }))
+            key,
+            value: String(value ?? ""),
+          }))
         : [{ key: "", value: "" }];
 
     setName(data?.name || "");
@@ -239,6 +240,12 @@ const Campaigns = () => {
     }
   };
 
+  const updateItem = (index, field, value) => {
+    setItems((prev) =>
+      prev.map((item, i) => (i === index ? { ...item, [field]: value } : item)),
+    );
+  };
+
   const createCampaign = async () => {
     const trimmedName = name.trim();
     const trimmedDescription = description.trim();
@@ -252,10 +259,8 @@ const Campaigns = () => {
     const formattedItems = {};
     items.forEach((i) => {
       if (!i.key || !i.value) return;
-
       const qty = Number(i.value);
       if (Number.isNaN(qty) || qty <= 0) return;
-
       formattedItems[i.key] = (formattedItems[i.key] || 0) + qty;
     });
 
@@ -280,9 +285,9 @@ const Campaigns = () => {
         location_address: trimmedLocation || null,
         required_skills: skills
           ? skills
-            .split(",")
-            .map((s) => s.trim())
-            .filter(Boolean)
+              .split(",")
+              .map((s) => s.trim())
+              .filter(Boolean)
           : [],
       });
 
@@ -299,7 +304,6 @@ const Campaigns = () => {
 
   const openDetails = async (campaign) => {
     setSelectedCampaign(campaign);
-
     try {
       setLoadingPool(true);
       const res = await API.get(`/campaigns/${campaign.id}/pool`);
@@ -336,27 +340,20 @@ const Campaigns = () => {
     }
   };
 
-  const getStatusClass = (s) => {
-    if (s === "ACTIVE") return "bg-blue-100 text-blue-700";
-    if (s === "COMPLETED") return "bg-emerald-100 text-emerald-700";
-    if (s === "PLANNED") return "bg-amber-100 text-amber-700";
-    return "bg-slate-100 text-slate-600";
+  // --- STYLING HELPERS ---
+  const getStatusStyle = (s) => {
+    if (s === "ACTIVE")
+      return "bg-green-500/10 text-green-400 border border-green-500/20";
+    if (s === "COMPLETED")
+      return "bg-blue-500/10 text-blue-400 border border-blue-500/20";
+    if (s === "PLANNED")
+      return "bg-amber-500/10 text-amber-400 border border-amber-500/20";
+    return "bg-white/10 text-gray-300 border border-white/20";
   };
 
-  const getTypeTone = (t) => {
-    if (t === "HEALTH") return "bg-rose-50 text-rose-700";
-    if (t === "EMERGENCY") return "bg-orange-50 text-orange-700";
-    if (t === "BASIC_NEEDS") return "bg-sky-50 text-sky-700";
-    if (t === "EDUCATION") return "bg-violet-50 text-violet-700";
-    if (t === "ENVIRONMENT") return "bg-emerald-50 text-emerald-700";
-    if (t === "SKILLS") return "bg-cyan-50 text-cyan-700";
-    if (t === "AWARENESS") return "bg-fuchsia-50 text-fuchsia-700";
-    return "bg-slate-100 text-slate-700";
-  };
-
+  // --- MEMOIZED DATA ---
   const campaignList = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
-
     return [...campaigns]
       .filter((c) => c.status === "ACTIVE" || c.status === "PLANNED")
       .filter((c) => filterType === "ALL" || c.type === filterType)
@@ -389,15 +386,8 @@ const Campaigns = () => {
     const active = campaigns.filter((c) => c.status === "ACTIVE").length;
     const planned = campaigns.filter((c) => c.status === "PLANNED").length;
     const completed = campaigns.filter((c) => c.status === "COMPLETED").length;
-
     return { active, planned, completed, total: campaigns.length };
   }, [campaigns]);
-
-  const updateItem = (index, field, value) => {
-    setItems((prev) =>
-      prev.map((item, i) => (i === index ? { ...item, [field]: value } : item)),
-    );
-  };
 
   const pendingCount = pool.filter((v) => v.status === "PENDING").length;
   const approvedCount = pool.filter((v) => v.status === "APPROVED").length;
@@ -420,26 +410,20 @@ const Campaigns = () => {
   }, [campaignList, currentPage]);
 
   const pageButtons = useMemo(() => {
-    if (totalPages <= 7) {
+    if (totalPages <= 7)
       return Array.from({ length: totalPages }, (_, i) => i + 1);
-    }
-
     const pages = new Set([1, totalPages, currentPage]);
-
     for (let i = currentPage - 1; i <= currentPage + 1; i += 1) {
       if (i > 1 && i < totalPages) pages.add(i);
     }
-
     const sorted = Array.from(pages).sort((a, b) => a - b);
     const result = [];
-
     for (let i = 0; i < sorted.length; i += 1) {
       result.push(sorted[i]);
       if (i < sorted.length - 1 && sorted[i + 1] - sorted[i] > 1) {
         result.push("...");
       }
     }
-
     return result;
   }, [currentPage, totalPages]);
 
@@ -449,68 +433,57 @@ const Campaigns = () => {
   );
 
   return (
-    <div className="space-y-8">
-      {/* HEADER */}
-      <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-        <div className="space-y-1">
-          <h1 className="text-4xl font-black tracking-tight text-slate-900">
-            Campaigns
-          </h1>
-          <p className="max-w-2xl text-sm text-slate-500">
-            Launch campaigns, inspect volunteer readiness, and keep live mission
-            flow organized in one place.
-          </p>
-        </div>
+    <div className="space-y-6 animate-fadeIn">
+      {/* HEADER SECTION */}
+      <div className="rounded-2xl border border-white/10 bg-surface_high/90 backdrop-blur-sm p-6 shadow-lg shadow-black/10">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p className="text-primary text-xs font-semibold uppercase tracking-[0.28em]">
+              Mission Control
+            </p>
+            <h1 className="mt-1 text-3xl font-bold">Campaigns</h1>
+            <p className="mt-2 flex items-center gap-2 text-sm opacity-70">
+              Launch missions, track readiness, and deploy operations.
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-400" />
+            </p>
+          </div>
 
-        <div className="flex flex-wrap gap-3">
-          <Link
-            to="/campaign-history"
-            className="rounded-xl bg-slate-100 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-200"
-          >
-            View Past Campaigns
-          </Link>
-          <button
-            onClick={openAIModal}
-            className="inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white shadow-lg transition hover:opacity-95 active:scale-[0.98]"
-            style={{
-              background: "linear-gradient(135deg, #0D7377 0%, #14919B 100%)",
-            }}
-          >
-            <span className="material-symbols-outlined text-[18px]">
-              magic_button
-            </span>
-            Generate Campaign Draft
-          </button>
-          <button
-            onClick={() => setShowForm(true)}
-            className="inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white shadow-lg transition hover:opacity-95 active:scale-[0.98]"
-            style={{
-              background: "linear-gradient(135deg, #0D7377 0%, #14919B 100%)",
-            }}
-          >
-            <span className="material-symbols-outlined text-[18px]">add</span>
-            New Campaign
-          </button>
+          <div className="flex flex-wrap gap-3">
+            <Link
+              to="/campaign-history"
+              className="rounded-xl border border-white/10 bg-surface px-5 py-2.5 text-sm font-semibold transition hover:bg-white/5"
+            >
+              Past Campaigns
+            </Link>
+            <button
+              onClick={openAIModal}
+              className="inline-flex items-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-4 py-2.5 text-sm font-semibold text-primary transition hover:bg-primary/20"
+            >
+              <span className="material-symbols-outlined text-[18px]">
+                magic_button
+              </span>
+              AI Draft
+            </button>
+            <button
+              onClick={() => setShowForm(true)}
+              className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-primary/20 transition hover:opacity-90 active:scale-95"
+            >
+              <span className="material-symbols-outlined text-[18px]">add</span>
+              New Campaign
+            </button>
+          </div>
         </div>
       </div>
 
       {/* STATS */}
       <div className="grid grid-cols-1 gap-5 md:grid-cols-4">
         <StatCard
-          label="Total Campaigns"
+          label="Total Missions"
           value={stats.total}
           icon="rocket_launch"
         />
-        <StatCard
-          label="Active Campaigns"
-          value={stats.active}
-          icon="play_circle"
-        />
-        <StatCard
-          label="Planned Campaigns"
-          value={stats.planned}
-          icon="event_upcoming"
-        />
+        <StatCard label="Active Now" value={stats.active} icon="play_circle" />
+        <StatCard label="Planned" value={stats.planned} icon="event_upcoming" />
         <StatCard
           label="Completed"
           value={stats.completed}
@@ -518,29 +491,28 @@ const Campaigns = () => {
         />
       </div>
 
-      {/* MAIN GRID */}
       <div className="grid grid-cols-12 items-start gap-6">
-        {/* LEFT COLUMN */}
-        <section className="col-span-12 space-y-6 lg:col-span-7">
-          <div className="rounded-2xl border border-white/30 bg-white/70 p-6 shadow-[0_40px_60px_-20px_rgba(32,25,36,0.08)] backdrop-blur-xl">
-            <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-                <div className="relative">
-                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[20px] text-slate-400">
+        {/* LEFT COLUMN: CAMPAIGN LIST */}
+        <section className="col-span-12 space-y-6 lg:col-span-8">
+          <div className="rounded-2xl border border-white/10 bg-surface_high/90 p-6 shadow-lg shadow-black/10 backdrop-blur-sm">
+            <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div className="flex flex-col gap-3 md:flex-row md:items-center w-full">
+                <div className="relative flex-1">
+                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[20px] opacity-60 text-white">
                     search
                   </span>
                   <input
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="Search campaigns..."
-                    className="w-full rounded-full border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-sm outline-none transition focus:border-blue-300 focus:bg-white lg:w-72"
+                    className="w-full rounded-xl border border-white/10 bg-surface_high/50 py-2.5 pl-10 pr-4 text-sm text-white placeholder-white/70 outline-none transition focus:border-primary/50"
                   />
                 </div>
 
                 <select
                   value={filterType}
                   onChange={(e) => setFilterType(e.target.value)}
-                  className="rounded-full border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm outline-none transition focus:border-blue-300 focus:bg-white"
+                  className="rounded-xl border border-white/10 bg-surface_high/50 px-4 py-2.5 text-sm text-white outline-none transition focus:border-primary/50"
                 >
                   <option value="ALL">All types</option>
                   {TYPE_OPTIONS.map((t) => (
@@ -552,33 +524,47 @@ const Campaigns = () => {
               </div>
             </div>
 
-            {campaignList.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-10 text-center">
-                <p className="text-sm font-medium text-slate-600">
-                  No campaigns found.
-                </p>
-                <p className="mt-1 text-xs text-slate-400">
-                  Launch a new mission blueprint to get started.
+            {loading ? (
+              <div className="space-y-5">
+                {Array.from({ length: MIN_CAMPAIGNS }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="relative overflow-hidden rounded-2xl border border-white/10 bg-surface_high/40 p-5"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="space-y-3 w-2/3">
+                        <Skeleton className="h-3 w-20" />
+                        <Skeleton className="h-5 w-full" />
+                        <Skeleton className="h-3 w-3/4" />
+                      </div>
+                      <Skeleton className="h-4 w-16" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : campaignList.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-white/10 bg-surface p-10 text-center">
+                <p className="text-sm font-medium opacity-70">
+                  No active or planned campaigns found.
                 </p>
               </div>
             ) : (
               <>
-                <div className="space-y-3">
-                  {paginatedCampaigns.map((c) => {
+                <div className="space-y-5">
+                  {paginatedCampaigns.map((c, i) => {
                     const isSelected = selectedCampaign?.id === c.id;
                     const itemsCount = c.items
                       ? Object.values(c.items).reduce(
-                        (sum, v) => sum + (Number(v) || 0),
-                        0,
-                      )
+                          (sum, v) => sum + (Number(v) || 0),
+                          0,
+                        )
                       : 0;
                     const dateLabel = c.start_time
                       ? new Date(c.start_time).toLocaleDateString(undefined, {
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                      })
-                      : "No date set";
+                          month: "short",
+                          day: "numeric",
+                        })
+                      : "TBD";
 
                     return (
                       <div
@@ -587,59 +573,58 @@ const Campaigns = () => {
                         tabIndex={0}
                         onClick={() => openDetails(c)}
                         onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
+                          if (e.key === "Enter" || e.key === " ")
                             openDetails(c);
-                          }
                         }}
-                        className={`cursor-pointer rounded-2xl border bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg ${isSelected
-                          ? "border-blue-300 ring-2 ring-blue-100"
-                          : "border-slate-200"
-                          }`}
+                        className={`group cursor-pointer rounded-2xl border p-5 transition-all hover:-translate-y-0.5 shadow-lg ${
+                          isSelected
+                            ? "border-primary bg-white ring-2 ring-primary/50"
+                            : "border-transparent bg-white/90 hover:bg-white"
+                        }`}
+                        style={{ animationDelay: `${i * 40}ms` }}
                       >
                         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                           <div className="min-w-0 flex-1">
                             <div className="mb-2 flex flex-wrap items-center gap-2">
-                              <span
-                                className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${getTypeTone(
-                                  c.type,
-                                )}`}
-                              >
+                              <span className="text-[10px] font-bold uppercase tracking-widest text-primary drop-shadow-sm">
                                 {c.type || "OTHER"}
                               </span>
-
+                              <span className="h-1 w-1 rounded-full bg-gray-400" />
                               <span
-                                className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${getStatusClass(
-                                  c.status,
-                                )}`}
+                                className={`text-[10px] font-bold uppercase tracking-widest ${
+                                  c.status === "ACTIVE"
+                                    ? "text-green-600"
+                                    : "text-amber-600"
+                                }`}
                               >
                                 {c.status}
                               </span>
                             </div>
 
-                            <h3 className="truncate text-base font-bold text-slate-900">
+                            <h3 className="truncate text-lg font-bold text-gray-900 group-hover:text-primary transition-colors">
                               {c.name}
                             </h3>
 
-                            <p className="mt-1 line-clamp-2 text-sm text-slate-500">
+                            <p className="mt-1 line-clamp-1 text-sm text-gray-600">
                               {c.description}
                             </p>
 
-                            <div className="mt-3 flex flex-wrap gap-2">
-                              <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600">
+                            <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-medium text-gray-700">
+                              <span className="rounded-md bg-gray-100 border border-gray-200 px-2 py-1">
                                 {itemsCount} items
                               </span>
-                              <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600">
+                              <span className="rounded-md bg-gray-100 border border-gray-200 px-2 py-1">
                                 {c.location_address || "No location"}
                               </span>
                             </div>
                           </div>
 
                           <div className="flex shrink-0 flex-row items-center gap-2 md:flex-col md:items-end md:text-right">
-                            <span className="text-xs font-semibold text-slate-500">
-                              {dateLabel}
+                            <span className="text-xs font-semibold text-gray-500 uppercase tracking-widest">
+                              Starts
                             </span>
-                            <span className="text-[11px] uppercase tracking-widest text-slate-400">
-                              Open details
+                            <span className="text-sm font-bold text-gray-900">
+                              {dateLabel}
                             </span>
                           </div>
                         </div>
@@ -649,21 +634,21 @@ const Campaigns = () => {
                 </div>
 
                 {totalPages > 1 && (
-                  <div className="mt-6 flex flex-col items-center gap-3 border-t border-slate-200 pt-5">
-                    <div className="text-sm text-slate-500">
+                  <div className="mt-6 flex flex-col items-center gap-3 border-t border-white/10 pt-5">
+                    <div className="text-sm opacity-60">
                       Page{" "}
-                      <span className="font-semibold text-slate-800">
+                      <span className="font-semibold text-white">
                         {currentPage}
                       </span>{" "}
                       of{" "}
-                      <span className="font-semibold text-slate-800">
+                      <span className="font-semibold text-white">
                         {totalPages}
                       </span>
                     </div>
 
                     <div className="flex flex-wrap items-center justify-center gap-2">
                       <button
-                        className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+                        className="rounded-lg border border-white/10 bg-surface px-3 py-1.5 text-sm font-medium transition hover:bg-white/5 disabled:opacity-40 disabled:cursor-not-allowed"
                         disabled={currentPage === 1}
                         onClick={() =>
                           setCurrentPage((p) => Math.max(1, p - 1))
@@ -676,7 +661,7 @@ const Campaigns = () => {
                         page === "..." ? (
                           <span
                             key={`dots-${idx}`}
-                            className="px-2 text-sm text-slate-400"
+                            className="px-2 text-sm opacity-40"
                           >
                             ...
                           </span>
@@ -684,10 +669,11 @@ const Campaigns = () => {
                           <button
                             key={page}
                             onClick={() => setCurrentPage(page)}
-                            className={`min-w-10 rounded-lg px-3 py-2 text-sm font-semibold transition ${currentPage === page
-                              ? "bg-blue-600 text-white"
-                              : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                              }`}
+                            className={`min-w-8 rounded-lg px-3 py-1.5 text-sm font-semibold transition ${
+                              currentPage === page
+                                ? "bg-primary text-white"
+                                : "border border-white/10 bg-surface hover:bg-white/5"
+                            }`}
                           >
                             {page}
                           </button>
@@ -695,7 +681,7 @@ const Campaigns = () => {
                       )}
 
                       <button
-                        className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+                        className="rounded-lg border border-white/10 bg-surface px-3 py-1.5 text-sm font-medium transition hover:bg-white/5 disabled:opacity-40 disabled:cursor-not-allowed"
                         disabled={currentPage === totalPages}
                         onClick={() =>
                           setCurrentPage((p) => Math.min(totalPages, p + 1))
@@ -712,150 +698,122 @@ const Campaigns = () => {
         </section>
 
         {/* RIGHT COLUMN */}
-        <section className="col-span-12 space-y-6 lg:col-span-5">
-          <div className="rounded-2xl border border-white/30 bg-white/70 p-6 shadow-[0_40px_60px_-20px_rgba(32,25,36,0.08)] backdrop-blur-xl">
+        <section className="col-span-12 space-y-6 lg:col-span-4">
+          <div className="rounded-2xl border border-white/10 bg-surface_high/90 p-6 shadow-lg shadow-black/10 backdrop-blur-sm lg:sticky lg:top-6">
             <div className="mb-5 flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-bold text-slate-900">
-                  Volunteer Readiness
-                </h3>
-                <p className="text-sm text-slate-800">
-                  Approved volunteers for ongoing campaigns.
+                <h3 className="text-lg font-bold">Volunteer Readiness</h3>
+                <p className="mt-1 text-xs opacity-70">
+                  Approved personnel for upcoming ops.
                 </p>
               </div>
-              <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-emerald-700">
-                {totalApprovedReadiness} approved
+              <span className="rounded-full bg-green-500/10 px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-green-400 border border-green-500/20">
+                {totalApprovedReadiness} Total
               </span>
             </div>
 
-            {loadingReadiness ? (
-              <div className="space-y-3">
-                <div className="h-20 animate-pulse rounded-2xl bg-slate-100" />
-                <div className="h-20 animate-pulse rounded-2xl bg-slate-100" />
-              </div>
-            ) : readiness.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center">
-                <p className="text-sm text-slate-800">
-                  No ongoing campaigns with approved volunteers yet.
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {readiness.flatMap(({ campaign, approvedVolunteers }) =>
-                  approvedVolunteers.map((v) => (
-                    <div
-                      key={`${campaign.id}-${v.volunteer_id}`}
-                      className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-sm"
-                    >
-                      <span className="font-medium text-slate-900">
-                        {v.volunteer_name}
-                      </span>
-                      <span className="max-w-[120px] truncate text-xs text-slate-500">
-                        {campaign.name}
-                      </span>
+            <div className="space-y-3">
+              {loadingReadiness ? (
+                Array.from({ length: MIN_READINESS }).map((_, i) => (
+                  <div key={i} className="space-y-2">
+                    <Skeleton className="h-4 w-full" />
+                    <div className="flex gap-2">
+                      <Skeleton className="h-8 w-16 rounded-lg" />
+                      <Skeleton className="h-8 w-16 rounded-lg" />
                     </div>
-                  )),
-                )}
-              </div>
-            )}
-          </div>
-
-          <div className="rounded-2xl border border-white/30 bg-white/70 p-6 shadow-[0_40px_60px_-20px_rgba(32,25,36,0.08)] backdrop-blur-xl">
-            <div className="mb-5 flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-bold text-slate-900">
-                  Quick Actions
-                </h3>
-                <p className="text-sm text-slate-800">
-                  Fast navigation for mission ops.
-                </p>
-              </div>
+                  </div>
+                ))
+              ) : readiness.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-white/10 bg-surface/50 p-6 text-center">
+                  <p className="text-sm opacity-70">
+                    No approved volunteers yet.
+                  </p>
+                </div>
+              ) : (
+                readiness.map((r) => (
+                  <div
+                    key={r.campaign.id}
+                    className="rounded-xl bg-white/5 p-4 border border-white/5"
+                  >
+                    <p className="text-[10px] font-bold uppercase tracking-widest opacity-50 mb-3 truncate">
+                      {r.campaign.name}
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {r.approvedVolunteers.map((v) => (
+                        <div
+                          key={v.volunteer_id}
+                          className="flex items-center gap-1.5 rounded-lg bg-green-500/10 px-2 py-1 text-[11px] font-medium text-green-400 border border-green-500/20"
+                        >
+                          <span className="material-symbols-outlined text-[14px]">
+                            person
+                          </span>
+                          {v.volunteer_name}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
 
-            <div className="grid gap-3">
-              <Link
-                to="/inventory"
-                className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
-              >
-                <span className="flex items-center gap-3">
-                  <span className="material-symbols-outlined text-blue-600">
-                    inventory_2
+            <div className="mt-8">
+              <h3 className="text-sm font-bold uppercase tracking-widest opacity-50 mb-3">
+                Quick Actions
+              </h3>
+              <div className="grid gap-2">
+                <Link
+                  to="/inventory"
+                  className="flex items-center justify-between rounded-xl border border-white/5 bg-white/5 px-4 py-3 text-sm font-semibold transition hover:bg-white/10"
+                >
+                  <span className="flex items-center gap-3">
+                    <span className="material-symbols-outlined text-primary">
+                      inventory_2
+                    </span>
+                    Inventory
                   </span>
-                  Inventory
-                </span>
-                <span className="material-symbols-outlined text-[18px] text-slate-400">
-                  chevron_right
-                </span>
-              </Link>
+                  <span className="material-symbols-outlined text-[16px] opacity-40">
+                    chevron_right
+                  </span>
+                </Link>
 
-              <Link
-                to="/volunteers"
-                className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
-              >
-                <span className="flex items-center gap-3">
-                  <span className="material-symbols-outlined text-blue-600">
-                    groups
+                <Link
+                  to="/volunteers"
+                  className="flex items-center justify-between rounded-xl border border-white/5 bg-white/5 px-4 py-3 text-sm font-semibold transition hover:bg-white/10"
+                >
+                  <span className="flex items-center gap-3">
+                    <span className="material-symbols-outlined text-primary">
+                      groups
+                    </span>
+                    Volunteers
                   </span>
-                  Volunteers
-                </span>
-                <span className="material-symbols-outlined text-[18px] text-slate-400">
-                  chevron_right
-                </span>
-              </Link>
-
-              <Link
-                to="/marketplace"
-                className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
-              >
-                <span className="flex items-center gap-3">
-                  <span className="material-symbols-outlined text-blue-600">
-                    storefront
+                  <span className="material-symbols-outlined text-[16px] opacity-40">
+                    chevron_right
                   </span>
-                  Marketplace
-                </span>
-                <span className="material-symbols-outlined text-[18px] text-slate-400">
-                  chevron_right
-                </span>
-              </Link>
+                </Link>
+              </div>
             </div>
 
             {selectedCampaign && (
-              <div className="mt-5 space-y-3">
+              <div className="mt-6 space-y-3 border-t border-white/10 pt-6">
                 <button
                   onClick={() => {
                     if (selectedCampaign.status === "COMPLETED") return;
                     triggerBroadcast(selectedCampaign.id);
                   }}
                   disabled={selectedCampaign.status === "COMPLETED"}
-                  className={`w-full rounded-xl px-4 py-3 text-sm font-semibold text-white transition active:scale-[0.98] ${selectedCampaign.status === "COMPLETED"
-                    ? "cursor-not-allowed bg-slate-300 opacity-70"
-                    : "hover:opacity-95"
-                    }`}
-                  style={{
-                    background:
-                      selectedCampaign.status === "COMPLETED"
-                        ? "#cbd5e1"
-                        : "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)",
-                  }}
+                  className={`w-full rounded-xl px-4 py-3 text-sm font-semibold text-white transition ${
+                    selectedCampaign.status === "COMPLETED"
+                      ? "cursor-not-allowed bg-white/10 opacity-50"
+                      : "bg-blue-600 hover:bg-blue-500"
+                  }`}
                 >
                   Trigger Broadcast
                 </button>
 
-                {selectedCampaign.status === "COMPLETED" ? (
-                  <button
-                    disabled
-                    className="cursor-not-allowed rounded-xl bg-emerald-100 px-4 py-3 text-sm font-semibold text-emerald-900 opacity-80"
-                  >
-                    Completed
-                  </button>
-                ) : (
+                {selectedCampaign.status !== "COMPLETED" && (
                   <button
                     onClick={() => completeCampaign(selectedCampaign.id)}
-                    className="w-full rounded-xl px-4 py-3 text-sm font-semibold text-white transition hover:opacity-95 active:scale-[0.98]"
-                    style={{
-                      background:
-                        "linear-gradient(135deg, #0D7377 0%, #14919B 100%)",
-                    }}
+                    className="w-full rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white transition hover:opacity-90"
                   >
                     Mark Campaign Completed
                   </button>
@@ -868,83 +826,98 @@ const Campaigns = () => {
 
       {/* DETAILS MODAL */}
       {selectedCampaign && (
-        <div className="fixed inset-0 z-[1100] flex items-start justify-center overflow-y-auto bg-black/45 px-4 py-10">
-          <div className="w-full max-w-5xl rounded-3xl border border-white/20 bg-white p-6 shadow-2xl">
-            <div className="mb-6 flex items-start justify-between gap-4">
-              <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">
-                  Mission Details
-                </p>
-                <h2 className="mt-1 text-2xl font-black text-slate-900">
-                  {selectedCampaign.name}
-                </h2>
-                <p className="mt-2 max-w-3xl text-sm text-slate-500">
-                  {selectedCampaign.description}
-                </p>
-              </div>
-
-              <button
-                onClick={() => {
-                  setSelectedCampaign(null);
-                  setPool([]);
-                }}
-                className="rounded-full bg-slate-100 p-2 text-slate-500 transition hover:bg-slate-200"
-                aria-label="Close details"
+        <div
+          className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fadeIn"
+          onClick={() => {
+            setSelectedCampaign(null);
+            setPool([]);
+          }}
+        >
+          <div
+            className="relative w-full max-w-5xl max-h-[95vh] overflow-y-auto rounded-3xl border border-white/10 bg-surface p-6 md:p-8 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Close Cross */}
+            <button
+              onClick={() => {
+                setSelectedCampaign(null);
+                setPool([]);
+              }}
+              className="absolute right-4 top-4 rounded-full bg-white/5 p-2 text-white/50 transition hover:bg-white/10 hover:text-white"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
               >
-                <span className="material-symbols-outlined">close</span>
-              </button>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+
+            <div className="mb-6 pr-10">
+              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-primary">
+                Mission Details
+              </p>
+              <h2 className="mt-1 text-2xl font-black text-white">
+                {selectedCampaign.name}
+              </h2>
+              <p className="mt-2 max-w-3xl text-sm opacity-70">
+                {selectedCampaign.description}
+              </p>
             </div>
 
             <div className="grid gap-6 lg:grid-cols-2">
               <div className="space-y-5">
-                <div className="rounded-2xl bg-slate-50 p-5">
-                  <div className="flex flex-wrap items-center gap-2">
+                {/* Meta details */}
+                <div className="rounded-2xl bg-surface_high/50 p-5 border border-white/5">
+                  <div className="flex flex-wrap items-center gap-2 mb-5">
                     <span
-                      className={`rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-widest ${getStatusClass(
-                        selectedCampaign.status,
-                      )}`}
+                      className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-widest ${getStatusStyle(selectedCampaign.status)}`}
                     >
                       {selectedCampaign.status}
                     </span>
-                    <span
-                      className={`rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-widest ${getTypeTone(
-                        selectedCampaign.type,
-                      )}`}
-                    >
+                    <span className="rounded-full bg-white/10 border border-white/10 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-white">
                       {selectedCampaign.type || "OTHER"}
                     </span>
                   </div>
 
-                  <div className="mt-5 grid gap-4 md:grid-cols-2">
+                  <div className="grid gap-4 md:grid-cols-2">
                     <div>
-                      <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                      <p className="text-[10px] font-bold uppercase tracking-widest opacity-50">
                         Location
                       </p>
-                      <p className="mt-1 text-sm font-semibold text-slate-800">
+                      <p className="mt-1 text-sm font-semibold">
                         {selectedCampaign.location_address || "No location"}
                       </p>
                     </div>
                     <div>
-                      <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
-                        Volunteers Required
-                      </p>
-                      <p className="mt-1 text-sm font-semibold text-slate-800">
-                        {selectedCampaign.volunteers_required || 0}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                      <p className="text-[10px] font-bold uppercase tracking-widest opacity-50">
                         Goal
                       </p>
-                      <p className="mt-1 text-sm font-semibold text-slate-800">
+                      <p className="mt-1 text-sm font-semibold">
                         {selectedCampaign.target_quantity || "N/A"}
                       </p>
                     </div>
                     <div>
-                      <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
-                        Skills
+                      <p className="text-[10px] font-bold uppercase tracking-widest opacity-50">
+                        Required Personnel
                       </p>
-                      <p className="mt-1 text-sm font-semibold text-slate-800">
+                      <p className="mt-1 text-sm font-semibold">
+                        {selectedCampaign.volunteers_required || 0}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-widest opacity-50">
+                        Required Skills
+                      </p>
+                      <p className="mt-1 text-sm font-semibold">
                         {selectedCampaign?.required_skills?.length
                           ? selectedCampaign.required_skills.join(", ")
                           : "General"}
@@ -953,10 +926,11 @@ const Campaigns = () => {
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-slate-200 bg-white p-5">
-                  <div className="mb-3 flex items-center justify-between">
-                    <h3 className="font-bold text-slate-900">Items</h3>
-                    <span className="text-xs text-slate-400">
+                {/* Items Breakdown */}
+                <div className="rounded-2xl border border-white/5 bg-surface_high/50 p-5">
+                  <div className="mb-4 flex items-center justify-between">
+                    <h3 className="font-bold">Inventory Requirements</h3>
+                    <span className="text-xs opacity-50">
                       {selectedCampaign.items
                         ? Object.keys(selectedCampaign.items).length
                         : 0}{" "}
@@ -965,124 +939,47 @@ const Campaigns = () => {
                   </div>
 
                   {selectedCampaign.items &&
-                    Object.keys(selectedCampaign.items).length > 0 ? (
+                  Object.keys(selectedCampaign.items).length > 0 ? (
                     <div className="space-y-2">
                       {Object.entries(selectedCampaign.items).map(([k, v]) => (
                         <div
                           key={k}
-                          className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3"
+                          className="flex items-center justify-between rounded-xl bg-white/5 px-4 py-3 border border-white/5"
                         >
-                          <span className="font-medium text-slate-700">
-                            {k}
-                          </span>
-                          <span className="text-sm font-bold text-slate-900">
+                          <span className="text-sm font-medium">{k}</span>
+                          <span className="text-sm font-bold text-primary">
                             {v}
                           </span>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-slate-500">
-                      No item breakdown available.
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <div className="mb-2 flex items-center justify-between text-[11px] font-bold uppercase tracking-widest text-slate-500">
-                    <span>Mission stage</span>
-                    <span>
-                      {selectedCampaign.status === "ACTIVE"
-                        ? "72%"
-                        : selectedCampaign.status === "PLANNED"
-                          ? "34%"
-                          : selectedCampaign.status === "COMPLETED"
-                            ? "100%"
-                            : "18%"}
-                    </span>
-                  </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-                    <div
-                      className="h-full rounded-full"
-                      style={{
-                        width: `${selectedCampaign.status === "ACTIVE"
-                          ? 72
-                          : selectedCampaign.status === "PLANNED"
-                            ? 34
-                            : selectedCampaign.status === "COMPLETED"
-                              ? 100
-                              : 18
-                          }%`,
-                        background:
-                          "linear-gradient(135deg, #0D7377 0%, #14919B 100%)",
-                      }}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid gap-3 md:grid-cols-2">
-                  <button
-                    onClick={() => {
-                      if (selectedCampaign.status === "COMPLETED") return;
-                      triggerBroadcast(selectedCampaign.id);
-                    }}
-                    disabled={selectedCampaign.status === "COMPLETED"}
-                    className={`w-full rounded-xl px-4 py-3 text-sm font-semibold text-white transition ${selectedCampaign.status === "COMPLETED"
-                      ? "cursor-not-allowed bg-slate-300 opacity-70"
-                      : "hover:opacity-95"
-                      }`}
-                    style={{
-                      background:
-                        selectedCampaign.status === "COMPLETED"
-                          ? "#cbd5e1"
-                          : "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)",
-                    }}
-                  >
-                    Trigger Broadcast
-                  </button>
-
-                  {selectedCampaign.status === "COMPLETED" ? (
-                    <button
-                      disabled
-                      className="cursor-not-allowed rounded-xl bg-emerald-100 px-4 py-3 text-sm font-semibold text-emerald-700 opacity-80"
-                    >
-                      Completed
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => completeCampaign(selectedCampaign.id)}
-                      className="w-full rounded-xl px-4 py-3 text-sm font-semibold text-white transition hover:opacity-95"
-                      style={{
-                        background:
-                          "linear-gradient(135deg, #0D7377 0%, #14919B 100%)",
-                      }}
-                    >
-                      Mark Completed
-                    </button>
+                    <p className="text-sm opacity-50">No items specified.</p>
                   )}
                 </div>
               </div>
 
+              {/* Pool Operations */}
               <div className="space-y-5">
-                <div className="rounded-2xl border border-slate-200 bg-white p-5">
-                  <div className="mb-4 flex items-center justify-between">
-                    <h3 className="font-bold text-slate-900">Volunteer Pool</h3>
-                    <span className="text-xs font-bold uppercase tracking-widest text-blue-600">
+                <div className="rounded-2xl border border-white/5 bg-surface_high/50 p-5 min-h-[300px]">
+                  <div className="mb-5 flex items-center justify-between">
+                    <h3 className="font-bold">Volunteer Pool</h3>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-primary">
                       {loadingPool
-                        ? "Loading..."
+                        ? "Syncing..."
                         : `${pendingCount} pending • ${approvedCount} approved`}
                     </span>
                   </div>
 
                   {loadingPool ? (
                     <div className="space-y-3">
-                      <div className="h-16 animate-pulse rounded-2xl bg-slate-100" />
-                      <div className="h-16 animate-pulse rounded-2xl bg-slate-100" />
+                      <Skeleton className="h-16 w-full rounded-2xl" />
+                      <Skeleton className="h-16 w-full rounded-2xl" />
                     </div>
                   ) : pool.length === 0 ? (
-                    <div className="rounded-2xl bg-slate-50 p-8 text-center">
-                      <p className="text-sm text-slate-500">
-                        No volunteers yet.
+                    <div className="rounded-xl bg-surface p-8 text-center border border-white/5">
+                      <p className="text-sm opacity-50">
+                        No volunteers matched or applied yet.
                       </p>
                     </div>
                   ) : (
@@ -1090,63 +987,54 @@ const Campaigns = () => {
                       {pool.map((v) => (
                         <div
                           key={v.volunteer_id}
-                          className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
+                          className="rounded-xl border border-white/5 bg-white/5 p-4"
                         >
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">
-                              <p className="truncate font-semibold text-slate-900">
+                              <p className="truncate font-semibold">
                                 {v.volunteer_name}
                               </p>
-                              <p className="mt-1 text-xs text-slate-500">
+                              <p className="mt-1 text-xs opacity-60">
                                 {v.skills?.length
                                   ? v.skills.join(", ")
                                   : "No skills"}
                               </p>
-
                               <span
-                                className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest ${v.status === "APPROVED"
-                                  ? "bg-emerald-100 text-emerald-700"
-                                  : v.status === "REJECTED"
-                                    ? "bg-rose-100 text-rose-700"
-                                    : "bg-amber-100 text-amber-700"
-                                  }`}
+                                className={`mt-2 inline-flex rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest ${
+                                  v.status === "APPROVED"
+                                    ? "bg-green-500/10 text-green-400"
+                                    : v.status === "REJECTED"
+                                      ? "bg-red-500/10 text-red-400"
+                                      : "bg-amber-500/10 text-amber-400"
+                                }`}
                               >
                                 {v.status}
                               </span>
                             </div>
 
-                            {v.status === "PENDING" ? (
+                            {v.status === "PENDING" && (
                               <button
                                 onClick={() =>
                                   approve(selectedCampaign.id, v.volunteer_id)
                                 }
-                                className="shrink-0 rounded-full bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-700"
+                                className="shrink-0 rounded-lg bg-green-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-green-500"
                               >
                                 Approve
                               </button>
-                            ) : (
-                              <span className="shrink-0 rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-500">
-                                {v.status === "APPROVED"
-                                  ? "Approved"
-                                  : "Rejected"}
-                              </span>
                             )}
                           </div>
 
                           {v.match_score != null && (
-                            <div className="mt-3">
-                              <div className="mb-1 flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                            <div className="mt-4">
+                              <div className="mb-1 flex items-center justify-between text-[10px] font-bold uppercase tracking-widest opacity-50">
                                 <span>Match score</span>
                                 <span>{v.match_score}%</span>
                               </div>
-                              <div className="h-1.5 rounded-full bg-slate-100">
+                              <div className="h-1 rounded-full bg-white/10">
                                 <div
-                                  className="h-1.5 rounded-full bg-blue-500"
+                                  className="h-1 rounded-full bg-primary"
                                   style={{
-                                    width: `${Math.max(
-                                      0,
-                                      Math.min(100, v.match_score),
-                                    )}%`,
+                                    width: `${Math.max(0, Math.min(100, v.match_score))}%`,
                                   }}
                                 />
                               </div>
@@ -1157,18 +1045,6 @@ const Campaigns = () => {
                     </div>
                   )}
                 </div>
-
-                <div className="rounded-2xl bg-slate-900 p-5 text-white">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/60">
-                    Ops note
-                  </p>
-                  <p className="mt-2 text-sm leading-relaxed text-white/80">
-                    Once volunteers are approved, they stay visible in the pool
-                    with their current status. This makes it easier to track who
-                    is pending, approved, or rejected without losing the full
-                    picture.
-                  </p>
-                </div>
               </div>
             </div>
           </div>
@@ -1177,43 +1053,63 @@ const Campaigns = () => {
 
       {/* AI DRAFT MODAL */}
       {showAIModal && (
-        <div className="fixed inset-0 z-[1100] flex items-start justify-center overflow-y-auto bg-black/45 px-4 py-10">
-          <div className="w-full max-w-3xl rounded-3xl border border-white/20 bg-white p-6 shadow-2xl">
-            <div className="mb-6 flex items-start justify-between gap-4">
-              <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">
-                  Campaign Draft Assistant
-                </p>
-                <h2 className="mt-1 text-2xl font-black text-slate-900">
-                  Generate your campaign brief
-                </h2>
-                <p className="mt-2 text-sm text-slate-500">
-                  Write a short prompt and I will prefill the campaign form for
-                  you.
-                </p>
-              </div>
-
-              <button
-                onClick={() => {
-                  setShowAIModal(false);
-                  setFormError("");
-                }}
-                className="rounded-full bg-slate-100 p-2 text-slate-500 transition hover:bg-slate-200"
-                aria-label="Close AI draft"
+        <div
+          className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fadeIn"
+          onClick={() => {
+            setShowAIModal(false);
+            setFormError("");
+          }}
+        >
+          <div
+            className="relative w-full max-w-3xl max-h-[95vh] overflow-y-auto rounded-3xl border border-white/10 bg-surface p-6 md:p-8 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Close Cross */}
+            <button
+              onClick={() => {
+                setShowAIModal(false);
+                setFormError("");
+              }}
+              className="absolute right-4 top-4 rounded-full bg-white/5 p-2 text-white/50 transition hover:bg-white/10 hover:text-white"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
               >
-                <span className="material-symbols-outlined">close</span>
-              </button>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+
+            <div className="mb-6 pr-10">
+              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-primary">
+                Intelligence Assistant
+              </p>
+              <h2 className="mt-1 text-2xl font-black text-white">
+                Generate Blueprint
+              </h2>
+              <p className="mt-2 text-sm opacity-70">
+                Describe the operation. The AI will parse requirements and
+                prefill the form.
+              </p>
             </div>
 
             {formError && (
-              <div className="mb-5 rounded-2xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
+              <div className="mb-5 rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-400">
                 {formError}
               </div>
             )}
 
             <textarea
-              className="min-h-[180px] w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-blue-300 focus:bg-white"
-              placeholder="Example: Distribute 100 food packets in Varanasi this Sunday evening. Need 5 volunteers, 2 hours, near the railway station. Required items: rice 50, water 100, blankets 30."
+              className="min-h-[180px] w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-white/30 outline-none transition focus:border-primary/50"
+              placeholder="Example: Distribute 100 food packets in Varanasi this Sunday. Need 5 volunteers for 2 hours..."
               value={aiPrompt}
               onChange={(e) => setAiPrompt(e.target.value)}
             />
@@ -1222,21 +1118,13 @@ const Campaigns = () => {
               <button
                 onClick={handleAIGenerate}
                 disabled={loadingAI}
-                className="flex-1 rounded-xl px-4 py-3 text-sm font-semibold text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-70"
-                style={{
-                  background:
-                    "linear-gradient(135deg, #0D7377 0%, #14919B 100%)",
-                }}
+                className="flex-1 rounded-xl bg-primary px-4 py-3 text-sm font-bold text-white shadow-lg transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {loadingAI ? "Generating..." : "Generate Campaign Draft"}
+                {loadingAI ? "Parsing Intelligence..." : "Generate Draft"}
               </button>
-
               <button
-                onClick={() => {
-                  setShowAIModal(false);
-                  setFormError("");
-                }}
-                className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                onClick={() => setShowAIModal(false)}
+                className="rounded-xl border border-white/10 bg-surface px-6 py-3 text-sm font-semibold transition hover:bg-white/5"
               >
                 Cancel
               </button>
@@ -1247,36 +1135,56 @@ const Campaigns = () => {
 
       {/* CREATE FORM MODAL */}
       {showForm && (
-        <div className="fixed inset-0 z-[1100] flex items-start justify-center overflow-y-auto bg-black/45 px-4 py-10">
-          <div className="mb-10 w-full max-w-4xl rounded-3xl border border-white/20 bg-white p-6 shadow-2xl">
-            <div className="mb-6 flex items-start justify-between gap-4">
-              <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">
-                  Mission Blueprint
-                </p>
-                <h2 className="mt-1 text-2xl font-black text-slate-900">
-                  Create Campaign
-                </h2>
-                <p className="mt-2 text-sm text-slate-500">
-                  Define the campaign scope, inventory requirements, timeline,
-                  and volunteer needs.
-                </p>
-              </div>
-
-              <button
-                onClick={() => {
-                  setShowForm(false);
-                  setFormError("");
-                }}
-                className="rounded-full bg-slate-100 p-2 text-slate-500 transition hover:bg-slate-200"
-                aria-label="Close form"
+        <div
+          className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fadeIn"
+          onClick={() => {
+            setShowForm(false);
+            setFormError("");
+          }}
+        >
+          <div
+            className="relative w-full max-w-4xl max-h-[95vh] overflow-y-auto rounded-3xl border border-white/10 bg-surface p-6 md:p-8 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Close Cross */}
+            <button
+              onClick={() => {
+                setShowForm(false);
+                setFormError("");
+              }}
+              className="absolute right-4 top-4 rounded-full bg-white/5 p-2 text-white/50 transition hover:bg-white/10 hover:text-white"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
               >
-                <span className="material-symbols-outlined">close</span>
-              </button>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+
+            <div className="mb-6 pr-10">
+              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-primary">
+                Mission Blueprint
+              </p>
+              <h2 className="mt-1 text-2xl font-black text-white">
+                Create Campaign
+              </h2>
+              <p className="mt-2 text-sm opacity-70">
+                Define scope, timeline, inventory limits, and personnel
+                requirements.
+              </p>
             </div>
 
             {formError && (
-              <div className="mb-5 rounded-2xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
+              <div className="mb-5 rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-400">
                 {formError}
               </div>
             )}
@@ -1285,7 +1193,7 @@ const Campaigns = () => {
               <div className="space-y-4">
                 <Field label="Name">
                   <input
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-blue-300 focus:bg-white"
+                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-white/30 outline-none transition focus:border-primary/50"
                     placeholder="e.g. Community Meal Drive"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
@@ -1294,8 +1202,8 @@ const Campaigns = () => {
 
                 <Field label="Description">
                   <textarea
-                    className="min-h-[120px] w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-blue-300 focus:bg-white"
-                    placeholder="Write a short description of the campaign"
+                    className="min-h-[120px] w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-white/30 outline-none transition focus:border-primary/50"
+                    placeholder="Brief description of operations..."
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                   />
@@ -1306,7 +1214,7 @@ const Campaigns = () => {
                     <select
                       value={type}
                       onChange={(e) => setType(e.target.value)}
-                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-blue-300 focus:bg-white"
+                      className="w-full rounded-xl border border-white/10 bg-surface_high px-4 py-3 text-sm text-white outline-none transition focus:border-primary/50"
                     >
                       {TYPE_OPTIONS.map((opt) => (
                         <option key={opt} value={opt}>
@@ -1316,9 +1224,9 @@ const Campaigns = () => {
                     </select>
                   </Field>
 
-                  <Field label="Goal">
+                  <Field label="Target Goal">
                     <input
-                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-blue-300 focus:bg-white"
+                      className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-white/30 outline-none transition focus:border-primary/50"
                       placeholder="e.g. 100 meals"
                       value={targetQuantity}
                       onChange={(e) => setTargetQuantity(e.target.value)}
@@ -1330,7 +1238,7 @@ const Campaigns = () => {
                   <Field label="Start Time">
                     <input
                       type="datetime-local"
-                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-blue-300 focus:bg-white"
+                      className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-white/30 outline-none transition focus:border-primary/50"
                       value={startTime}
                       onChange={(e) => setStartTime(e.target.value)}
                     />
@@ -1339,7 +1247,7 @@ const Campaigns = () => {
                   <Field label="End Time">
                     <input
                       type="datetime-local"
-                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-blue-300 focus:bg-white"
+                      className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-white/30 outline-none transition focus:border-primary/50"
                       value={endTime}
                       onChange={(e) => setEndTime(e.target.value)}
                     />
@@ -1348,44 +1256,47 @@ const Campaigns = () => {
 
                 <Field label="Location">
                   <input
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-blue-300 focus:bg-white"
+                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-white/30 outline-none transition focus:border-primary/50"
                     placeholder="e.g. Ward 12, City Hospital"
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
                   />
                 </Field>
 
-                <Field label="Required Skills">
-                  <input
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-blue-300 focus:bg-white"
-                    placeholder="e.g. medical, logistics, coordination"
-                    value={skills}
-                    onChange={(e) => setSkills(e.target.value)}
-                  />
-                </Field>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Field label="Required Skills (CSV)">
+                    <input
+                      className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-white/30 outline-none transition focus:border-primary/50"
+                      placeholder="medical, logistics"
+                      value={skills}
+                      onChange={(e) => setSkills(e.target.value)}
+                    />
+                  </Field>
 
-                <Field label="Volunteers Required">
-                  <input
-                    type="number"
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-blue-300 focus:bg-white"
-                    placeholder="e.g. 5"
-                    value={volunteersRequired}
-                    onChange={(e) => setVolunteersRequired(e.target.value)}
-                  />
-                </Field>
+                  <Field label="Personnel Needed">
+                    <input
+                      type="number"
+                      className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-white/30 outline-none transition focus:border-primary/50"
+                      placeholder="e.g. 5"
+                      value={volunteersRequired}
+                      onChange={(e) => setVolunteersRequired(e.target.value)}
+                    />
+                  </Field>
+                </div>
               </div>
 
+              {/* Form Right Col */}
               <div className="space-y-4">
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                <div className="rounded-2xl border border-white/10 bg-surface_high/50 p-5">
                   <div className="mb-4 flex items-center justify-between">
-                    <h3 className="font-bold text-slate-900">Item Breakdown</h3>
+                    <h3 className="font-bold">Item Loadout</h3>
                     <button
                       onClick={() =>
                         setItems([...items, { key: "", value: "" }])
                       }
-                      className="text-sm font-semibold text-blue-600"
+                      className="text-xs font-bold text-primary hover:underline"
                     >
-                      + Add item
+                      + ADD ITEM
                     </button>
                   </div>
 
@@ -1397,16 +1308,15 @@ const Campaigns = () => {
                           onChange={(e) =>
                             updateItem(idx, "key", e.target.value)
                           }
-                          className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-blue-300"
+                          className="w-full rounded-xl border border-white/10 bg-surface_high px-4 py-3 text-sm text-white outline-none focus:border-primary/50"
                         >
-                          <option value="">Select item</option>
+                          <option value="">Select inventory...</option>
                           {inventory.map((inv) => (
                             <option key={inv.id} value={inv.item_name}>
                               {inv.item_name} ({inv.quantity} {inv.unit})
                             </option>
                           ))}
                         </select>
-
                         <input
                           type="number"
                           placeholder="Quantity"
@@ -1414,43 +1324,24 @@ const Campaigns = () => {
                           onChange={(e) =>
                             updateItem(idx, "value", e.target.value)
                           }
-                          className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-blue-300"
+                          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-white/30 outline-none focus:border-primary/50"
                         />
                       </div>
                     ))}
                   </div>
                 </div>
 
-                <div className="rounded-2xl bg-white p-5 shadow-sm">
-                  <p className="text-sm font-semibold text-slate-900">
-                    Blueprint notes
-                  </p>
-                  <p className="mt-2 text-sm leading-relaxed text-slate-500">
-                    Pick items from inventory, define the volunteer load, and
-                    set a realistic timeline. Campaigns can be updated later
-                    from the mission details view.
-                  </p>
-                </div>
-
-                <div className="flex gap-3 pt-2">
+                <div className="flex gap-3 pt-6">
                   <button
                     onClick={createCampaign}
                     disabled={creating}
-                    className="flex-1 rounded-xl px-4 py-3 text-sm font-semibold text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-70"
-                    style={{
-                      background:
-                        "linear-gradient(135deg, #0D7377 0%, #14919B 100%)",
-                    }}
+                    className="flex-1 rounded-xl bg-primary px-4 py-3 text-sm font-bold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    {creating ? "Creating..." : "Create Campaign"}
+                    {creating ? "Processing..." : "Deploy Campaign"}
                   </button>
-
                   <button
-                    onClick={() => {
-                      setShowForm(false);
-                      setFormError("");
-                    }}
-                    className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                    onClick={() => setShowForm(false)}
+                    className="rounded-xl border border-white/10 bg-surface px-6 py-3 text-sm font-semibold transition hover:bg-white/5"
                   >
                     Cancel
                   </button>
@@ -1464,25 +1355,24 @@ const Campaigns = () => {
   );
 };
 
-const StatCard = ({ label, value, hint, icon }) => (
-  <div className="rounded-2xl border border-white/30 bg-white/70 p-5 shadow-[0_40px_60px_-20px_rgba(32,25,36,0.08)] backdrop-blur-xl">
-    <div className="flex items-start justify-between gap-4">
-      <div className="rounded-2xl bg-slate-100 p-3 text-blue-600">
-        <span className="material-symbols-outlined">{icon}</span>
+// UI Sub-components
+const StatCard = ({ label, value, icon }) => (
+  <div className="rounded-2xl border border-white/10 bg-surface_high/90 p-5 shadow-lg shadow-black/10 backdrop-blur-sm">
+    <div className="mb-4 flex items-center justify-between">
+      <div className="rounded-xl bg-primary/20 p-2.5 text-primary border border-primary/20">
+        <span className="material-symbols-outlined text-[20px]">{icon}</span>
       </div>
     </div>
-
-    <p className="mt-6 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-600">
+    <p className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-60">
       {label}
     </p>
-    <p className="mt-1 text-3xl font-black text-slate-900">{value}</p>
-    <p className="mt-2 text-xs font-medium text-slate-600">{hint}</p>
+    <p className="mt-1 text-3xl font-black">{value}</p>
   </div>
 );
 
 const Field = ({ label, children }) => (
   <label className="block space-y-2">
-    <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-800">
+    <span className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-60 ml-1">
       {label}
     </span>
     {children}
