@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../services/api";
+import Skeleton from "../components/Skeleton";
 
 const MarketplaceAlerts = () => {
   const navigate = useNavigate();
@@ -50,58 +51,122 @@ const MarketplaceAlerts = () => {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* HEADER */}
-      <div className="flex justify-between items-center">
-        <div className="flex items-center gap-4">
-          {/* BACK BUTTON */}
-          <button
-            onClick={() => navigate("/marketplace")}
-            className="px-3 py-2 text-sm bg-surface_high rounded-lg border border-white/10 hover:opacity-80"
-          >
-            ← Back
-          </button>
+      <div className="rounded-2xl border border-white/10 bg-surface_high/90 p-6 shadow-lg shadow-black/10">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => navigate("/marketplace")}
+              className="rounded-xl border border-white/10 bg-surface px-3 py-2 text-sm transition hover:bg-white/5"
+            >
+              ← Back
+            </button>
 
-          <div>
-            <h1 className="text-3xl font-outfit font-bold">
-              Marketplace Alerts
-            </h1>
-            <p className="text-sm text-on_surface_variant">
-              Live donor signals → convert into needs instantly
-            </p>
+            <div>
+              <h1 className="text-3xl font-outfit font-bold">
+                Marketplace Alerts
+              </h1>
+              <p className="mt-1 text-sm text-on_surface_variant">
+                Live donor signals → convert into needs instantly
+              </p>
+            </div>
           </div>
-        </div>
 
-        <button
-          onClick={() => loadAlerts(false)}
-          className="px-4 py-2 text-sm bg-surface_high rounded-lg border border-white/10 hover:opacity-80"
-        >
-          {refreshing ? "Refreshing..." : "Refresh"}
-        </button>
+          <button
+            onClick={() => loadAlerts(false)}
+            className="rounded-xl border border-white/10 bg-surface px-4 py-2 text-sm transition hover:bg-white/5"
+          >
+            {refreshing ? "Refreshing..." : "Refresh"}
+          </button>
+        </div>
       </div>
 
       {/* ERROR */}
       {error && (
-        <div className="bg-red-100 text-red-600 text-sm p-3 rounded">
+        <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
           {error}
         </div>
       )}
 
-      {/* LOADING */}
+      {/* CONTENT */}
       {initialLoading ? (
-        <div className="text-center p-16 text-on_surface_variant">
-          Fetching live alerts...
+        <div className="grid grid-cols-12 gap-6">
+          {/* LEFT SKELETON FEED */}
+          <div className="col-span-12 space-y-4 lg:col-span-8">
+            <div className="flex items-center justify-between">
+              <Skeleton className="h-5 w-28" />
+              <Skeleton className="h-3 w-24" />
+            </div>
+
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div
+                key={i}
+                className="relative overflow-hidden rounded-2xl border border-white/5 bg-surface_high p-5"
+              >
+                <div className="absolute inset-0 -translate-x-full animate-shimmer bg-shimmer pointer-events-none" />
+
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Skeleton className="h-3 w-24" />
+                    <Skeleton className="h-3 w-20" />
+                  </div>
+
+                  <Skeleton className="h-4 w-5/6" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-2/3" />
+
+                  <div className="flex items-center gap-2 pt-1">
+                    <Skeleton className="h-3 w-3" />
+                    <Skeleton className="h-3 w-28" />
+                  </div>
+
+                  <div className="flex justify-end pt-2">
+                    <Skeleton className="h-10 w-36 rounded-lg" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* RIGHT SKELETON INSIGHTS */}
+          <div className="col-span-12 lg:col-span-4">
+            <div className="relative h-full min-h-[400px] overflow-hidden rounded-2xl border border-white/5 bg-surface_high p-5">
+              <div className="absolute inset-0 -translate-x-full animate-shimmer bg-shimmer pointer-events-none" />
+
+              <div className="space-y-4">
+                <Skeleton className="h-5 w-24" />
+                <Skeleton className="h-4 w-40" />
+
+                <div className="space-y-3 pt-2">
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-4 w-5/6" />
+                  <Skeleton className="h-4 w-2/3" />
+                  <Skeleton className="h-4 w-4/5" />
+                </div>
+
+                <div className="pt-8">
+                  <Skeleton className="h-10 w-full rounded-xl" />
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       ) : alerts.length === 0 ? (
-        <div className="text-center p-16 text-on_surface_variant">
+        <div className="rounded-2xl border border-white/10 bg-surface_high/90 p-16 text-center text-on_surface_variant shadow-lg shadow-black/10">
           No active alerts right now
         </div>
       ) : (
         <div className="grid grid-cols-12 gap-6">
           {/* ALERT LIST */}
-          <div className="col-span-12 lg:col-span-8 space-y-4">
+          <div className="col-span-12 space-y-4 lg:col-span-8">
             <div className="flex items-center justify-between">
-              <h3 className="font-semibold text-lg">Alert Feed</h3>
+              <div>
+                <h3 className="text-lg font-semibold">Alert Feed</h3>
+                <p className="mt-1 text-sm text-on_surface_variant">
+                  Incoming donor signals ready to convert
+                </p>
+              </div>
 
               <span className="text-xs text-on_surface_variant">
                 Auto-refresh every 5s
@@ -111,24 +176,27 @@ const MarketplaceAlerts = () => {
             {alerts.map((a) => (
               <div
                 key={a.id}
-                className="bg-surface_high p-5 rounded-xl border border-white/5 hover:scale-[1.01] transition"
+                className="rounded-2xl border border-white/5 bg-surface_high p-5 shadow-lg shadow-black/5 transition hover:-translate-y-0.5 hover:bg-white/5"
               >
-                <div className="flex justify-between items-center mb-3">
-                  <span className="text-[10px] font-bold text-primary tracking-wide">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <span className="text-[10px] font-bold tracking-[0.24em] text-primary">
                     DONOR SIGNAL
                   </span>
 
                   <span className="text-[10px] text-on_surface_variant">
-                    {new Date(a.created_at).toLocaleTimeString()}
+                    {new Date(a.created_at).toLocaleTimeString([], {
+                      hour: "numeric",
+                      minute: "2-digit",
+                    })}
                   </span>
                 </div>
 
-                <p className="text-sm font-medium leading-relaxed">
+                <p className="text-sm leading-relaxed text-on_surface">
                   {a.message_body}
                 </p>
 
                 {a.donor_name && (
-                  <div className="mt-3 text-xs text-on_surface_variant flex items-center gap-1">
+                  <div className="mt-3 flex items-center gap-1 text-xs text-on_surface_variant">
                     <span>👤</span>
                     <span>{a.donor_name}</span>
                   </div>
@@ -138,7 +206,7 @@ const MarketplaceAlerts = () => {
                   <button
                     disabled={loadingId === a.id}
                     onClick={() => claimAlert(a.id)}
-                    className={`px-4 py-2 rounded-lg text-sm transition ${
+                    className={`rounded-xl px-4 py-2 text-sm transition ${
                       loadingId === a.id
                         ? "bg-gray-400 text-white"
                         : "bg-primary text-white hover:opacity-90"
@@ -151,18 +219,22 @@ const MarketplaceAlerts = () => {
             ))}
           </div>
 
+          {/* INSIGHTS */}
           <div className="col-span-12 lg:col-span-4">
-            <div className="bg-surface_high rounded-xl p-5 h-full min-h-[400px]">
-              <h3 className="font-semibold mb-4">Insights</h3>
+            <div className="rounded-2xl border border-white/10 bg-surface_high p-5 shadow-lg shadow-black/10">
+              <h3 className="text-lg font-semibold">Insights</h3>
+              <p className="mt-1 text-sm text-on_surface_variant">
+                A quick view of what is coming in.
+              </p>
 
-              <div className="space-y-3 text-sm text-on_surface_variant">
+              <div className="mt-6 space-y-3 text-sm text-on_surface_variant">
                 <p>• Incoming donor trends</p>
                 <p>• Most requested resources</p>
                 <p>• Conversion efficiency</p>
               </div>
 
-              <div className="mt-10 text-xs text-on_surface_variant text-center">
-                (analytics coming soon)
+              <div className="mt-10 rounded-2xl border border-white/5 bg-surface p-4 text-center text-xs text-on_surface_variant">
+                analytics coming soon
               </div>
             </div>
           </div>
