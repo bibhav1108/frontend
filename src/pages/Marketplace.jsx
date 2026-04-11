@@ -144,14 +144,14 @@ const Marketplace = ({ sidebarOpen }) => {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => navigate("/dispatches")}
-                className="rounded-xl border border-white/10 bg-surface px-4 py-2 text-sm transition hover:bg-white/5"
+                className="rounded-xl border border-white/10 bg-surface px-4 py-2 text-sm transition hover:scale-105 hover:bg-slate-500 hover:text-white active:scale-95 shadow-lg shadow-black/10"
               >
                 Dispatch History
               </button>
 
               <button
                 onClick={() => navigate("/marketplace-stats")}
-                className="rounded-xl border border-white/10 bg-surface px-4 py-2 text-sm transition hover:bg-white/5"
+                className="rounded-xl border border-white/10 bg-surface px-4 py-2 text-sm transition hover:scale-105 hover:bg-slate-500 hover:text-white active:scale-95 shadow-lg shadow-black/10"
               >
                 Stats
               </button>
@@ -266,7 +266,7 @@ const Marketplace = ({ sidebarOpen }) => {
                 className={`rounded-lg px-3 py-1.5 transition ${
                   filter === f
                     ? "bg-primary text-white"
-                    : "border border-white/10 bg-surface hover:bg-white/5"
+                    : "border border-white/10 bg-surface hover:scale-105 hover:bg-slate-500 hover:text-white active:scale-95 shadow-sm"
                 }`}
               >
                 {f}
