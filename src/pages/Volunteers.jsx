@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import API from "../services/api";
 import Skeleton from "../components/Skeleton";
+import VerificationBadge from "../components/VerificationBadge";
 
 const Volunteers = ({ sidebarOpen }) => {
   const [volunteers, setVolunteers] = useState([]);
@@ -205,9 +206,17 @@ const Volunteers = ({ sidebarOpen }) => {
                     <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold">
                       {(v.name || "?")[0]?.toUpperCase()}
                     </div>
-                    <span className="font-medium text-sm truncate text-on_surface">
-                      {v.name}
-                    </span>
+
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="font-medium text-sm truncate text-on_surface">
+                        {v.name}
+                      </span>
+
+                      <VerificationBadge
+                        trustTier={v.trust_tier}
+                        telegramActive={v.telegram_active}
+                      />
+                    </div>
                   </div>
 
                   <div className="col-span-3 text-sm truncate text-on_surface">
@@ -334,6 +343,10 @@ const Volunteers = ({ sidebarOpen }) => {
                 <h2 className="text-2xl font-bold text-on_surface">
                   {selected.name}
                 </h2>
+                <VerificationBadge
+                  trustTier={selected.trust_tier}
+                  telegramActive={selected.telegram_active}
+                />
                 <p className="text-on_surface_variant">
                   {selected.phone_number}
                 </p>
