@@ -324,7 +324,7 @@ const Volunteers = () => {
                      </div>
                      <div className="bg-surface_lowest p-5 rounded-3xl border border-surface_highest text-center group hover:bg-primary/5 transition-all">
                         <span className="text-[10px] text-on_surface_variant block mb-1 uppercase font-black tracking-widest">Hours</span>
-                        <span className="text-2xl font-black text-on_surface">{selected.hours_served.toFixed(1)}</span>
+                        <span className="text-2xl font-black text-on_surface">{(selected.hours_served || 0).toFixed(1)}</span>
                      </div>
                 </div>
 
