@@ -1,8 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Dashboard from "./pages/Dashboard";
-import Login from "./pages/auth/Login";
-import Register from "./pages/auth/Register";
+import AuthPortal from "./pages/auth/AuthPortal";
 import Volunteers from "./pages/Volunteers";
 import Landing from "./pages/Landing";
 import Marketplace from "./pages/Marketplace";
@@ -18,6 +17,7 @@ import MarketplaceAlerts from "./pages/MarketplaceAlerts";
 import MarketplaceStatsPage from "./pages/MarketplaceStats";
 import VolunteerProfile from "./pages/VolunteerProfile";
 import VerifyEmail from "./pages/VolunteerEmailVerification";
+import NGOBrowser from "./pages/NGOBrowser";
 // 👉 (you should create this later)
 import VolunteerLayout from "./components/VolunteerLayout";
 
@@ -27,15 +27,18 @@ function App() {
       <Routes>
         {/* 🌐 Public routes */}
         <Route path="/" element={<Landing />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        <Route path="/login" element={<AuthPortal />} />
+        <Route path="/register" element={<AuthPortal />} />
+        <Route path="/auth" element={<AuthPortal />} />
         <Route path="/missions/:campaign_id" element={<MissionResponse />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
+        
+        <Route path="/register-volunteer" element={<AuthPortal />} />
         {/* ================= ORG ROUTES ================= */}
         <Route
           path="/dashboard"
           element={
-            <ProtectedRoute allowedRole="NGO_COORDINATOR">
+            <ProtectedRoute allowedRoles={["NGO_COORDINATOR"]}>
               <Layout>
                 <Dashboard />
               </Layout>
@@ -46,7 +49,7 @@ function App() {
         <Route
           path="/volunteers"
           element={
-            <ProtectedRoute allowedRole="NGO_COORDINATOR">
+            <ProtectedRoute allowedRoles={["NGO_COORDINATOR"]}>
               <Layout>
                 <Volunteers />
               </Layout>
@@ -57,7 +60,7 @@ function App() {
         <Route
           path="/marketplace"
           element={
-            <ProtectedRoute allowedRole="NGO_COORDINATOR">
+            <ProtectedRoute allowedRoles={["NGO_COORDINATOR"]}>
               <Layout>
                 <Marketplace />
               </Layout>
@@ -68,7 +71,7 @@ function App() {
         <Route
           path="/marketplace-stats"
           element={
-            <ProtectedRoute allowedRole="NGO_COORDINATOR">
+            <ProtectedRoute allowedRoles={["NGO_COORDINATOR"]}>
               <Layout>
                 <MarketplaceStatsPage />
               </Layout>
@@ -79,7 +82,7 @@ function App() {
         <Route
           path="/alerts"
           element={
-            <ProtectedRoute allowedRole="NGO_COORDINATOR">
+            <ProtectedRoute allowedRoles={["NGO_COORDINATOR"]}>
               <Layout>
                 <MarketplaceAlerts />
               </Layout>
@@ -90,7 +93,7 @@ function App() {
         <Route
           path="/inventory"
           element={
-            <ProtectedRoute allowedRole="NGO_COORDINATOR">
+            <ProtectedRoute allowedRoles={["NGO_COORDINATOR"]}>
               <Layout>
                 <Inventory />
               </Layout>
@@ -101,7 +104,7 @@ function App() {
         <Route
           path="/needs"
           element={
-            <ProtectedRoute allowedRole="NGO_COORDINATOR">
+            <ProtectedRoute allowedRoles={["NGO_COORDINATOR"]}>
               <Layout>
                 <ActiveNeeds />
               </Layout>
@@ -112,7 +115,7 @@ function App() {
         <Route
           path="/dispatches"
           element={
-            <ProtectedRoute allowedRole="NGO_COORDINATOR">
+            <ProtectedRoute allowedRoles={["NGO_COORDINATOR"]}>
               <Layout>
                 <DispatchHistory />
               </Layout>
@@ -123,7 +126,7 @@ function App() {
         <Route
           path="/campaigns"
           element={
-            <ProtectedRoute allowedRole="NGO_COORDINATOR">
+            <ProtectedRoute allowedRoles={["NGO_COORDINATOR"]}>
               <Layout>
                 <Campaigns />
               </Layout>
@@ -134,7 +137,7 @@ function App() {
         <Route
           path="/campaign-history"
           element={
-            <ProtectedRoute allowedRole="NGO_COORDINATOR">
+            <ProtectedRoute allowedRoles={["NGO_COORDINATOR"]}>
               <Layout>
                 <CampaignHistory />
               </Layout>
@@ -147,9 +150,19 @@ function App() {
         <Route
           path="/volunteer/profile"
           element={
-            <ProtectedRoute allowedRole="VOLUNTEER">
+            <ProtectedRoute allowedRoles={["VOLUNTEER"]}>
               <VolunteerLayout>
                 <VolunteerProfile />
+              </VolunteerLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/volunteer/find-ngo"
+          element={
+            <ProtectedRoute allowedRoles={["VOLUNTEER"]}>
+              <VolunteerLayout>
+                <NGOBrowser />
               </VolunteerLayout>
             </ProtectedRoute>
           }

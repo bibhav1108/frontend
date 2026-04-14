@@ -19,7 +19,8 @@ const getUserRole = (token) => {
   }
 };
 
-const ProtectedRoute = ({ children, allowedRoles }) => {
+const ProtectedRoute = ({ children, allowedRole, allowedRoles }) => {
+  const roles = allowedRoles || (allowedRole ? [allowedRole] : null);
   const token = localStorage.getItem("token");
 
   // 🔒 Not logged in
@@ -31,7 +32,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   const role = getUserRole(token);
 
   // 🎭 Role check
-  if (allowedRoles && !allowedRoles.includes(role)) {
+  if (roles && !roles.includes(role)) {
     // redirect smartly
     if (role === "VOLUNTEER") {
       return <Navigate to="/volunteer/profile" replace />;

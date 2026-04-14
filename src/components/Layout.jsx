@@ -1,10 +1,12 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
-import API from "../services/api";
+import API, { BACKEND_BASE_URL } from "../services/api";
 import logo from "../assets/logo.png";
 import pingSound from "../assets/ping.mp3";
 import React from "react";
 import Skeleton from "../components/Skeleton";
+import { resolveProfileImage } from "../utils/imageUtils";
+import VerificationBadge from "../components/VerificationBadge";
 
 const NAV_ITEMS = [
   { to: "/dashboard", label: "Overview", icon: "dashboard" },
@@ -63,7 +65,6 @@ const Layout = ({ children }) => {
 
     loadProfile();
   }, []);
-
   const loadNotifications = async () => {
     if (loadingRef.current.notifications) return;
     loadingRef.current.notifications = true;
@@ -132,7 +133,7 @@ const Layout = ({ children }) => {
 
   useEffect(() => {
     loadNotifications();
-    const interval = setInterval(loadNotifications, 5000);
+    const interval = setInterval(loadNotifications, 10000); // Increased to 10s to optimize performance
     return () => clearInterval(interval);
   }, []);
 
@@ -296,14 +297,12 @@ const Layout = ({ children }) => {
             </button>
           )}
 
-          <div className="relative flex-1 hidden sm:block">
-            <span className="material-symbols-outlined absolute left-3 top-2 text-on_surface_variant">
-              search
+          <div className="flex items-center gap-2">
+            <span className="text-on_surface_variant/40 text-sm">Operations</span>
+            <span className="material-symbols-outlined text-xs text-on_surface_variant/40">chevron_right</span>
+            <span className="text-sm font-bold text-on_surface uppercase tracking-widest text-[11px]">
+                {NAV_ITEMS.find(i => i.to === location.pathname)?.label || "Dashboard"}
             </span>
-            <input
-              className="w-full rounded-xl bg-surface_high py-2 pl-10 pr-3 text-sm outline-none transition focus:ring-2 focus:ring-primary/40"
-              placeholder="Search..."
-            />
           </div>
         </div>
 
@@ -345,14 +344,21 @@ const Layout = ({ children }) => {
                     setProfileOpen((p) => !p);
                     setShowNotifications(false);
                   }}
-                  className="flex items-center gap-2 rounded-xl bg-surface_high px-3 py-2 transition-all duration-200 hover:scale-[1.01] hover:bg-white/5"
+                  className="flex items-center gap-2 rounded-xl bg-surface_high px-2 py-1.5 pr-4 transition-all duration-200 hover:scale-[1.01] hover:bg-white/5 border border-white/10"
                 >
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-semibold text-white shadow-soft">
-                    {getInitials(user.full_name)}
+                  <div className="w-8 h-8 rounded-full overflow-hidden border border-primary/10 shadow-soft">
+                    <img 
+                      src={resolveProfileImage(user.profile_image_url)} 
+                      alt="pfp" 
+                      className="w-full h-full object-cover"
+                    />
                   </div>
-                  <span className="hidden sm:inline text-sm font-medium">
-                    {user.full_name || "User"}
-                  </span>
+                  <div className="hidden sm:flex flex-col items-start leading-none">
+                    <div className="flex items-center gap-1.5 font-semibold text-sm">
+                      <span>{user.full_name || "User"}</span>
+                      <VerificationBadge trustTier={user.trust_tier} telegramActive={user.telegram_active} />
+                    </div>
+                  </div>
                   <span className="material-symbols-outlined text-[18px] text-on_surface_variant">
                     expand_more
                   </span>
@@ -366,13 +372,18 @@ const Layout = ({ children }) => {
 
                 {/* User Info Section */}
                 <div className="flex items-center gap-3 p-2">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary font-semibold text-white shadow-soft">
-                    {getInitials(user.full_name)}
+                  <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/10 shadow-soft">
+                    <img 
+                      src={resolveProfileImage(user.profile_image_url)} 
+                      alt="pfp" 
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                   <div className="min-w-0">
-                    <p className="truncate font-semibold">
-                      {user.full_name || "User"}
-                    </p>
+                    <div className="flex items-center gap-2 font-semibold">
+                      <p className="truncate">{user.full_name || "User"}</p>
+                      <VerificationBadge trustTier={user.trust_tier} telegramActive={user.telegram_active} />
+                    </div>
                     <p className="truncate text-xs text-on_surface_variant">
                       {user.email}
                     </p>

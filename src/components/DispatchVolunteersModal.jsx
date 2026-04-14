@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import API from "../services/api";
 import Skeleton from "./Skeleton";
+import { resolveProfileImage } from "../utils/imageUtils";
 import VerificationBadge from "./VerificationBadge";
 
 const DispatchVolunteersModal = ({ open, onClose, needId, onSuccess }) => {
@@ -131,13 +132,21 @@ const DispatchVolunteersModal = ({ open, onClose, needId, onSuccess }) => {
                         }
                       `}
                     >
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">{v.name}</span>
-
-                        <VerificationBadge
-                          trustTier={v.trust_tier}
-                          telegramActive={v.telegram_active}
-                        />
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full overflow-hidden border border-primary/10 shadow-sm">
+                          <img 
+                            src={resolveProfileImage(v.profile_image_url)} 
+                            alt={v.name} 
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium">{v.name}</span>
+                          <VerificationBadge
+                            trustTier={v.trust_tier}
+                            telegramActive={v.telegram_active}
+                          />
+                        </div>
                       </div>
                       {isSelected && (
                         <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
@@ -203,13 +212,21 @@ const DispatchVolunteersModal = ({ open, onClose, needId, onSuccess }) => {
                   key={v.id}
                   className="group flex items-center justify-between bg-surface border border-white/10 px-3 py-2.5 rounded-lg transition-colors hover:border-white/20"
                 >
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm">{v.name}</span>
-
-                    <VerificationBadge
-                      trustTier={v.trust_tier}
-                      telegramActive={v.telegram_active}
-                    />
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full overflow-hidden border border-primary/10 shadow-sm">
+                      <img 
+                        src={resolveProfileImage(v.profile_image_url)} 
+                        alt={v.name} 
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium">{v.name}</span>
+                      <VerificationBadge
+                        trustTier={v.trust_tier}
+                        telegramActive={v.telegram_active}
+                      />
+                    </div>
                   </div>
                   {/* DESELECT VOLUNTEER BUTTON - NOW ACTUALLY RED */}
                   <button

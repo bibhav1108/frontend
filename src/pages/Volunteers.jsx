@@ -2,12 +2,16 @@ import { useState, useEffect } from "react";
 import API from "../services/api";
 import Skeleton from "../components/Skeleton";
 import VerificationBadge from "../components/VerificationBadge";
+import { resolveProfileImage } from "../utils/imageUtils";
 
-const Volunteers = ({ sidebarOpen }) => {
+const Volunteers = () => {
+  const [activeTab, setActiveTab] = useState("members"); // "members" or "requests"
   const [volunteers, setVolunteers] = useState([]);
+  const [requests, setRequests] = useState([]);
   const [selected, setSelected] = useState(null);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [requestsLoading, setRequestsLoading] = useState(false);
 
   const [seenIds, setSeenIds] = useState(new Set());
 
@@ -20,59 +24,44 @@ const Volunteers = ({ sidebarOpen }) => {
     skills: "",
   });
 
-  // INITIAL + POLLING (no flicker)
   useEffect(() => {
-    loadVolunteers(true);
+    if (activeTab === "members") {
+      loadVolunteers(true);
+    } else {
+      loadRequests();
+    }
+  }, [activeTab]);
 
-    const i = setInterval(() => {
-      loadVolunteers(false);
-    }, 5000);
-
-    return () => clearInterval(i);
-  }, []);
-
-  useEffect(() => {
-    const handleEsc = (e) => {
-      if (e.key === "Escape") {
-        setShowForm(false);
-        setSelected(null);
-      }
-    };
-    window.addEventListener("keydown", handleEsc);
-    return () => window.removeEventListener("keydown", handleEsc);
-  }, []);
-
-  // SMART LOAD (merge instead of replace)
   const loadVolunteers = async (initial = false) => {
     try {
       if (initial) setLoading(true);
-
       const res = await API.get("/volunteers");
-      const incoming = res.data || [];
-
-      setVolunteers((prev) => {
-        const map = new Map(prev.map((v) => [v.id, v]));
-        const newOnes = [];
-
-        incoming.forEach((v) => {
-          if (!map.has(v.id)) newOnes.push(v.id);
-          map.set(v.id, v);
-        });
-
-        // track new ones
-        setSeenIds((prevIds) => {
-          const updated = new Set(prevIds);
-          newOnes.forEach((id) => updated.add(id));
-          return updated;
-        });
-
-        return Array.from(map.values()).sort((a, b) =>
-          (a.name || "").localeCompare(b.name || ""),
-        );
-      });
+      setVolunteers(res.data || []);
     } catch {
     } finally {
       if (initial) setLoading(false);
+    }
+  };
+
+  const loadRequests = async () => {
+    try {
+      setRequestsLoading(true);
+      const res = await API.get("/volunteers/join-requests/incoming");
+      setRequests(res.data || []);
+    } catch {
+    } finally {
+      setRequestsLoading(false);
+    }
+  };
+
+  const handleRequestAction = async (requestId, status) => {
+    try {
+      await API.patch(`/volunteers/join-requests/${requestId}`, { status });
+      alert(`Request ${status === "APPROVED" ? "approved" : "rejected"} successfully!`);
+      loadRequests();
+      if (status === "APPROVED") loadVolunteers(false);
+    } catch (err) {
+      alert(err.response?.data?.detail || "Action failed");
     }
   };
 
@@ -91,13 +80,7 @@ const Volunteers = ({ sidebarOpen }) => {
         skills: form.skills ? form.skills.split(",").map((s) => s.trim()) : [],
       });
 
-      setForm({
-        name: "",
-        phone_number: "",
-        zone: "",
-        skills: "",
-      });
-
+      setForm({ name: "", phone_number: "", zone: "", skills: "" });
       setShowForm(false);
       loadVolunteers(false);
     } catch (err) {
@@ -107,328 +90,203 @@ const Volunteers = ({ sidebarOpen }) => {
     }
   };
 
-  const getSuccessRate = (v) => {
-    const c = Number(v.completions || 0);
-    const n = Number(v.no_shows || 0);
-    const total = c + n;
-    if (total === 0) return 0;
-    return Math.round(((c - n) / total) * 100);
-  };
-
   const filtered = volunteers.filter((v) =>
     (v.name || "").toLowerCase().includes(search.toLowerCase()),
   );
 
   return (
     <div className="space-y-6">
-      {/* HEADER */}
-      <div className="rounded-2xl border border-white/10 bg-surface_high/80 backdrop-blur p-6 flex justify-between items-center flex-wrap gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-on_surface">
-            Volunteer Force
-          </h1>
-          <p className="text-sm text-on_surface_variant">
-            Manage and deploy your human network
-          </p>
-        </div>
+      {/* TABS */}
+      <div className="flex gap-2">
+        <button
+          onClick={() => setActiveTab("members")}
+          className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${
+            activeTab === "members"
+              ? "bg-primary text-white shadow-soft"
+              : "bg-surface_high text-on_surface_variant hover:bg-surface_highest"
+          }`}
+        >
+          Team Members
+        </button>
+        <button
+          onClick={() => setActiveTab("requests")}
+          className={`px-6 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${
+            activeTab === "requests"
+              ? "bg-primary text-white shadow-soft"
+              : "bg-surface_high text-on_surface_variant hover:bg-surface_highest"
+          }`}
+        >
+          Join Requests
+          {requests.length > 0 && activeTab !== "requests" && (
+             <span className="w-2 h-2 bg-red-400 rounded-full animate-pulse"></span>
+          )}
+        </button>
+      </div>
 
-        <div className="flex items-center gap-4">
-          <div className="text-right">
-            <p className="text-3xl font-bold text-on_surface">
-              {volunteers.length}
-            </p>
-            <p className="text-xs text-on_surface_variant">Active Volunteers</p>
+      {activeTab === "members" ? (
+        <div className="space-y-6">
+          {/* MEMBERS VIEW */}
+          <div className="rounded-2xl border border-white/10 bg-surface_high/80 backdrop-blur p-6 flex justify-between items-center flex-wrap gap-4">
+            <div>
+              <h1 className="text-2xl font-bold text-on_surface">Volunteer Force</h1>
+              <p className="text-sm text-on_surface_variant">Manage and deploy your human network</p>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="text-right">
+                <p className="text-3xl font-bold text-on_surface">{volunteers.length}</p>
+                <p className="text-xs text-on_surface_variant">Active Volunteers</p>
+              </div>
+              <button
+                onClick={() => setShowForm(true)}
+                className="bg-primary text-white px-4 py-2 rounded-xl text-sm font-semibold hover:opacity-90"
+              >
+                + Add
+              </button>
+            </div>
           </div>
 
-          <button
-            onClick={() => setShowForm(true)}
-            className="bg-primary text-white px-4 py-2 rounded-xl text-sm font-semibold hover:opacity-90"
-          >
-            + Add
-          </button>
-        </div>
-      </div>
+          <input
+            placeholder="Search volunteers..."
+            className="w-full max-w-md px-4 py-3 rounded-xl bg-surface_high border border-white/10 text-on_surface placeholder:text-on_surface_variant focus:outline-none focus:ring-2 focus:ring-primary/30"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
 
-      {/* SEARCH */}
-      <input
-        placeholder="Search volunteers..."
-        className="w-full max-w-md px-4 py-3 rounded-xl bg-surface_high border border-white/10 text-on_surface placeholder:text-on_surface_variant focus:outline-none focus:ring-2 focus:ring-primary/30"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-      />
+          <div className="rounded-2xl border border-white/10 bg-surface_high/80 backdrop-blur p-2 space-y-2">
+            <div className="grid grid-cols-12 px-4 py-2 text-xs text-on_surface_variant">
+              <div className="col-span-5">Name</div>
+              <div className="col-span-4">Phone</div>
+              <div className="col-span-3 text-right">Status</div>
+            </div>
 
-      {/* LIST */}
-      <div className="rounded-2xl border border-white/10 bg-surface_high/80 backdrop-blur p-2 space-y-2">
-        {/* HEADER */}
-        <div className="grid grid-cols-12 px-4 py-2 text-xs text-on_surface_variant">
-          <div className="col-span-4">Name</div>
-          <div className="col-span-3">Phone</div>
-          <div className="col-span-2">Zone</div>
-          <div className="col-span-1">Status</div>
-          <div className="col-span-2 text-right">Success</div>
-        </div>
-
-        {/* LOADING */}
-        {loading
-          ? Array.from({ length: 6 }).map((_, i) => (
+            {loading ? (
+               <Skeleton count={5} height={50} />
+            ) : filtered.map((v) => (
               <div
-                key={i}
-                className="grid grid-cols-12 px-4 py-3 items-center bg-surface rounded-lg border border-white/5"
+                key={v.id}
+                onClick={() => setSelected(v)}
+                className="grid grid-cols-12 items-center px-4 py-3 cursor-pointer transition rounded-lg border border-white/10 hover:bg-white/5"
               >
-                <div className="col-span-4 flex gap-3 items-center">
-                  <Skeleton className="w-8 h-8 rounded-full" />
-                  <Skeleton className="h-3 w-32" />
+                <div className="col-span-5 flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full overflow-hidden border border-primary/10 shadow-sm">
+                    <img 
+                      src={resolveProfileImage(v.profile_image_url)} 
+                      alt={v.name} 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <span className="font-medium text-sm text-on_surface">{v.name}</span>
+                  <VerificationBadge trustTier={v.trust_tier} telegramActive={v.telegram_active} />
                 </div>
-                <div className="col-span-3">
-                  <Skeleton className="h-3 w-28" />
-                </div>
-                <div className="col-span-2">
-                  <Skeleton className="h-3 w-20" />
-                </div>
-                <div className="col-span-1">
-                  <Skeleton className="h-3 w-12" />
-                </div>
-                <div className="col-span-2 flex justify-end">
-                  <Skeleton className="h-3 w-12" />
+                <div className="col-span-4 text-sm text-on_surface_variant">{v.phone_number}</div>
+                <div className="col-span-3 text-right">
+                   <span className={`text-[10px] px-2 py-0.5 rounded-full ${v.telegram_active ? "bg-green-500/10 text-green-500" : "bg-gray-500/10 text-gray-500"}`}>
+                     {v.telegram_active ? "Online" : "Offline"}
+                   </span>
                 </div>
               </div>
-            ))
-          : filtered.map((v) => {
-              const rate = getSuccessRate(v);
-
-              return (
-                <div
-                  key={v.id}
-                  onClick={() => setSelected(v)}
-                  className={`grid grid-cols-12 items-center px-4 py-3 cursor-pointer transition rounded-lg border border-white/10 shadow-sm hover:bg-white/5 ${!seenIds.has(v.id) ? "animate-fadeIn" : ""}`}
-                >
-                  <div className="col-span-4 flex items-center gap-3 min-w-0">
-                    <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold">
-                      {(v.name || "?")[0]?.toUpperCase()}
-                    </div>
-
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="font-medium text-sm truncate text-on_surface">
-                        {v.name}
-                      </span>
-
-                      <VerificationBadge
-                        trustTier={v.trust_tier}
-                        telegramActive={v.telegram_active}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="col-span-3 text-sm truncate text-on_surface">
-                    {v.phone_number}
-                  </div>
-
-                  <div className="col-span-2 text-sm truncate text-on_surface">
-                    {v.zone || "—"}
-                  </div>
-
-                  <div className="col-span-1">
-                    <span
-                      className={`text-xs px-2 py-1 rounded-full ${
-                        v.telegram_active
-                          ? "bg-green-200 text-green-900"
-                          : "bg-gray-300 text-gray-800"
-                      }`}
-                    >
-                      {v.telegram_active ? "Online" : "Offline"}
-                    </span>
-                  </div>
-
-                  <div className="col-span-2 text-right text-sm font-semibold text-on_surface">
-                    {rate > 0 ? `+${rate}` : rate}%
-                  </div>
-                </div>
-              );
-            })}
-      </div>
-
-      {/* CREATE FORM MODAL */}
-      {showForm && (
-        <div
-          className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
-          onClick={() => setShowForm(false)}
-        >
-          <div
-            className="bg-surface_high w-full max-w-md p-6 rounded-2xl space-y-4 border border-white/10 relative"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={() => setShowForm(false)}
-              className="absolute top-4 right-4 text-on_surface_variant hover:text-on_surface"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-            <h2 className="font-bold text-xl text-on_surface">Add Volunteer</h2>
-
-            {["name", "phone_number", "zone", "skills"].map((field) => (
-              <input
-                key={field}
-                placeholder={
-                  field === "skills"
-                    ? "Skills (comma separated)"
-                    : field.replace("_", " ")
-                }
-                value={form[field]}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, [field]: e.target.value }))
-                }
-                className="w-full px-3 py-2 rounded-lg bg-surface border border-white/10 text-on_surface focus:outline-none focus:ring-1 focus:ring-primary/50 placeholder-capitalize"
-              />
             ))}
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {/* REQUESTS VIEW */}
+          <div className="rounded-2xl border border-white/10 bg-surface_high/80 backdrop-blur p-6">
+             <h2 className="text-xl font-bold text-on_surface">Pending Applications</h2>
+             <p className="text-sm text-on_surface_variant">Volunteers waiting to join your team.</p>
+          </div>
 
-            <button
-              onClick={handleCreate}
-              className="w-full py-2.5 rounded-lg bg-primary text-white font-medium hover:opacity-90 transition-opacity"
-            >
-              {creating ? "Creating..." : "Create Volunteer"}
-            </button>
+          <div className="grid gap-4">
+             {requestsLoading ? (
+               <Skeleton count={3} height={80} />
+             ) : requests.length > 0 ? (
+               requests.map((req) => (
+                 <div key={req.id} className="bg-surface_lowest p-5 rounded-2xl border border-white/10 shadow-soft flex justify-between items-center">
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-primary/10 shadow-soft">
+                            <img 
+                                src={resolveProfileImage(req.profile_image_url)} 
+                                alt={req.volunteer_name} 
+                                className="w-full h-full object-cover"
+                            />
+                        </div>
+                        <div>
+                            <div className="flex items-center gap-2 font-bold text-on_surface">
+                                <h3>{req.volunteer_name}</h3>
+                                <VerificationBadge trustTier={req.trust_tier} telegramActive={req.telegram_active} />
+                            </div>
+                            <p className="text-xs text-on_surface_variant">Applied on {new Date(req.created_at).toLocaleDateString()}</p>
+                        </div>
+                    </div>
+                    <div className="flex gap-2">
+                        <button 
+                            onClick={() => handleRequestAction(req.id, "REJECTED")}
+                            className="px-4 py-2 text-xs font-bold text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                        >
+                            Decline
+                        </button>
+                        <button 
+                            onClick={() => handleRequestAction(req.id, "APPROVED")}
+                            className="px-6 py-2 bg-primary text-white text-xs font-bold rounded-lg shadow-soft hover:shadow-lg transition-all"
+                        >
+                            Approve
+                        </button>
+                    </div>
+                 </div>
+               ))
+             ) : (
+               <div className="text-center py-20 bg-surface_lowest rounded-3xl border border-dashed border-gray-200">
+                  <span className="material-symbols-outlined text-4xl text-on_surface_variant mb-2">inbox</span>
+                  <p className="text-on_surface_variant">No pending join requests</p>
+               </div>
+             )}
           </div>
         </div>
       )}
 
-      {/* VOLUNTEER DETAILS MODAL */}
+      {/* MODALS ... (re-using the ones from original Volunteers.jsx) */}
+      {/* Form Modal */}
+      {showForm && (
+        <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setShowForm(false)}>
+          <div className="bg-surface_high w-full max-w-md p-6 rounded-2xl space-y-4 border border-white/10 relative" onClick={(e) => e.stopPropagation()}>
+            <h2 className="font-bold text-xl text-on_surface">Add Volunteer</h2>
+            <input placeholder="Name" value={form.name} onChange={(e) => setForm({...form, name: e.target.value})} className="w-full px-3 py-2 rounded-lg bg-surface border border-white/10 text-on_surface" />
+            <input placeholder="Phone Number" value={form.phone_number} onChange={(e) => setForm({...form, phone_number: e.target.value})} className="w-full px-3 py-2 rounded-lg bg-surface border border-white/10 text-on_surface" />
+            <button onClick={handleCreate} className="w-full py-2.5 rounded-lg bg-primary text-white font-medium">{creating ? "Creating..." : "Create Volunteer"}</button>
+          </div>
+        </div>
+      )}
+
       {selected && (
-        <div
-          className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
-          onClick={() => setSelected(null)}
-        >
-          <div
-            className="bg-surface_high w-full max-w-lg p-6 rounded-2xl shadow-2xl border border-white/10 relative animate-fadeIn"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Close Cross Button */}
-            <button
-              onClick={() => setSelected(null)}
-              className="absolute top-4 right-4 text-on_surface_variant hover:text-on_surface transition-colors"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-
-            {/* Profile Header */}
-            <div className="flex items-center gap-5 mb-6">
-              <div className="w-16 h-16 rounded-full bg-primary text-white flex items-center justify-center text-2xl font-bold shadow-inner">
-                {(selected.name || "?")[0]?.toUpperCase()}
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold text-on_surface">
-                  {selected.name}
-                </h2>
-                <VerificationBadge
-                  trustTier={selected.trust_tier}
-                  telegramActive={selected.telegram_active}
-                />
-                <p className="text-on_surface_variant">
-                  {selected.phone_number}
-                </p>
-              </div>
-            </div>
-
-            {/* Stats / Info Grid */}
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div className="bg-surface p-3 rounded-xl border border-white/5">
-                <span className="text-on_surface_variant block mb-1 text-xs uppercase tracking-wider">
-                  Zone
-                </span>
-                <span className="text-on_surface font-medium">
-                  {selected.zone || "Unassigned"}
-                </span>
-              </div>
-              <div className="bg-surface p-3 rounded-xl border border-white/5">
-                <span className="text-on_surface_variant block mb-1 text-xs uppercase tracking-wider">
-                  Status
-                </span>
-                <span
-                  className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                    selected.telegram_active
-                      ? "bg-green-500/20 text-green-400"
-                      : "bg-gray-500/20 text-gray-400"
-                  }`}
-                >
-                  {selected.telegram_active ? "Online" : "Offline"}
-                </span>
-              </div>
-              <div className="bg-surface p-3 rounded-xl border border-white/5">
-                <span className="text-on_surface_variant block mb-1 text-xs uppercase tracking-wider">
-                  Completions
-                </span>
-                <span className="text-on_surface font-medium text-lg">
-                  {selected.completions || 0}
-                </span>
-              </div>
-              <div className="bg-surface p-3 rounded-xl border border-white/5">
-                <span className="text-on_surface_variant block mb-1 text-xs uppercase tracking-wider">
-                  No Shows
-                </span>
-                <span className="text-on_surface font-medium text-lg text-red-400">
-                  {selected.no_shows || 0}
-                </span>
-              </div>
-            </div>
-
-            {/* Skills Badges */}
-            {selected.skills && selected.skills.length > 0 && (
-              <div className="mt-4 bg-surface p-4 rounded-xl border border-white/5">
-                <span className="text-on_surface_variant block mb-3 text-xs uppercase tracking-wider">
-                  Skills
-                </span>
-                <div className="flex flex-wrap gap-2">
-                  {Array.isArray(selected.skills) ? (
-                    selected.skills.map((skill, i) => (
-                      <span
-                        key={i}
-                        className="px-2.5 py-1 bg-white/5 border border-white/10 rounded-md text-xs text-on_surface"
-                      >
-                        {skill}
-                      </span>
-                    ))
-                  ) : (
-                    <span className="px-2.5 py-1 bg-white/5 border border-white/10 rounded-md text-xs text-on_surface">
-                      {selected.skills}
-                    </span>
-                  )}
+        <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setSelected(null)}>
+          <div className="bg-surface_high w-full max-w-lg p-6 rounded-2xl shadow-2xl border border-white/10 relative" onClick={(e) => e.stopPropagation()}>
+             <div className="flex items-center gap-5 mb-6">
+                <div className="w-16 h-16 rounded-full overflow-hidden border-4 border-white shadow-xl">
+                    <img 
+                        src={resolveProfileImage(selected.profile_image_url)} 
+                        alt={selected.name} 
+                        className="w-full h-full object-cover"
+                    />
                 </div>
-              </div>
-            )}
-
-            {/* Success Rate Footer */}
-            <div className="mt-6 pt-4 border-t border-white/10 flex justify-between items-center">
-              <span className="text-sm text-on_surface_variant">
-                Overall Success Rate
-              </span>
-              <span className="text-lg font-bold text-on_surface">
-                {getSuccessRate(selected)}%
-              </span>
-            </div>
+                <div>
+                    <div className="flex items-center gap-2">
+                        <h2 className="text-2xl font-bold text-on_surface">{selected.name}</h2>
+                        <VerificationBadge trustTier={selected.trust_tier} telegramActive={selected.telegram_active} />
+                    </div>
+                    <p className="text-on_surface_variant text-sm">{selected.phone_number}</p>
+                </div>
+             </div>
+             <div className="grid grid-cols-2 gap-4">
+                 <div className="bg-surface p-4 rounded-xl">
+                    <span className="text-xs text-on_surface_variant block mb-1 uppercase tracking-wider">Status</span>
+                    <span className={`text-sm font-bold ${selected.telegram_active ? "text-green-500" : "text-gray-500"}`}>{selected.telegram_active ? "Online" : "Offline"}</span>
+                 </div>
+                 <div className="bg-surface p-4 rounded-xl">
+                    <span className="text-xs text-on_surface_variant block mb-1 uppercase tracking-wider">Trust Tier</span>
+                    <span className="text-sm font-bold text-primary">{selected.trust_tier}</span>
+                 </div>
+             </div>
+             <button onClick={() => setSelected(null)} className="mt-8 w-full py-3 bg-surface_high text-on_surface font-bold rounded-xl border border-white/10">Close</button>
           </div>
         </div>
       )}

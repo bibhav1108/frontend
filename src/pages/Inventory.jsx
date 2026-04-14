@@ -425,7 +425,10 @@ const Inventory = () => {
 
       {/* --- EDIT QUANTITY (INLINE OVERLAY) --- */}
       {editingId && (
-        <div className="fixed inset-0 z-40 bg-transparent" onClick={() => setEditingId(null)}>
+        <div
+          className="fixed inset-0 z-40 bg-transparent"
+          onClick={() => setEditingId(null)}
+        >
           {/* This is a backdrop to close edit on click outside if we want, or just handle it in the row */}
         </div>
       )}
