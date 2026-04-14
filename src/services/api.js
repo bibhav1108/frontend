@@ -1,8 +1,11 @@
 import axios from "axios";
 
-export const BACKEND_BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8005";
+export const BACKEND_BASE_URL = "http://localhost:8005";
+
 const API = axios.create({
-  baseURL: `${BACKEND_BASE_URL}/api/v1/`,
+
+  baseURL: "https://sahyog-setu-backend.onrender.com/api/v1/",
+
 });
 
 API.interceptors.request.use((config) => {
