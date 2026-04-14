@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import API from "../services/api";
 import Skeleton from "../components/Skeleton";
 import VerificationBadge from "../components/VerificationBadge";
@@ -258,36 +259,107 @@ const Volunteers = () => {
       )}
 
       {selected && (
-        <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setSelected(null)}>
-          <div className="bg-surface_high w-full max-w-lg p-6 rounded-2xl shadow-2xl border border-white/10 relative" onClick={(e) => e.stopPropagation()}>
-             <div className="flex items-center gap-5 mb-6">
-                <div className="w-16 h-16 rounded-full overflow-hidden border-4 border-white shadow-xl">
-                    <img 
-                        src={resolveProfileImage(selected.profile_image_url)} 
-                        alt={selected.name} 
-                        className="w-full h-full object-cover"
-                    />
-                </div>
-                <div>
-                    <div className="flex items-center gap-2">
-                        <h2 className="text-2xl font-bold text-on_surface">{selected.name}</h2>
-                        <VerificationBadge trustTier={selected.trust_tier} telegramActive={selected.telegram_active} />
+        <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/60 backdrop-blur-md p-4" onClick={() => setSelected(null)}>
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white w-full max-w-xl rounded-[3rem] shadow-2xl border border-white/20 relative overflow-hidden" 
+            onClick={(e) => e.stopPropagation()}
+          >
+             {/* Profile Header Background */}
+             <div className="h-32 bg-gradient-to-br from-primary to-primary_dark relative">
+                <button 
+                  onClick={() => setSelected(null)}
+                  className="absolute top-6 right-6 w-10 h-10 bg-white/20 hover:bg-white/30 text-white rounded-full flex items-center justify-center transition-all"
+                >
+                  <span className="material-symbols-outlined text-sm">close</span>
+                </button>
+             </div>
+
+             <div className="px-10 pb-10">
+                {/* Profile Picture Overlay */}
+                <div className="relative -mt-16 mb-6">
+                    <div className="w-32 h-32 rounded-[2.5rem] overflow-hidden border-8 border-white shadow-2xl mx-auto md:mx-0">
+                        <img 
+                            src={resolveProfileImage(selected.profile_image_url)} 
+                            alt={selected.name} 
+                            className="w-full h-full object-cover"
+                        />
                     </div>
-                    <p className="text-on_surface_variant text-sm">{selected.phone_number}</p>
                 </div>
+
+                <div className="flex flex-col md:flex-row justify-between items-start gap-6">
+                    <div className="space-y-1">
+                        <div className="flex items-center gap-3">
+                            <h2 className="text-3xl font-outfit font-black text-on_surface">{selected.name}</h2>
+                            <VerificationBadge trustTier={selected.trust_tier} telegramActive={selected.telegram_active} />
+                        </div>
+                        <div className="flex items-center gap-2 text-on_surface_variant">
+                            <span className="material-symbols-outlined text-sm">call</span>
+                            <span className="text-sm font-bold">{selected.phone_number}</span>
+                            {selected.zone && (
+                                <>
+                                    <span className="text-gray-300">|</span>
+                                    <span className="material-symbols-outlined text-sm">location_on</span>
+                                    <span className="text-sm font-bold">{selected.zone}</span>
+                                </>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="bg-surface_high/50 px-4 py-2 rounded-2xl border border-surface_highest">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-on_surface_variant mb-1 text-center">Trust Score</p>
+                        <p className="text-xl font-black text-primary text-center">{selected.trust_score}</p>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
+                     <div className="bg-surface_lowest p-5 rounded-3xl border border-surface_highest text-center group hover:bg-primary/5 transition-all">
+                        <span className="text-[10px] text-on_surface_variant block mb-1 uppercase font-black tracking-widest">Completed</span>
+                        <span className="text-2xl font-black text-on_surface">{selected.completions}</span>
+                     </div>
+                     <div className="bg-surface_lowest p-5 rounded-3xl border border-surface_highest text-center group hover:bg-secondary/5 transition-all">
+                        <span className="text-[10px] text-on_surface_variant block mb-1 uppercase font-black tracking-widest">No Shows</span>
+                        <span className={`text-2xl font-black ${selected.no_shows > 0 ? "text-red-400" : "text-on_surface"}`}>{selected.no_shows}</span>
+                     </div>
+                     <div className="bg-surface_lowest p-5 rounded-3xl border border-surface_highest text-center group hover:bg-primary/5 transition-all">
+                        <span className="text-[10px] text-on_surface_variant block mb-1 uppercase font-black tracking-widest">Hours</span>
+                        <span className="text-2xl font-black text-on_surface">{selected.hours_served.toFixed(1)}</span>
+                     </div>
+                </div>
+
+                {/* Performance Meter */}
+                <div className="mt-8 space-y-3">
+                    <div className="flex justify-between items-end">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-on_surface_variant">Confidence Score</label>
+                        <span className="text-xs font-black text-primary italic">
+                            {selected.completions > 0 ? Math.round((selected.completions / (selected.completions + selected.no_shows)) * 100) : 0}% Reliable
+                        </span>
+                    </div>
+                    <div className="h-4 w-full bg-surface_highest rounded-full overflow-hidden border border-surface_highest p-1">
+                        <motion.div 
+                            initial={{ width: 0 }}
+                            animate={{ width: `${selected.completions > 0 ? (selected.completions / (selected.completions + selected.no_shows)) * 100 : 0}%` }}
+                            className="h-full bg-gradient-to-r from-primary to-primary_light rounded-full"
+                        />
+                    </div>
+                </div>
+
+                {/* Skills Chips */}
+                {selected.skills && selected.skills.length > 0 && (
+                    <div className="mt-8">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-on_surface_variant block mb-3">Capabilities</label>
+                        <div className="flex flex-wrap gap-2">
+                             {selected.skills.map(skill => (
+                                 <span key={skill} className="px-3 py-1 bg-surface_high text-on_surface text-[10px] font-black uppercase tracking-widest rounded-full border border-surface_highest">
+                                    {skill}
+                                 </span>
+                             ))}
+                        </div>
+                    </div>
+                )}
              </div>
-             <div className="grid grid-cols-2 gap-4">
-                 <div className="bg-surface p-4 rounded-xl">
-                    <span className="text-xs text-on_surface_variant block mb-1 uppercase tracking-wider">Status</span>
-                    <span className={`text-sm font-bold ${selected.telegram_active ? "text-green-500" : "text-gray-500"}`}>{selected.telegram_active ? "Online" : "Offline"}</span>
-                 </div>
-                 <div className="bg-surface p-4 rounded-xl">
-                    <span className="text-xs text-on_surface_variant block mb-1 uppercase tracking-wider">Trust Tier</span>
-                    <span className="text-sm font-bold text-primary">{selected.trust_tier}</span>
-                 </div>
-             </div>
-             <button onClick={() => setSelected(null)} className="mt-8 w-full py-3 bg-surface_high text-on_surface font-bold rounded-xl border border-white/10">Close</button>
-          </div>
+          </motion.div>
         </div>
       )}
     </div>
