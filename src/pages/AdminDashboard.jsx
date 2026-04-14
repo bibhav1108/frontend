@@ -86,48 +86,26 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-surface font-inter text-on_surface">
-      {/* 🔝 HEADER */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-surface_highest sticky top-0 z-30">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-3">
-             <div className="w-10 h-10 bg-primaryGradient rounded-xl shadow-lg ring-4 ring-primary/10 flex items-center justify-center text-white font-black">SS</div>
-             <span className="text-xl font-outfit font-black tracking-tighter">ADMIN <span className="text-primary">PORTAL</span></span>
-          </Link>
-          <div className="flex items-center gap-4">
-            <div className="text-right hidden sm:block">
-              <p className="text-sm font-bold">System Admin</p>
-              <p className="text-[10px] text-on_surface_variant uppercase tracking-widest font-black">Global Access</p>
-            </div>
-            <button 
-              onClick={handleLogout}
-              className="p-3 rounded-xl bg-surface_highest text-on_surface_variant hover:text-red-500 transition-colors"
-            >
-              <span className="material-symbols-outlined">logout</span>
-            </button>
-          </div>
-        </div>
-      </header>
+    <div className="space-y-10 animate-[fadeIn_0.4s_ease]">
+      {/* 📊 STATS CARDS */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatCard title="Total NGOs" value={stats.total_ngos} icon="corporate_fare" color="bg-blue-500" />
+        <StatCard title="Pending" value={stats.pending_ngos} icon="pending_actions" color="bg-amber-500" pulse />
+        <StatCard title="Active NGOs" value={stats.active_ngos} icon="verified" color="bg-green-500" />
+        <StatCard title="Volunteers" value={stats.total_volunteers} icon="groups" color="bg-primary" />
+      </div>
 
-      <main className="max-w-7xl mx-auto px-6 py-10 space-y-10">
-        {/* 📊 STATS CARDS */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <StatCard title="Total NGOs" value={stats.total_ngos} icon="corporate_fare" color="bg-blue-500" />
-          <StatCard title="Pending" value={stats.pending_ngos} icon="pending_actions" color="bg-amber-500" pulse />
-          <StatCard title="Active NGOs" value={stats.active_ngos} icon="verified" color="bg-green-500" />
-          <StatCard title="Volunteers" value={stats.total_volunteers} icon="groups" color="bg-primary" />
-        </div>
-
-        {/* 🏢 PENDING NGOS LIST */}
-        <section className="bg-white rounded-3xl shadow-soft border border-surface_highest overflow-hidden">
-          <div className="p-8 border-b border-surface_highest flex items-center justify-between">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+        {/* 🏢 PENDING NGOS LIST (Quick Actions) */}
+        <section className="lg:col-span-2 bg-white rounded-3xl shadow-soft border border-surface_highest overflow-hidden">
+          <div className="p-8 border-b border-surface_highest flex items-center justify-between bg-surface_lowest/50">
             <div>
-              <h2 className="text-2xl font-outfit font-black mb-1">Pending Approvals</h2>
-              <p className="text-sm text-on_surface_variant">Recent organization registration requests</p>
+              <h2 className="text-xl font-outfit font-black mb-1">Pending Approvals</h2>
+              <p className="text-xs text-on_surface_variant">Recent organization registration requests</p>
             </div>
-            <div className="px-4 py-2 bg-amber-50 text-amber-600 rounded-full text-xs font-bold uppercase tracking-widest ring-1 ring-amber-100">
-              {pendingNGOs.length} Awaiting
-            </div>
+            <Link to="/admin/organizations" className="text-xs font-bold text-primary hover:underline uppercase tracking-widest">
+              View All
+            </Link>
           </div>
 
           <div className="overflow-x-auto">
@@ -135,14 +113,12 @@ const AdminDashboard = () => {
               <thead className="bg-surface_lowest text-[10px] uppercase font-black tracking-widest text-on_surface_variant">
                 <tr>
                   <th className="px-8 py-4">Organization</th>
-                  <th className="px-8 py-4">Contact Info</th>
-                  <th className="px-8 py-4">Registered On</th>
                   <th className="px-8 py-4 text-center">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-surface_highest">
                 <AnimatePresence>
-                  {pendingNGOs.map((ngo) => (
+                  {pendingNGOs.slice(0, 5).map((ngo) => (
                     <motion.tr 
                       key={ngo.id}
                       initial={{ opacity: 0 }}
@@ -150,42 +126,25 @@ const AdminDashboard = () => {
                       exit={{ opacity: 0, x: -20 }}
                       className="hover:bg-surface_lowest transition-colors group"
                     >
-                      <td className="px-8 py-6">
-                        <div className="font-bold text-on_surface text-lg">{ngo.name}</div>
-                        <div className="text-xs text-on_surface_variant flex items-center gap-1">
-                           <span className="material-symbols-outlined text-xs">fingerprint</span> NGO ID: {ngo.id}
+                      <td className="px-8 py-5">
+                        <div className="font-bold text-on_surface text-md">{ngo.name}</div>
+                        <div className="text-[10px] text-on_surface_variant flex items-center gap-1">
+                           {ngo.contact_email}
                         </div>
                       </td>
-                      <td className="px-8 py-6">
-                        <div className="flex flex-col gap-1">
-                          <div className="flex items-center gap-2 text-sm text-on_surface_variant">
-                            <span className="material-symbols-outlined text-sm">mail</span> {ngo.contact_email}
-                          </div>
-                          <div className="flex items-center gap-2 text-sm text-on_surface_variant">
-                            <span className="material-symbols-outlined text-sm">call</span> {ngo.contact_phone}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-8 py-6">
-                        <div className="text-sm font-medium">
-                          {new Date(ngo.created_at).toLocaleDateString(undefined, {
-                            day: 'numeric', month: 'short', year: 'numeric'
-                          })}
-                        </div>
-                      </td>
-                      <td className="px-8 py-6">
-                        <div className="flex items-center justify-center gap-3">
+                      <td className="px-8 py-5">
+                        <div className="flex items-center justify-center gap-2">
                           <button 
                             disabled={actionLoading === ngo.id}
                             onClick={() => handleApprove(ngo.id)}
-                            className="h-10 px-6 rounded-xl bg-green-500 text-white text-xs font-bold hover:bg-green-600 transition-all shadow-lg shadow-green-200 disabled:opacity-50"
+                            className="h-8 px-4 rounded-lg bg-green-500 text-white text-[10px] font-bold hover:bg-green-600 transition-all shadow-md shadow-green-200 disabled:opacity-50"
                           >
                             {actionLoading === ngo.id ? "..." : "Approve"}
                           </button>
                           <button 
                             disabled={actionLoading === ngo.id}
                             onClick={() => handleReject(ngo.id)}
-                            className="h-10 px-6 rounded-xl bg-red-50 text-red-500 text-xs font-bold hover:bg-red-500 hover:text-white transition-all disabled:opacity-50"
+                            className="h-8 px-4 rounded-lg bg-red-50 text-red-500 text-[10px] font-bold hover:bg-red-500 hover:text-white transition-all disabled:opacity-50"
                           >
                             {actionLoading === ngo.id ? "..." : "Reject"}
                           </button>
@@ -196,12 +155,8 @@ const AdminDashboard = () => {
                 </AnimatePresence>
                 {pendingNGOs.length === 0 && (
                   <tr>
-                    <td colSpan="4" className="px-8 py-20 text-center">
-                      <div className="mb-4 text-primary opacity-20 transform scale-150">
-                        <span className="material-symbols-outlined text-4xl">check_circle</span>
-                      </div>
-                      <h3 className="text-lg font-bold text-on_surface">No Pending Requests</h3>
-                      <p className="text-sm text-on_surface_variant">All clear! Check back later for new registrations.</p>
+                    <td colSpan="2" className="px-8 py-12 text-center">
+                      <h3 className="text-sm font-bold text-on_surface">No Pending Requests</h3>
                     </td>
                   </tr>
                 )}
@@ -209,7 +164,39 @@ const AdminDashboard = () => {
             </table>
           </div>
         </section>
-      </main>
+
+        {/* 🚀 QUICK TOOLS */}
+        <section className="space-y-6">
+           <div className="bg-primaryGradient p-8 rounded-3xl text-white shadow-xl shadow-primary/20 relative overflow-hidden group">
+              <div className="relative z-10">
+                <h3 className="text-lg font-black mb-2 italic">Broadcast System</h3>
+                <p className="text-xs text-white/80 mb-6">Send urgent messages to all registered NGO coordinators.</p>
+                <button className="w-full py-3 bg-white text-primary text-xs font-black rounded-xl uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all">
+                   Manage Broadcasts
+                </button>
+              </div>
+              <span className="material-symbols-outlined absolute -right-4 -bottom-4 text-9xl opacity-10 rotate-12 group-hover:rotate-0 transition-transform duration-500">campaign</span>
+           </div>
+
+           <div className="bg-white p-6 rounded-3xl border border-surface_highest shadow-soft">
+              <h4 className="text-xs font-black uppercase tracking-widest text-on_surface_variant mb-4">System Status</h4>
+              <div className="space-y-4">
+                 <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Core API</span>
+                    <span className="px-2 py-0.5 bg-green-100 text-green-600 text-[10px] font-bold rounded-full uppercase">Healthy</span>
+                 </div>
+                 <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Telegram Bot</span>
+                    <span className="px-2 py-0.5 bg-green-100 text-green-600 text-[10px] font-bold rounded-full uppercase">Online</span>
+                 </div>
+                 <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Database (Neon)</span>
+                    <span className="px-2 py-0.5 bg-green-100 text-green-600 text-[10px] font-bold rounded-full uppercase">Optimal</span>
+                 </div>
+              </div>
+           </div>
+        </section>
+      </div>
     </div>
   );
 };

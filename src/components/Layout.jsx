@@ -11,6 +11,7 @@ import VerificationBadge from "../components/VerificationBadge";
 const NAV_ITEMS = [
   { to: "/dashboard", label: "Overview", icon: "dashboard" },
   { to: "/marketplace", label: "Marketplace", icon: "notifications_active" },
+  { to: "/collection-hub", label: "Collection Hub", icon: "move_to_inbox" },
   { to: "/campaigns", label: "Campaign Control", icon: "rocket_launch" },
   { to: "/volunteers", label: "Volunteers", icon: "groups" },
   { to: "/inventory", label: "Inventory", icon: "inventory_2" },

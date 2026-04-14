@@ -20,7 +20,10 @@ import VerifyEmail from "./pages/VolunteerEmailVerification";
 import NGOBrowser from "./pages/NGOBrowser";
 import VolunteerLayout from "./components/VolunteerLayout";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminOrganizations from "./pages/AdminOrganizations";
+import AdminLayout from "./components/AdminLayout";
 import ActivityHistory from "./pages/ActivityHistory";
+import MarketplaceInventory from "./pages/MarketplaceInventory";
 
 function App() {
   return (
@@ -146,6 +149,16 @@ function App() {
           }
         />
         <Route
+          path="/collection-hub"
+          element={
+            <ProtectedRoute allowedRoles={["NGO_COORDINATOR"]}>
+              <Layout>
+                <MarketplaceInventory />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/activity-history"
           element={
             <ProtectedRoute allowedRoles={["NGO_COORDINATOR"]}>
@@ -182,7 +195,19 @@ function App() {
           path="/admin/dashboard"
           element={
             <ProtectedRoute allowedRoles={["SYSTEM_ADMIN"]}>
-               <AdminDashboard />
+              <AdminLayout>
+                <AdminDashboard />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/organizations"
+          element={
+            <ProtectedRoute allowedRoles={["SYSTEM_ADMIN"]}>
+              <AdminLayout>
+                <AdminOrganizations />
+              </AdminLayout>
             </ProtectedRoute>
           }
         />

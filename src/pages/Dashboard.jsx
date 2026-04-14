@@ -3,6 +3,21 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import API from "../services/api";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+
+// Fix Leaflet's default icon issue in React
+import icon from "leaflet/dist/images/marker-icon.png";
+import iconShadow from "leaflet/dist/images/marker-shadow.png";
+
+let DefaultIcon = L.icon({
+  iconUrl: icon,
+  shadowUrl: iconShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+});
+L.Marker.prototype.options.icon = DefaultIcon;
+
 import Skeleton from "../components/Skeleton";
 import { resolveProfileImage } from "../utils/imageUtils";
 import VerificationBadge from "../components/VerificationBadge";
@@ -110,24 +125,33 @@ const Dashboard = () => {
           )}
         </div>
 
-        <div className="relative z-0 h-[420px] rounded-xl bg-surface_high p-4">
+        <div className="relative z-0 h-[420px] rounded-2xl bg-surface_high border border-white/5 overflow-hidden shadow-soft">
           <MapContainer
             center={center}
             zoom={6}
-            className="z-0 h-full w-full rounded-xl"
+            className="z-0 h-full w-full"
           >
-            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+            {/* Using a cleaner, more premium tile set (CartoDB Voyager) */}
+            <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
 
-            {activeNeeds.filter(n => n.latitude && n.longitude).map((n) => (
+            {activeNeeds
+              .filter(n => n.latitude && n.longitude && n.latitude !== 0 && n.longitude !== 0)
+              .map((n) => (
               <Marker
                 key={n.id}
-                position={[n.latitude, n.longitude]}
+                position={[parseFloat(n.latitude), parseFloat(n.longitude)]}
               >
-                <Popup>
-                  <div className="font-outfit">
-                    <p className="font-bold text-primary">{n.type}</p>
-                    <p className="text-xs">{n.quantity}</p>
-                    <p className="text-[10px] mt-1 text-on_surface_variant">{n.pickup_address}</p>
+                <Popup className="premium-popup">
+                  <div className="p-1 min-w-[150px]">
+                    <div className="flex items-center gap-2 mb-1">
+                       <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+                       <p className="font-outfit font-black text-sm uppercase tracking-tight text-primary">{n.type}</p>
+                    </div>
+                    <p className="text-xs font-bold text-on_surface mb-1">{n.quantity}</p>
+                    <p className="text-[10px] leading-relaxed text-on_surface_variant border-t border-white/10 pt-1">
+                        <span className="material-symbols-outlined text-[10px] align-middle mr-1">location_on</span>
+                        {n.pickup_address || "Location provided by donor"}
+                    </p>
                   </div>
                 </Popup>
               </Marker>
