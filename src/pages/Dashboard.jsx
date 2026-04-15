@@ -18,6 +18,21 @@ let DefaultIcon = L.icon({
 });
 L.Marker.prototype.options.icon = DefaultIcon;
 
+// Custom Marker Generator for Needs
+const createNeedIcon = (urgency) => {
+  const urgencyClass = urgency === "HIGH" ? "marker-high marker-pulse" : 
+                       urgency === "MEDIUM" ? "marker-medium" : 
+                       "marker-low";
+  
+  return L.divIcon({
+    className: "need-marker-container",
+    html: `<div class="need-marker-content ${urgencyClass}">N</div>`,
+    iconSize: [30, 30],
+    iconAnchor: [15, 15],
+    popupAnchor: [0, -15]
+  });
+};
+
 import Skeleton from "../components/Skeleton";
 import { resolveProfileImage } from "../utils/imageUtils";
 import VerificationBadge from "../components/VerificationBadge";
@@ -131,8 +146,11 @@ const Dashboard = () => {
             zoom={6}
             className="z-0 h-full w-full"
           >
-            {/* Using a cleaner, more premium tile set (CartoDB Voyager) */}
-            <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
+            {/* Using Esri World Topo for more detail on roads and terrain */}
+            <TileLayer 
+              url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}" 
+              attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
+            />
 
             {activeNeeds
               .filter(n => n.latitude && n.longitude && n.latitude !== 0 && n.longitude !== 0)
@@ -140,6 +158,7 @@ const Dashboard = () => {
               <Marker
                 key={n.id}
                 position={[parseFloat(n.latitude), parseFloat(n.longitude)]}
+                icon={createNeedIcon(n.urgency)}
               >
                 <Popup className="premium-popup">
                   <div className="p-1 min-w-[150px]">

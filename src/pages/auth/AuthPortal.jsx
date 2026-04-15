@@ -295,9 +295,16 @@ const LoginForm = ({ email, setEmail, password, setPassword, setError, setLoadin
       <button
         type="submit"
         disabled={loading}
-        className="w-full py-4 bg-primaryGradient text-white font-black uppercase tracking-widest rounded-2xl shadow-lg hover:shadow-primary/25 active:scale-[0.98] transition-all disabled:opacity-50"
+        className="w-full py-4 bg-primaryGradient text-white font-black uppercase tracking-widest rounded-2xl shadow-lg hover:shadow-primary/25 active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
       >
-        {loading ? "Authenticating..." : "Sign In"}
+        {loading ? (
+          <>
+            <div className="auth-spinner" />
+            <span>Authenticating...</span>
+          </>
+        ) : (
+          "Sign In"
+        )}
       </button>
     </motion.form>
   );
@@ -413,8 +420,17 @@ const VolunteerRegForm = ({ setError, setSuccess, setLoading, loading, switchMod
         <div className="space-y-4">
           <AuthInput label="Username" value={username} setValue={setUsername} icon="alternate_email" />
           <AuthInput label="Email Address" value={email} setValue={setEmail} type="email" icon="mail" />
-          <button onClick={handleSendOTP} disabled={loading} className="w-full py-4 bg-primary text-white font-bold rounded-2xl shadow-soft">
-            {loading ? "Checking Availability..." : "Send Verification Code"}
+          <button 
+             onClick={handleSendOTP} 
+             disabled={loading} 
+             className="w-full py-4 bg-primary text-white font-bold rounded-2xl shadow-soft flex items-center justify-center gap-2"
+          >
+            {loading ? (
+              <>
+                 <div className="auth-spinner" />
+                 <span>Verifying Availability...</span>
+              </>
+            ) : "Send Verification Code"}
           </button>
         </div>
       )}
@@ -422,8 +438,17 @@ const VolunteerRegForm = ({ setError, setSuccess, setLoading, loading, switchMod
         <div className="space-y-4">
           <p className="text-xs text-center text-on_surface_variant">Enter the 6-digit code sent to <b>{email}</b></p>
           <AuthInput label="OTP Code" value={otp} setValue={setOtp} icon="password" />
-          <button onClick={handleVerifyOTP} disabled={loading} className="w-full py-4 bg-primary text-white font-bold rounded-2xl shadow-soft">
-            {loading ? "Verifying..." : "Verify OTP"}
+          <button 
+             onClick={handleVerifyOTP} 
+             disabled={loading} 
+             className="w-full py-4 bg-primary text-white font-bold rounded-2xl shadow-soft flex items-center justify-center gap-2"
+          >
+            {loading ? (
+              <>
+                 <div className="auth-spinner" />
+                 <span>Verifying...</span>
+              </>
+            ) : "Verify OTP"}
           </button>
         </div>
       )}
@@ -432,8 +457,17 @@ const VolunteerRegForm = ({ setError, setSuccess, setLoading, loading, switchMod
            <AuthInput label="Full Name" value={name} setValue={setName} icon="person" />
            <AuthInput label="Phone Number" value={phone} setValue={setPhone} icon="phone" />
            <AuthInput label="Create Password" value={password} setValue={setPassword} type="password" icon="lock" />
-           <button type="submit" disabled={loading} className="w-full py-4 bg-primary text-white font-bold rounded-2xl shadow-lg">
-             {loading ? "Creating Account..." : "Complete Registration"}
+           <button 
+             type="submit" 
+             disabled={loading} 
+             className="w-full py-4 bg-primary text-white font-bold rounded-2xl shadow-lg flex items-center justify-center gap-2"
+           >
+             {loading ? (
+              <>
+                 <div className="auth-spinner" />
+                 <span>Creating Account...</span>
+              </>
+            ) : "Complete Registration"}
            </button>
         </form>
       )}
@@ -480,8 +514,17 @@ const NGORegForm = ({ setError, setSuccess, setLoading, loading, switchMode, MOD
         <AuthInput label="Admin Email" value={admin.email} setValue={(v) => setAdmin({...admin, email: v})} type="email" />
       </div>
       <AuthInput label="Admin Password" value={admin.password} setValue={(v) => setAdmin({...admin, password: v})} type="password" icon="lock" />
-      <button type="submit" disabled={loading} className="w-full py-4 bg-primaryGradient text-white font-bold rounded-2xl shadow-lg">
-        {loading ? "Registering NGO..." : "Register Organization"}
+      <button 
+        type="submit" 
+        disabled={loading} 
+        className="w-full py-4 bg-primaryGradient text-white font-bold rounded-2xl shadow-lg flex items-center justify-center gap-2"
+      >
+        {loading ? (
+          <>
+            <div className="auth-spinner" />
+            <span>Registering NGO...</span>
+          </>
+        ) : "Register Organization"}
       </button>
     </form>
   );
