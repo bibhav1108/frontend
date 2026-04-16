@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import API from "../services/api";
 import logo from "../assets/logo.png";
 import React from "react";
-import Skeleton from "../components/Skeleton";
+import SkeletonStructure from "./shared/SkeletonStructure";
 import { resolveProfileImage } from "../utils/imageUtils";
 
 const ADMIN_NAV_ITEMS = [
@@ -140,7 +140,7 @@ const AdminLayout = ({ children }) => {
         <div className="flex items-center gap-3">
             <div className="relative">
                 {loadingUser ? (
-                    <Skeleton className="h-10 w-10 rounded-xl" />
+                    <SkeletonStructure layout={[{type: 'rect', height: 40, width: 40, className: "rounded-xl"}]} />
                 ) : (
                     <button
                         onClick={() => setProfileOpen(!profileOpen)}

@@ -1,37 +1,37 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-import Dashboard from "./pages/Dashboard";
-import AuthPortal from "./pages/auth/AuthPortal";
-import Volunteers from "./pages/Volunteers";
-import Landing from "./pages/Landing";
-import Marketplace from "./pages/Marketplace";
-import Inventory from "./pages/Inventory";
-import Layout from "./components/Layout"; // ORG layout
+import NGODashboard from "./pages/ngo/NGODashboard";
+import AuthPortal from "./pages/public/AuthPortal";
+import Volunteers from "./pages/ngo/Volunteers";
+import Landing from "./pages/public/Landing";
+import Marketplace from "./pages/ngo/Marketplace";
+import Inventory from "./pages/ngo/Inventory";
+import Layout from "./pages/ngo/components/Layout"; // ORG layout
 import { ToastProvider } from "./context/ToastContext";
 import ToastContainer from "./components/ToastContainer";
-import ActiveNeeds from "./pages/ActiveNeeds";
-import DispatchHistory from "./pages/DispatchHistory";
+import ActiveNeeds from "./pages/ngo/ActiveNeeds";
+import DispatchHistory from "./pages/ngo/archive/DispatchHistory";
 import ProtectedRoute from "./components/ProtectedRoute";
-import Campaigns from "./pages/Campaigns";
-import MissionResponse from "./pages/MissionResponse";
-import CampaignHistory from "./pages/CampaignHistory";
-import MarketplaceAlerts from "./pages/MarketplaceAlerts";
-import MarketplaceStatsPage from "./pages/MarketplaceStats";
-import VolunteerProfile from "./pages/VolunteerProfile";
-import VerifyEmail from "./pages/VolunteerEmailVerification";
-import NGOBrowser from "./pages/NGOBrowser";
-import VolunteerLayout from "./components/VolunteerLayout";
-import AdminDashboard from "./pages/AdminDashboard";
-import AdminOrganizations from "./pages/AdminOrganizations";
+import Campaigns from "./pages/ngo/Campaigns";
+import MissionResponse from "./pages/public/MissionResponse";
+import CampaignHistory from "./pages/ngo/archive/CampaignHistory";
+import MarketplaceAlerts from "./pages/ngo/MarketplaceAlerts";
+import MarketplaceStatsPage from "./pages/ngo/archive/MarketplaceStats";
+import VolunteerDashboard from "./pages/volunteer/VolunteerDashboard";
+import VerifyEmail from "./pages/public/VolunteerEmailVerification";
+import NGOBrowser from "./pages/volunteer/NGOBrowser";
+import VolunteerLayout from "./pages/volunteer/components/VolunteerLayout";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminOrganizations from "./pages/admin/AdminOrganizations";
 import AdminLayout from "./components/AdminLayout";
-import ActivityHistory from "./pages/ActivityHistory";
-import MarketplaceInventory from "./pages/MarketplaceInventory";
-import CoordinatorProfile from "./pages/CoordinatorProfile";
-import OrganizationProfile from "./pages/OrganizationProfile";
-import ReviewPage from "./pages/ReviewPage";
-import ContactPage from "./pages/ContactPage";
-import HelpCenter from "./pages/HelpCenter";
-import PickLocation from "./pages/PickLocation";
+import ActivityHistory from "./pages/ngo/archive/ActivityHistory";
+import MarketplaceInventory from "./pages/ngo/MarketplaceInventory";
+import CoordinatorProfile from "./pages/ngo/CoordinatorProfile";
+import OrganizationProfile from "./pages/ngo/OrganizationProfile";
+import ReviewPage from "./pages/shared/ReviewPage";
+import ContactPage from "./pages/shared/ContactPage";
+import HelpCenter from "./pages/shared/HelpCenter";
+import PickLocation from "./pages/public/PickLocation";
 
 function App() {
   return (
@@ -51,11 +51,11 @@ function App() {
           <Route path="/register-volunteer" element={<AuthPortal />} />
           {/* ================= ORG ROUTES ================= */}
           <Route
-            path="/dashboard"
+            path="/ngo/dashboard"
             element={
               <ProtectedRoute allowedRoles={["NGO_COORDINATOR"]}>
                 <Layout>
-                  <Dashboard />
+                  <NGODashboard />
                 </Layout>
               </ProtectedRoute>
             }
@@ -233,11 +233,11 @@ function App() {
           {/* ================= VOLUNTEER ROUTES ================= */}
 
           <Route
-            path="/volunteer/profile"
+            path="/volunteer/dashboard"
             element={
               <ProtectedRoute allowedRoles={["VOLUNTEER"]}>
                 <VolunteerLayout>
-                  <VolunteerProfile />
+                  <VolunteerDashboard />
                 </VolunteerLayout>
               </ProtectedRoute>
             }

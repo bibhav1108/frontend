@@ -22,8 +22,8 @@ export const resolveProfileImage = (url) => {
   // Handle case where we might have double slashes if url starts with /
   const cleanUrl = url.startsWith("/") ? url : `/${url}`;
   
-  // Prefix with the backend base URL (removing the /api/v1 suffix if it exists there)
-  const base = BACKEND_BASE_URL.replace("/api/v1", "");
+  // Prefix with the backend base URL (removing any /api suffix if it accidentally exists there)
+  const base = BACKEND_BASE_URL.replace("/api/v1", "").replace("/api", "");
   return `${base}${cleanUrl}`;
 };
 

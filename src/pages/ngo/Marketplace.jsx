@@ -1,0 +1,265 @@
+import { useEffect, useState } from "react";
+import API from "../../services/api";
+import { useNavigate } from "react-router-dom";
+import DispatchVolunteersModal from "./components/DispatchVolunteersModal";
+import { motion, AnimatePresence } from "framer-motion";
+
+// Shared UI Components
+import MetricCard from "../../components/shared/MetricCard";
+import ContentSection from "../../components/shared/ContentSection";
+import DataRow from "../../components/shared/DataRow";
+import SkeletonStructure from "../../components/shared/SkeletonStructure";
+
+const Marketplace = ({ sidebarOpen }) => {
+  const navigate = useNavigate();
+
+  const [needs, setNeeds] = useState([]);
+  const [alerts, setAlerts] = useState([]);
+
+  const [needsLoading, setNeedsLoading] = useState(true);
+  const [alertsLoading, setAlertsLoading] = useState(true);
+
+  const [lastUpdated, setLastUpdated] = useState(Date.now());
+
+  const [dispatchModal, setDispatchModal] = useState({
+    open: false,
+    needId: null,
+  });
+
+  const [claimingId, setClaimingId] = useState(null);
+  const [filter, setFilter] = useState("OPEN");
+  const [newNeedId, setNewNeedId] = useState(null);
+
+  const MIN_ALERTS = 6;
+  const MIN_NEEDS = 5;
+
+  const sortByNewest = (items = []) =>
+    [...items].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+  const loadNeeds = async (init = false) => {
+    if (init) setNeedsLoading(true);
+
+    try {
+      const res = await API.get("/marketplace/needs/");
+      const data = sortByNewest(
+        (res.data || []).filter((n) => n.status !== "COMPLETED"),
+      );
+      setNeeds(data);
+    } catch (err) {
+      console.error("Failed to load needs", err);
+    } finally {
+      if (init) setNeedsLoading(false);
+      setLastUpdated(Date.now());
+    }
+  };
+
+  const loadAlerts = async (init = false) => {
+    if (init) setAlertsLoading(true);
+
+    try {
+      const res = await API.get("/marketplace/needs/alerts");
+      const data = sortByNewest(res.data || []);
+      setAlerts(data);
+    } catch (err) {
+      console.error("Failed to load alerts", err);
+    } finally {
+      if (init) setAlertsLoading(false);
+      setLastUpdated(Date.now());
+    }
+  };
+
+  const claimAlert = async (id) => {
+    try {
+      setClaimingId(id);
+      await API.post(`/marketplace/needs/alerts/${id}/convert`);
+      setAlerts((prev) => prev.filter((a) => a.id !== id));
+      const res = await API.get("/marketplace/needs/");
+      const updated = sortByNewest(res.data || []);
+      setNeeds(updated);
+      if (updated.length > 0) {
+        setNewNeedId(updated[0].id);
+        setTimeout(() => setNewNeedId(null), 1000);
+      }
+      setLastUpdated(Date.now());
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setClaimingId(null);
+    }
+  };
+
+  useEffect(() => {
+    loadNeeds(true);
+    loadAlerts(true);
+    const interval = setInterval(() => {
+      loadNeeds();
+      loadAlerts();
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const filteredNeeds = needs.filter((n) =>
+    filter === "ALL" ? true : n.status === filter,
+  );
+
+  const timeAgo = () => {
+    const seconds = Math.max(0, Math.floor((Date.now() - lastUpdated) / 1000));
+    if (seconds < 5) return "just now";
+    if (seconds < 60) return `${seconds}s ago`;
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    return `${hours}h ago`;
+  };
+
+  const marketplaceSkeletonLayout = [
+      { type: 'row', cols: [ { type: 'text', width: 200 }, { type: 'row', gap: 2, cols: [ { type: 'rect', width: 100, height: 32 }, { type: 'rect', width: 80, height: 32 } ] } ] },
+      { type: 'stack', gap: 4, items: Array(4).fill({ type: 'rect', height: 80, className: "rounded-xl" }) }
+  ];
+
+  return (
+    <div className="grid grid-cols-12 gap-8 selection:bg-primary/10">
+      {/* LEFT: Live Alerts */}
+      <div className="col-span-12 lg:col-span-8 space-y-8">
+        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="flex items-center justify-between">
+            <div>
+              <p className="text-primary text-[10px] font-black uppercase tracking-[0.3em] mb-1">Live Information Network</p>
+              <h1 className="text-4xl font-outfit font-black text-on_surface tracking-tight">Marketplace</h1>
+              <div className="mt-2 flex items-center gap-2 text-xs font-bold text-on_surface_variant/60">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                <span>Live Feed • Updated {timeAgo()}</span>
+              </div>
+            </div>
+            <div className="flex gap-2">
+                <button onClick={() => navigate("/dispatches")} className="px-4 py-2 bg-surface_high hover:bg-surface_highest rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">History</button>
+                <button onClick={() => navigate("/marketplace-stats")} className="px-4 py-2 bg-primary/10 text-primary hover:bg-primary/20 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">Statistics</button>
+            </div>
+        </motion.div>
+
+        <ContentSection title="Live Network Alerts" icon="radar" delay="100ms">
+            <div className="flex items-center justify-between mb-4">
+                <p className="text-xs text-on_surface_variant font-medium">Potential requests awaiting conversion to resources.</p>
+                <button onClick={() => navigate("/alerts")} className="text-[10px] font-black uppercase tracking-widest text-primary hover:underline">Full Audit</button>
+            </div>
+
+            <div className="space-y-4">
+                {alertsLoading ? (
+                    <SkeletonStructure layout={marketplaceSkeletonLayout} />
+                ) : (
+                    <AnimatePresence mode="popLayout">
+                        {alerts.slice(0, MIN_ALERTS).map((a, i) => (
+                            <motion.div 
+                                key={a.id}
+                                layout
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                className="group bg-surface_high/40 p-5 rounded-2xl border border-white hover:bg-white/50 transition-all flex items-center justify-between gap-4"
+                            >
+                                <div className="space-y-1">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <span className="px-2 py-0.5 bg-primary/10 text-primary text-[9px] font-black uppercase tracking-widest rounded">ALERT</span>
+                                        <span className="text-[10px] font-bold text-on_surface_variant/40">
+                                            {new Date(a.created_at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
+                                        </span>
+                                    </div>
+                                    <p className="text-sm font-bold text-on_surface leading-tight">{a.message_body}</p>
+                                    {a.donor_name && <p className="text-[10px] font-black uppercase tracking-widest text-on_surface_variant opacity-50">Reported by {a.donor_name}</p>}
+                                </div>
+                                <button
+                                    disabled={claimingId === a.id}
+                                    onClick={() => claimAlert(a.id)}
+                                    className="shrink-0 bg-primaryGradient text-white px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 transform group-hover:scale-105 transition-all disabled:opacity-50"
+                                >
+                                    {claimingId === a.id ? "Processing" : "Claim"}
+                                </button>
+                            </motion.div>
+                        ))}
+                    </AnimatePresence>
+                )}
+            </div>
+        </ContentSection>
+      </div>
+
+      {/* RIGHT: Active Needs */}
+      <div className="col-span-12 lg:col-span-4">
+        <ContentSection title="Urgent Needs" icon="bolt" delay="200ms" className="h-full">
+            <div className="mb-6">
+                <div className="flex gap-2 p-1 bg-surface_highest rounded-xl mb-4">
+                    {["OPEN", "DISPATCHED"].map((f) => (
+                        <button
+                            key={f}
+                            onClick={() => setFilter(f)}
+                            className={`flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${
+                                filter === f ? "bg-white text-on_surface shadow-sm" : "text-on_surface_variant/60 hover:text-on_surface"
+                            }`}
+                        >
+                            {f}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            <div className="space-y-4">
+                {needsLoading ? (
+                    <SkeletonStructure layout={marketplaceSkeletonLayout} />
+                ) : (
+                    filteredNeeds.slice(0, MIN_NEEDS).map((n, i) => (
+                        <motion.div 
+                            key={n.id}
+                            initial={{ opacity: 0, x: 10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            className={`p-5 rounded-2xl border-2 transition-all group ${
+                                n.urgency === "HIGH" ? "border-red-500/10 bg-red-500/5 hover:bg-red-500/10" : 
+                                n.urgency === "MEDIUM" ? "border-amber-500/10 bg-amber-500/5 hover:bg-amber-500/10" : 
+                                "border-primary/10 bg-primary/5 hover:bg-primary/10"
+                            } ${newNeedId === n.id ? "ring-2 ring-primary animate-pulse" : ""}`}
+                        >
+                            <div className="flex justify-between items-start mb-2">
+                                <h4 className="font-outfit font-black text-on_surface tracking-tight truncate pr-2">
+                                    {n.type} <span className="text-xs opacity-40 ml-1">• {n.quantity}</span>
+                                </h4>
+                                <span className={`text-[8px] font-black uppercase tracking-[0.2em] px-2 py-0.5 rounded ${
+                                    n.urgency === "HIGH" ? "bg-red-500 text-white" : "bg-on_surface/5 text-on_surface"
+                                }`}>
+                                    {n.urgency}
+                                </span>
+                            </div>
+                            <p className="text-xs text-on_surface_variant line-clamp-2 mb-4 leading-relaxed">{n.description}</p>
+                            
+                            <div className="flex items-center justify-between gap-2 mt-auto border-t border-white/40 pt-4">
+                                <div className="flex items-center gap-1.5 opacity-40 min-w-0">
+                                    <span className="material-symbols-outlined text-sm">location_on</span>
+                                    <span className="text-[10px] font-bold truncate">{n.pickup_address}</span>
+                                </div>
+
+                                {n.status === "OPEN" ? (
+                                    <button
+                                        onClick={() => setDispatchModal({ open: true, needId: n.id })}
+                                        className="shrink-0 bg-on_surface text-white px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest hover:-translate-y-0.5 transition-all"
+                                    >
+                                        Dispatch
+                                    </button>
+                                ) : (
+                                    <span className="text-[9px] font-black uppercase tracking-widest opacity-30">Dispatched</span>
+                                )}
+                            </div>
+                        </motion.div>
+                    ))
+                )}
+            </div>
+        </ContentSection>
+      </div>
+
+      <DispatchVolunteersModal
+        open={dispatchModal.open}
+        needId={dispatchModal.needId}
+        sidebarOpen={sidebarOpen}
+        onClose={() => setDispatchModal({ open: false, needId: null })}
+        onSuccess={loadNeeds}
+      />
+    </div>
+  );
+};
+
+export default Marketplace;
