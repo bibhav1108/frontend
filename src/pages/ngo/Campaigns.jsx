@@ -297,39 +297,39 @@ const Campaigns = () => {
   return (
     <>
     <div className="space-y-8 selection:bg-primary/10 animate-fadeIn">
-      {/* HEADER: Mission Control */}
+      {/* HEADER: Campaigns */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
         <div>
-          <p className="text-primary text-[10px] sm:text-[10px] font-black uppercase tracking-[0.3em] mb-1">Strategic Operations</p>
-          <h1 className="text-3xl sm:text-4xl font-outfit font-black text-on_surface tracking-tight">Mission Control</h1>
-          <p className="text-xs font-bold text-on_surface_variant/60 mt-1">Deploying resources and coordinating volunteer movements.</p>
+          <p className="text-primary text-[10px] sm:text-[10px] font-black uppercase tracking-[0.3em] mb-1">NGO Operations</p>
+          <h1 className="text-3xl sm:text-4xl font-outfit font-black text-on_surface tracking-tight">Campaign Control</h1>
+          <p className="text-xs font-bold text-on_surface_variant/60 mt-1">Manage your active campaigns and volunteer coordination.</p>
         </div>
         <div className="flex flex-wrap gap-2 sm:gap-3">
           <Link to="/campaign-history" className="px-4 sm:px-5 py-2.5 bg-surface_high hover:bg-surface_highest rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">History</Link>
           <button onClick={() => setShowAIModal(true)} className="flex items-center gap-2 px-4 sm:px-5 py-2.5 bg-primary/10 text-primary border border-primary/20 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all hover:bg-primary/20">
-            <span className="material-symbols-outlined text-sm">magic_button</span> AI
+            <span className="material-symbols-outlined text-sm">magic_button</span> AI Draft
           </button>
-          <button onClick={() => setShowForm(true)} className="px-5 sm:px-6 py-2.5 bg-primaryGradient text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-105 transition-all">Launch</button>
+          <button onClick={() => setShowForm(true)} className="px-5 sm:px-6 py-2.5 bg-primaryGradient text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-105 transition-all">New Campaign</button>
         </div>
       </div>
 
       {/* STATS OVERVIEW */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
-        <MetricCard label="Total Ops" value={stats.total} icon="rocket_launch" />
-        <MetricCard label="Active" value={stats.active} icon="play_circle" />
-        <MetricCard label="Planned" value={stats.planned} icon="event_upcoming" />
-        <MetricCard label="Success" value={stats.completed} icon="check_circle" />
+        <MetricCard label="Total Campaigns" value={stats.total} icon="rocket_launch" />
+        <MetricCard label="Currently Active" value={stats.active} icon="play_circle" />
+        <MetricCard label="Upcoming" value={stats.planned} icon="event_upcoming" />
+        <MetricCard label="Completed" value={stats.completed} icon="check_circle" />
       </div>
 
       <div className="grid grid-cols-12 gap-8 items-start">
         {/* LEFT: Campaigns Registry */}
         <div className="col-span-12 lg:col-span-8 space-y-6">
-          <ContentSection title="Active & Planned Deployments" icon="list_alt">
+          <ContentSection title="Active & Planned Campaigns" icon="list_alt">
             <div className="flex flex-col md:flex-row gap-4 mb-8">
                 <div className="relative flex-1">
                     <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-sm opacity-30">search</span>
                     <input
-                        placeholder="Filter missions..."
+                        placeholder="Search campaigns..."
                         className="w-full bg-white border border-on_surface/5 pl-10 pr-4 py-3 rounded-2xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-primary/20"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -340,8 +340,8 @@ const Campaigns = () => {
                     onChange={(e) => setFilterType(e.target.value)}
                     className="w-full md:w-48 bg-white border border-on_surface/5 px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-primary/20"
                 >
-                    <option value="ALL">All Sectors</option>
-                    {TYPE_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
+                    <option value="ALL">All Categories</option>
+                    {TYPE_OPTIONS.map(t => <option key={t} value={t}>{t.replaceAll("_", " ")}</option>)}
                 </select>
             </div>
 
@@ -375,9 +375,9 @@ const Campaigns = () => {
                                     <p className="text-xs text-on_surface_variant line-clamp-1 opacity-70">{c.description}</p>
                                 </div>
                                 <div className="text-left sm:text-right shrink-0">
-                                    <p className="text-[9px] font-black uppercase tracking-widest opacity-30 mb-1 leading-none">Launch Date</p>
+                                    <p className="text-[9px] font-black uppercase tracking-widest opacity-30 mb-1 leading-none">Start Date</p>
                                     <p className="text-sm font-black text-on_surface">
-                                        {c.start_time ? new Date(c.start_time).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : 'TBD'}
+                                        {c.start_time ? new Date(c.start_time).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : 'Flexible'}
                                     </p>
                                 </div>
                             </div>
@@ -390,13 +390,13 @@ const Campaigns = () => {
 
         {/* RIGHT: Readiness Tracking */}
         <div className="col-span-12 lg:col-span-4 space-y-6">
-            <ContentSection title="Personnel Readiness" icon="verified_user">
-                <p className="text-[10px] font-bold text-on_surface_variant/60 mb-6 leading-relaxed">Intelligence on approved volunteers for upcoming deployments.</p>
+            <ContentSection title="Volunteer Readiness" icon="verified_user">
+                <p className="text-[10px] font-bold text-on_surface_variant/60 mb-6 leading-relaxed">Information on approved volunteers for upcoming campaigns.</p>
                 <div className="space-y-3">
                     {loadingReadiness ? (
                         <SkeletonStructure layout={Array(3).fill({ type: 'rect', height: 80, className: "rounded-2xl" })} />
                     ) : readiness.length === 0 ? (
-                        <div className="text-center py-10 opacity-20"><p className="text-xs font-bold">No active readiness stream</p></div>
+                        <div className="text-center py-10 opacity-20"><p className="text-xs font-bold">No volunteers currently ready</p></div>
                     ) : (
                         readiness.map(r => (
                             <div key={r.campaign.id} className="p-4 bg-surface_high/40 rounded-2xl border border-white/50">
@@ -427,7 +427,7 @@ const Campaigns = () => {
                 <Link to="/volunteers" className="flex items-center justify-between p-4 bg-surface_high hover:bg-surface_highest rounded-2xl group hover:-translate-x-1 transition-all border border-white/20">
                     <div className="flex items-center gap-3 text-on_surface">
                         <span className="material-symbols-outlined text-sm">groups</span>
-                        <span className="text-[10px] font-black uppercase tracking-widest">Team Portal</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest">Volunteer Portal</span>
                     </div>
                     <span className="material-symbols-outlined text-sm opacity-30 group-hover:opacity-100">arrow_forward</span>
                 </Link>
@@ -437,11 +437,11 @@ const Campaigns = () => {
 
       {/* MODALS ARE PORTALED BELOW */}
     </div>
-      {/* MISSION DETAILS MODAL */}
+      {/* CAMPAIGN DETAILS MODAL */}
       <Modal
         isOpen={!!selectedCampaign}
         onClose={() => { setSelectedCampaign(null); setPool([]); }}
-        title="Mission Details"
+        title="Campaign Details"
         maxWidth="max-w-5xl"
       >
         {selectedCampaign && (
@@ -460,27 +460,27 @@ const Campaigns = () => {
                       {selectedCampaign.status}
                     </span>
                     <span className="rounded-full bg-surface_high border border-white/20 px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-on_surface">
-                      {selectedCampaign.type || "OTHER"}
+                      {selectedCampaign.type?.replaceAll("_", " ") || "OTHER"}
                     </span>
                   </div>
 
                   <div className="grid gap-6 md:grid-cols-2">
                     <div>
-                      <p className="text-[9px] font-black uppercase tracking-widest opacity-40 mb-1 leading-none">Intelligence Zone</p>
-                      <p className="text-sm font-black text-on_surface">{selectedCampaign.location_address || "TBD Sector"}</p>
+                      <p className="text-[9px] font-black uppercase tracking-widest opacity-40 mb-1 leading-none">Location</p>
+                      <p className="text-sm font-black text-on_surface">{selectedCampaign.location_address || "TBD Area"}</p>
                     </div>
                     <div>
-                      <p className="text-[9px] font-black uppercase tracking-widest opacity-40 mb-1 leading-none">Tactical Goal</p>
+                      <p className="text-[9px] font-black uppercase tracking-widest opacity-40 mb-1 leading-none">Target Goal</p>
                       <p className="text-sm font-black text-on_surface">{selectedCampaign.target_quantity || "N/A"}</p>
                     </div>
                     <div>
-                      <p className="text-[9px] font-black uppercase tracking-widest opacity-40 mb-1 leading-none">Personnel Requirement</p>
-                      <p className="text-sm font-black text-on_surface">{selectedCampaign.volunteers_required || 0} Assets</p>
+                      <p className="text-[9px] font-black uppercase tracking-widest opacity-40 mb-1 leading-none">Volunteers Needed</p>
+                      <p className="text-sm font-black text-on_surface">{selectedCampaign.volunteers_required || 0} People</p>
                     </div>
                     <div>
-                      <p className="text-[9px] font-black uppercase tracking-widest opacity-40 mb-1 leading-none">Specialized Skills</p>
+                      <p className="text-[9px] font-black uppercase tracking-widest opacity-40 mb-1 leading-none">Required Skills</p>
                       <p className="text-sm font-black text-on_surface">
-                        {selectedCampaign?.required_skills?.length ? selectedCampaign.required_skills.join(", ") : "General"}
+                        {selectedCampaign?.required_skills?.length ? selectedCampaign.required_skills.join(", ") : "General Help"}
                       </p>
                     </div>
                   </div>
@@ -488,9 +488,9 @@ const Campaigns = () => {
 
                 <div className="rounded-3xl border border-white/20 bg-surface_high/50 p-6 flex flex-col">
                   <div className="mb-6 flex items-center justify-between">
-                    <h3 className="font-outfit font-black text-lg tracking-tight">Inventory Loadout</h3>
+                    <h3 className="font-outfit font-black text-lg tracking-tight">Required Items</h3>
                     <span className="text-[9px] font-black uppercase tracking-widest opacity-40">
-                      {selectedCampaign.items ? Object.keys(selectedCampaign.items).length : 0} Entries
+                      {selectedCampaign.items ? Object.keys(selectedCampaign.items).length : 0} Items
                     </span>
                   </div>
 
@@ -504,7 +504,7 @@ const Campaigns = () => {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-xs font-bold opacity-30 text-center py-10 italic">No resource assets mapped</p>
+                    <p className="text-xs font-bold opacity-30 text-center py-10 italic">No specific items required</p>
                   )}
                 </div>
               </div>
@@ -512,10 +512,10 @@ const Campaigns = () => {
               <div className="space-y-5">
                 <div className="rounded-3xl border border-white/20 bg-surface_high/50 p-6 flex flex-col min-h-[400px]">
                   <div className="mb-6 flex items-center justify-between">
-                    <h3 className="font-outfit font-black text-lg tracking-tight">Personnel Roster</h3>
+                    <h3 className="font-outfit font-black text-lg tracking-tight">Volunteer List</h3>
                     <div className="flex gap-2">
                          <span className="px-3 py-1 bg-surface_high text-on_surface_variant/60 rounded-lg text-[9px] font-black border border-white/20 tracking-widest uppercase">
-                            {pool.length} Tracked
+                            {pool.length} Applicants
                          </span>
                     </div>
                   </div>
@@ -527,7 +527,7 @@ const Campaigns = () => {
                   ) : pool.length === 0 ? (
                     <div className="flex-1 flex flex-col items-center justify-center opacity-20 py-10 border-2 border-dashed border-on_surface/5 rounded-[2rem] mx-4 mb-4">
                       <span className="material-symbols-outlined text-5xl mb-3">groups</span>
-                      <p className="text-xs font-black uppercase tracking-widest">No applicants assigned</p>
+                      <p className="text-xs font-black uppercase tracking-widest">No volunteers have applied</p>
                     </div>
                   ) : (
                     <div className="space-y-3 px-4 max-h-[500px] overflow-y-auto custom-scrollbar">
@@ -559,7 +559,7 @@ const Campaigns = () => {
                           {v.match_score != null && (
                             <div className="mt-4 pt-4 border-t border-on_surface/5">
                               <div className="mb-2 flex items-center justify-between text-[8px] font-black uppercase tracking-[0.2em] opacity-40">
-                                <span>Tactical Match</span>
+                                <span>Skill Match</span>
                                 <span>{v.match_score}%</span>
                               </div>
                               <div className="h-1.5 rounded-full bg-surface_high overflow-hidden border border-on_surface/5">
@@ -586,11 +586,11 @@ const Campaigns = () => {
       <Modal
         isOpen={showAIModal}
         onClose={() => { setShowAIModal(false); setFormError(""); }}
-        title="Intelligence Assistant"
+        title="AI Campaign Assistant"
         maxWidth="max-w-2xl"
       >
         <div className="space-y-6">
-            <p className="text-xs font-bold text-on_surface_variant/60 leading-relaxed italic">Describe the operation. Our AI will parse requirements and prefill the strategic mission briefing.</p>
+            <p className="text-xs font-bold text-on_surface_variant/60 leading-relaxed italic">Describe your goal. Our AI will suggest a campaign structure and prefill the details for you.</p>
 
             {formError && (
               <div className="mb-5 rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-xs font-black uppercase text-red-500 flex items-center gap-3">
@@ -612,14 +612,14 @@ const Campaigns = () => {
                 onClick={handleAIGenerate}
                 className="flex-[2] rounded-2xl bg-primaryGradient py-4 text-[10px] font-black uppercase tracking-[0.2em] text-white shadow-xl shadow-primary/20 transition hover:-translate-y-1 active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3"
               >
-                {loadingAI ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <span className="material-symbols-outlined text-sm">rocket_launch</span>}
-                {loadingAI ? "Syncing Logic..." : "Compose Mission Blueprint"}
+                {loadingAI ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <span className="material-symbols-outlined text-sm">auto_awesome</span>}
+                {loadingAI ? "Drafting..." : "Generate Campaign Draft"}
               </button>
               <button
                 onClick={() => setShowAIModal(false)}
-                className="flex-1 rounded-2xl border border-on_surface/5 bg-surface_high px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em] transition hover:bg-surface_highest text-on_surface/60"
+                className="flex-1 rounded-2xl border border-on_surface/5 bg-surface_high px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em] transition hover:bg-surface_highest text-on_surface_variant/60"
               >
-                Abort
+                Cancel
               </button>
             </div>
         </div>
@@ -629,11 +629,11 @@ const Campaigns = () => {
       <Modal
         isOpen={showForm}
         onClose={() => { setShowForm(false); resetForm(); setFormError(""); }}
-        title="Mission Blueprint"
+        title="Setup Campaign"
         maxWidth="max-w-4xl"
       >
         <div className="space-y-8">
-            <p className="text-xs font-bold text-on_surface_variant/60 leading-relaxed italic">Define scope, timeline, inventory loadout, and personnel requirements.</p>
+            <p className="text-xs font-bold text-on_surface_variant/60 leading-relaxed italic">Define the scope, timeline, required items, and volunteer needs.</p>
 
             {formError && (
               <div className="mb-5 rounded-xl border border-red-500/20 bg-red-500/10 p-4 font-black uppercase text-xs text-red-500 flex items-center gap-3">
@@ -644,13 +644,13 @@ const Campaigns = () => {
 
             <div className="grid gap-8 lg:grid-cols-2">
               <div className="space-y-6">
-                <ActionInput label="Mission Designation" placeholder="e.g. Community Meal Drive" value={name} onChange={setName} />
+                <ActionInput label="Campaign Name" placeholder="e.g. Community Meal Drive" value={name} onChange={setName} />
                 
                 <div className="space-y-2">
-                    <label className="text-[9px] font-black uppercase tracking-widest text-on_surface_variant/40 ml-1">Tactical Objective</label>
+                    <label className="text-[9px] font-black uppercase tracking-widest text-on_surface_variant/40 ml-1">Campaign Description</label>
                     <textarea
                         className="min-h-[140px] w-full rounded-2xl border border-on_surface/5 bg-white p-5 text-sm font-medium text-on_surface placeholder-on_surface/30 shadow-inner outline-none transition focus:ring-2 focus:ring-primary/20"
-                        placeholder="Brief description of operations..."
+                        placeholder="Brief description of what you want to achieve..."
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
                     />
@@ -658,7 +658,7 @@ const Campaigns = () => {
 
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
-                    <label className="text-[9px] font-black uppercase tracking-widest text-on_surface_variant/40 ml-1">Mission Sector</label>
+                    <label className="text-[9px] font-black uppercase tracking-widest text-on_surface_variant/40 ml-1">Category</label>
                     <select
                       value={type}
                       onChange={(e) => setType(e.target.value)}
@@ -669,31 +669,31 @@ const Campaigns = () => {
                       ))}
                     </select>
                   </div>
-                  <ActionInput label="Success Metric" placeholder="e.g. 100 meals" value={targetQuantity} onChange={setTargetQuantity} />
+                  <ActionInput label="Target Goal" placeholder="e.g. 100 meals" value={targetQuantity} onChange={setTargetQuantity} />
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-2">
-                  <ActionInput label="Launch Window" type="datetime-local" value={startTime} onChange={setStartTime} />
-                  <ActionInput label="Terminal Window" type="datetime-local" value={endTime} onChange={setEndTime} />
+                  <ActionInput label="Start Date" type="datetime-local" value={startTime} onChange={setStartTime} />
+                  <ActionInput label="End Date" type="datetime-local" value={endTime} onChange={setEndTime} />
                 </div>
 
-                <ActionInput label="Operational Zone" placeholder="e.g. Ward 12, City Hospital" value={location} onChange={setLocation} />
+                <ActionInput label="Location" placeholder="e.g. Ward 12, City Hospital" value={location} onChange={setLocation} />
 
                 <div className="grid gap-4 md:grid-cols-2">
-                   <ActionInput label="Specialized Skills" placeholder="medical, logistics" value={skills} onChange={setSkills} />
-                   <ActionInput label="Personnel Target" type="number" placeholder="e.g. 5" value={volunteersRequired} onChange={setVolunteersRequired} />
+                   <ActionInput label="Required Skills" placeholder="medical, logistics" value={skills} onChange={setSkills} />
+                   <ActionInput label="Volunteers Needed" type="number" placeholder="e.g. 5" value={volunteersRequired} onChange={setVolunteersRequired} />
                 </div>
               </div>
 
               <div className="space-y-6">
                 <div className="rounded-[2rem] border border-white bg-white/40 p-8 shadow-inner min-h-full">
                   <div className="mb-6 flex items-center justify-between">
-                    <h3 className="font-outfit font-black text-lg tracking-tight">Loadout Mapping</h3>
+                    <h3 className="font-outfit font-black text-lg tracking-tight">Required Items</h3>
                     <button
                       onClick={() => setItems([...items, { key: "", value: "" }])}
                       className="px-4 py-2 bg-primary/10 text-primary border border-primary/20 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-primary hover:text-white transition-all"
                     >
-                      + ADD ASSET
+                      + ADD ITEM
                     </button>
                   </div>
 
@@ -706,7 +706,7 @@ const Campaigns = () => {
                                 onChange={(e) => { const n = [...items]; n[idx].key = e.target.value; setItems(n); }}
                                 className="w-full rounded-xl border border-on_surface/5 bg-white px-4 py-3 text-xs font-bold text-on_surface shadow-sm outline-none cursor-pointer"
                             >
-                                <option value="">Identify Resource...</option>
+                                <option value="">Select Resource...</option>
                                 {inventory.map((inv) => (
                                     <option key={inv.id} value={inv.item_name}>
                                         {inv.item_name} ({inv.quantity} {inv.unit})
@@ -736,8 +736,8 @@ const Campaigns = () => {
                         onClick={createCampaign}
                         className="flex-[2] rounded-2xl bg-on_surface py-4 text-[10px] font-black uppercase tracking-[0.2em] text-white shadow-2xl hover:bg-primary transition-all disabled:opacity-50 flex items-center justify-center gap-3"
                     >
-                        {creating ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <span className="material-symbols-outlined text-lg">rocket_launch</span>}
-                        {creating ? "Launching..." : "Authorize Deployment"}
+                        {creating ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <span className="material-symbols-outlined text-lg">check_circle</span>}
+                        {creating ? "Creating..." : "Create Campaign"}
                     </button>
                     <button
                         onClick={() => setShowForm(false)}

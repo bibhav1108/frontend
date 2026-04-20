@@ -57,36 +57,36 @@ const MarketplaceStatsPage = () => {
       {/* HEADER */}
       <div className="flex flex-col lg:flex-row justify-between items-center lg:items-center gap-8 text-center lg:text-left">
         <div>
-            <p className="text-primary text-[10px] font-black uppercase tracking-[0.3em] mb-1">Global Marketplace Intelligence</p>
-            <h1 className="text-4xl sm:text-5xl font-outfit font-black text-on_surface tracking-tight">Recovery Analytics</h1>
-            <p className="text-xs font-bold text-on_surface_variant/60 mt-1">Real-time telemetry from asset acquisition and mission theaters.</p>
+            <p className="text-primary text-[10px] font-black uppercase tracking-[0.3em] mb-1">Marketplace Overview</p>
+            <h1 className="text-4xl sm:text-5xl font-outfit font-black text-on_surface tracking-tight">Inventory Analytics</h1>
+            <p className="text-xs font-bold text-on_surface_variant/60 mt-1">Real-time updates on donation arrivals and distribution goals.</p>
         </div>
         <div className="flex items-center gap-4 bg-white/60 backdrop-blur-md p-4 px-4 sm:px-6 rounded-[2.5rem] border border-on_surface/5 shadow-sm">
             <div className="w-12 h-12 bg-green-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-green-500/20">
-                <span className="material-symbols-outlined font-black">satellite_alt</span>
+                <span className="material-symbols-outlined font-black">table_chart</span>
             </div>
             <div className="text-left">
                 <p className="text-[10px] uppercase font-black tracking-widest text-on_surface_variant/40">Network Status</p>
-                <p className="text-sm font-black text-on_surface">UPLINK ACTIVE</p>
+                <p className="text-sm font-black text-on_surface">ONLINE</p>
             </div>
         </div>
       </div>
 
       {/* KEY METRICS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <MetricCard label="Total Recoveries" value={stats?.total_items_recovered || 0} icon="package_2" variant="primary" />
-        <MetricCard label="Volume Capacity" value={totalQuantity.toFixed(0)} icon="equalizer" />
-        <MetricCard label="Tactical Range" value={breakdownEntries.length} icon="category" />
+        <MetricCard label="Items Received" value={stats?.total_items_recovered || 0} icon="package_2" variant="primary" />
+        <MetricCard label="Total Quantity" value={totalQuantity.toFixed(0)} icon="equalizer" />
+        <MetricCard label="Item Categories" value={breakdownEntries.length} icon="category" />
       </div>
 
       {/* ANALYSIS GRID */}
       <div className="grid grid-cols-12 gap-6 lg:gap-10">
         {/* DISTRIBUTION */}
         <div className="col-span-12 lg:col-span-7">
-            <ContentSection title="Inventory Distribution Matrix" icon="data_exploration">
+            <ContentSection title="Inventory Breakdown" icon="data_exploration">
                 <div className="space-y-8 py-4">
                     {breakdownEntries.length === 0 ? (
-                        <div className="py-20 text-center text-on_surface_variant/40 italic text-[10px] font-black uppercase tracking-widest">No Sector Data Available</div>
+                        <div className="py-20 text-center text-on_surface_variant/40 italic text-[10px] font-black uppercase tracking-widest">No Inventory Data Available</div>
                     ) : (
                         breakdownEntries.map(([name, count]) => (
                             <div key={name} className="space-y-4">
@@ -114,17 +114,17 @@ const MarketplaceStatsPage = () => {
             <ContentSection 
                 title={
                     <div className="flex items-center gap-2">
-                        <span>Inbound Signals</span>
+                        <span>Recently Received</span>
                         <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]"></span>
                     </div>
                 } 
-                icon="sensors"
+                icon="schedule"
             >
                 <div className="space-y-4">
                     {latest.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-10 opacity-20">
-                            <span className="material-symbols-outlined text-4xl mb-2">signal_cellular_nodata</span>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-center">Silence on the line</p>
+                            <span className="material-symbols-outlined text-4xl mb-2">inventory</span>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-center">No recent records</p>
                         </div>
                     ) : (
                         latest.map((item) => (
@@ -144,7 +144,7 @@ const MarketplaceStatsPage = () => {
                                             <span className="w-1 h-1 bg-primary/20 rounded-full shrink-0"></span>
                                         </div>
                                         <p className="text-[9px] font-bold text-on_surface_variant/40 tracking-widest uppercase">
-                                            Detected: {new Date(item.collected_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            Time: {new Date(item.collected_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                         </p>
                                     </div>
                                 </div>
@@ -163,9 +163,9 @@ const MarketplaceStatsPage = () => {
                 <div className="absolute -right-10 -top-10 w-40 h-40 bg-primary opacity-20 blur-[80px] group-hover:opacity-40 transition-opacity" />
                 <div className="relative z-10 space-y-6">
                     <div>
-                        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-2">Operational Quota</p>
-                        <h3 className="text-2xl sm:text-3xl font-outfit font-black tracking-tight mb-2">Weekly Objective</h3>
-                        <p className="text-xs font-bold text-white/40">Achieved 84% of your current recovery target for the specific sector.</p>
+                        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-2">Current Goals</p>
+                        <h3 className="text-2xl sm:text-3xl font-outfit font-black tracking-tight mb-2">Weekly Target</h3>
+                        <p className="text-xs font-bold text-white/40">You have achieved 84% of your collection target for this week.</p>
                     </div>
                     
                     <div className="space-y-3">
@@ -173,8 +173,8 @@ const MarketplaceStatsPage = () => {
                             <div className="h-full bg-white rounded-full w-[84%] shadow-lg shadow-white/20" />
                         </div>
                         <div className="flex justify-between items-center opacity-30">
-                            <span className="text-[9px] font-black uppercase tracking-widest">Target Metrika</span>
-                            <span className="text-[9px] font-black uppercase tracking-widest">1,200 Assets</span>
+                            <span className="text-[9px] font-black uppercase tracking-widest">Progress</span>
+                            <span className="text-[9px] font-black uppercase tracking-widest">1,200 Items</span>
                         </div>
                     </div>
                 </div>

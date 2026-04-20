@@ -121,7 +121,7 @@ const CoordinatorProfile = () => {
           
           <div className="flex-1 text-center md:text-left space-y-4">
             <div>
-                <p className="text-primary text-[10px] font-black uppercase tracking-[0.3em] mb-2">Personnel File</p>
+                <p className="text-primary text-[10px] font-black uppercase tracking-[0.3em] mb-2">Account Profile</p>
                 <h1 className="text-5xl font-outfit font-black text-on_surface tracking-tight mb-1">{user?.full_name}</h1>
                 <p className="text-sm font-bold text-on_surface_variant/60">{user?.email}</p>
             </div>
@@ -133,7 +133,7 @@ const CoordinatorProfile = () => {
                 </span>
                 <span className="inline-flex items-center gap-2 px-5 py-2.5 bg-white rounded-2xl border border-on_surface/5 text-[10px] font-black uppercase tracking-widest text-on_surface shadow-sm">
                     <span className="material-symbols-outlined text-primary text-sm">event</span>
-                    Active since {new Date(user?.created_at).getFullYear()}
+                    Coordinator since {new Date(user?.created_at).getFullYear()}
                 </span>
             </div>
           </div>
@@ -142,36 +142,36 @@ const CoordinatorProfile = () => {
 
       {/* STATS GRID */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
-        <MetricCard label="Campaigns Orchestrated" value={stats.total_campaigns} icon="rocket_launch" variant="primary" />
-        <MetricCard label="Tactical Personnel" value={stats.total_volunteers} icon="person_check" />
-        <MetricCard label="Logistics Assets" value={stats.total_inventory} icon="inventory_2" />
+        <MetricCard label="Campaigns Managed" value={stats.total_campaigns} icon="rocket_launch" variant="primary" />
+        <MetricCard label="Active Volunteers" value={stats.total_volunteers} icon="person_check" />
+        <MetricCard label="Inventory Items" value={stats.total_inventory} icon="inventory_2" />
       </div>
 
       {/* DETAILS SECTION */}
       <div className="grid grid-cols-12 gap-10">
         <div className="col-span-12 lg:col-span-6">
-            <ContentSection title="Identity Parameters" icon="person">
+            <ContentSection title="Personal Information" icon="person">
                 <div className="space-y-6">
-                    <DataRow label="Assigned Identifier" value={user?.full_name} icon="id_card" />
-                    <DataRow label="Communication Channel" value={user?.email} icon="alternate_email" />
-                    <DataRow label="Institutional Status" value={user?.org_id ? "Officer - Verified NGO" : "Authorization Pending"} icon="shield" />
+                    <DataRow label="Full Name" value={user?.full_name} icon="id_card" />
+                    <DataRow label="Email Address" value={user?.email} icon="alternate_email" />
+                    <DataRow label="NGO Status" value={user?.org_id ? "Verified NGO Coordinator" : "Verification Pending"} icon="shield" />
                     
                     <button className="w-full mt-10 py-4 bg-on_surface text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl hover:bg-primary transition-all">
-                        Upgrade Identification Details
+                        Edit Profile Details
                     </button>
                 </div>
             </ContentSection>
         </div>
 
         <div className="col-span-12 lg:col-span-6">
-            <ContentSection title="Security Protocol" icon="security">
+            <ContentSection title="Security & Privacy" icon="security">
                 <div className="space-y-6">
-                    <DataRow label="Authorization Hash" value="••••••••••••" icon="key" />
-                    <DataRow label="Multi-Factor Auth" value="Tactical Bypass Active" icon="lock_open" />
-                    <DataRow label="Session Resilience" value="High Altitude Lock" icon="timer" />
+                    <DataRow label="Password" value="••••••••••••" icon="key" />
+                    <DataRow label="Two-Factor Auth" value="Enabled" icon="check_circle" />
+                    <DataRow label="Account Status" value="Active & Secure" icon="verified" />
 
                     <button className="w-full mt-10 py-4 bg-surface_high text-on_surface rounded-2xl text-[10px] font-black uppercase tracking-widest border border-white hover:bg-on_surface hover:text-white transition-all">
-                        Manage Privacy Matrix
+                        Privacy Settings
                     </button>
                 </div>
             </ContentSection>

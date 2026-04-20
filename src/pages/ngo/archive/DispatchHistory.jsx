@@ -7,6 +7,7 @@ import MetricCard from "../../../components/shared/MetricCard";
 import ContentSection from "../../../components/shared/ContentSection";
 import DataRow from "../../../components/shared/DataRow";
 import SkeletonStructure from "../../../components/shared/SkeletonStructure";
+import { generateDispatchReport } from "../../../services/reportService";
 
 const DispatchHistory = () => {
     const [dispatches, setDispatches] = useState([]);
@@ -80,7 +81,14 @@ const DispatchHistory = () => {
                     <h1 className="text-4xl font-outfit font-black text-on_surface tracking-tight">Dispatch Timeline</h1>
                     <p className="text-xs font-bold text-on_surface_variant/60 mt-1">Archived logs of completed tactical deployments and resource transfers.</p>
                 </div>
-                <div className="flex justify-center w-full lg:w-auto">
+                <div className="flex flex-col md:flex-row items-center gap-4 w-full lg:w-auto">
+                    <button 
+                        onClick={() => generateDispatchReport(dispatches, "Full History")}
+                        className="flex items-center gap-2 px-6 py-3 bg-on_surface text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl hover:scale-105 active:scale-95 transition-all outline-none"
+                    >
+                        <span className="material-symbols-outlined text-sm">archive</span>
+                        Download Full History
+                    </button>
                     <MetricCard label="Archived Ops" value={dispatches.length} icon="history" variant="primary" />
                 </div>
             </div>
@@ -129,19 +137,27 @@ const DispatchHistory = () => {
                             return (
                                 <div key={group} className="relative space-y-6">
                                     {/* GROUP HEADER */}
-                                    <div 
-                                        onClick={() => toggleGroup(group)}
-                                        className="relative flex items-center justify-between cursor-pointer group"
-                                    >
-                                        <div className="flex items-center gap-4">
+                                    <div className="relative flex items-center justify-between pr-4">
+                                        <div 
+                                            onClick={() => toggleGroup(group)}
+                                            className="flex items-center gap-4 cursor-pointer group"
+                                        >
                                             <div className="absolute -left-4 md:-left-6 w-3 h-3 bg-white border-2 border-primary rounded-full z-10" />
                                             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary bg-primary/5 px-4 py-1.5 rounded-full border border-primary/10">
                                                 {group}
                                             </span>
+                                            <span className="material-symbols-outlined text-sm opacity-20 group-hover:opacity-100 transition-opacity">
+                                                {collapsed ? "add" : "remove"}
+                                            </span>
                                         </div>
-                                        <span className="material-symbols-outlined text-sm opacity-20 group-hover:opacity-100 transition-opacity">
-                                            {collapsed ? "add" : "remove"}
-                                        </span>
+                                        
+                                        <button 
+                                            onClick={(e) => { e.stopPropagation(); generateDispatchReport(items, `${view.toUpperCase()}: ${group}`); }}
+                                            className="flex items-center gap-2 p-2 hover:bg-primary/5 text-primary rounded-lg transition-colors border border-primary/5"
+                                        >
+                                            <span className="material-symbols-outlined text-sm">picture_as_pdf</span>
+                                            <span className="text-[8px] font-black uppercase tracking-widest">Period Log</span>
+                                        </button>
                                     </div>
 
                                     {!collapsed && (
@@ -154,10 +170,7 @@ const DispatchHistory = () => {
                                                         initial={{ opacity: 0, x: -20 }}
                                                         animate={{ opacity: 1, x: 0 }}
                                                         transition={{ delay: i * 0.03 }}
-                                                        onClick={() => setExpanded(expanded === d.id ? null : d.id)}
-                                                        className={`group relative bg-white/60 backdrop-blur-md p-8 rounded-[2.5rem] border transition-all duration-300 cursor-pointer ${
-                                                            expanded === d.id ? "border-primary/40 bg-white shadow-2xl" : "border-on_surface/5 hover:bg-white hover:border-primary/20"
-                                                        }`}
+                                                        className="group relative bg-white/60 backdrop-blur-md p-8 rounded-[2.5rem] border border-on_surface/5 hover:bg-white hover:border-primary/20 hover:shadow-2xl transition-all duration-300"
                                                     >
                                                         <div className="flex justify-between items-start gap-6">
                                                             <div className="flex-1 space-y-2">
@@ -174,23 +187,19 @@ const DispatchHistory = () => {
                                                                     </span>
                                                                 </div>
                                                             </div>
-                                                            <div className="text-right">
-                                                                <p className="text-[10px] font-black text-on_surface uppercase tracking-tight">{new Date(d.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                                                            <div className="flex items-center gap-4">
+                                                                <div className="text-right">
+                                                                    <p className="text-[10px] font-black text-on_surface uppercase tracking-tight">{new Date(d.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                                                                </div>
+                                                                <button 
+                                                                    onClick={() => generateDispatchReport(d, `Operation: #${d.id}`)}
+                                                                    className="p-2 bg-white border border-on_surface/5 rounded-xl hover:bg-primaryGradient hover:text-white hover:border-transparent transition-all shadow-sm"
+                                                                    title="Download PDF Log"
+                                                                >
+                                                                    <span className="material-symbols-outlined text-[18px]">download</span>
+                                                                </button>
                                                             </div>
                                                         </div>
-
-                                                        {expanded === d.id && (
-                                                            <motion.div 
-                                                                initial={{ opacity: 0, height: 0 }}
-                                                                animate={{ opacity: 1, height: 'auto' }}
-                                                                className="mt-8 pt-8 border-t border-on_surface/5 space-y-4"
-                                                            >
-                                                                <DataRow label="Pickup Coordinates" value={d.pickup_address} icon="location_on" />
-                                                                <DataRow label="Asset Class" value={d.item_type || "General Supply"} icon="category" />
-                                                                <DataRow label="Tactical Quantity" value={`${d.item_quantity} units`} icon="format_list_numbered" />
-                                                                {d.description && <DataRow label="Mission Narrative" value={d.description} icon="description" />}
-                                                            </motion.div>
-                                                        )}
                                                     </motion.div>
                                                 ))}
                                             </AnimatePresence>

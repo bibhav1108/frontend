@@ -20,6 +20,7 @@ const Marketplace = ({ sidebarOpen }) => {
   const [alertsLoading, setAlertsLoading] = useState(true);
 
   const [lastUpdated, setLastUpdated] = useState(Date.now());
+  const [expandedId, setExpandedId] = useState(null);
 
   const [dispatchModal, setDispatchModal] = useState({
     open: false,
@@ -123,23 +124,23 @@ const Marketplace = ({ sidebarOpen }) => {
       <div className="col-span-12 lg:col-span-8 space-y-8">
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <p className="text-primary text-[10px] font-black uppercase tracking-[0.3em] mb-1">Live Information Network</p>
+              <p className="text-primary text-[10px] font-black uppercase tracking-[0.3em] mb-1">Donation Feed</p>
               <h1 className="text-3xl sm:text-4xl font-outfit font-black text-on_surface tracking-tight">Marketplace</h1>
               <div className="mt-2 flex items-center gap-2 text-xs font-bold text-on_surface_variant/60">
                 <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-                <span>Live Feed • Updated {timeAgo()}</span>
+                <span>Active Feed • Updated {timeAgo()}</span>
               </div>
             </div>
             <div className="flex gap-2">
                 <button onClick={() => navigate("/dispatches")} className="px-3 sm:px-4 py-2 bg-surface_high hover:bg-surface_highest rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all">History</button>
-                <button onClick={() => navigate("/marketplace-stats")} className="px-3 sm:px-4 py-2 bg-primary/10 text-primary hover:bg-primary/20 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all">Statistics</button>
+                <button onClick={() => navigate("/marketplace-stats")} className="px-3 sm:px-4 py-2 bg-primary/10 text-primary hover:bg-primary/20 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all">Analytics</button>
             </div>
         </motion.div>
 
-        <ContentSection title="Live Network Alerts" icon="radar" delay="100ms">
+        <ContentSection title="Recent Donation Alerts" icon="notifications_active" delay="100ms">
             <div className="flex items-center justify-between mb-4">
-                <p className="text-xs text-on_surface_variant font-medium">Potential requests awaiting conversion to resources.</p>
-                <button onClick={() => navigate("/alerts")} className="text-[10px] font-black uppercase tracking-widest text-primary hover:underline">Full Audit</button>
+                <p className="text-xs text-on_surface_variant font-medium">New requests from donors awaiting review.</p>
+                <button onClick={() => navigate("/alerts")} className="text-[10px] font-black uppercase tracking-widest text-primary hover:underline">View History</button>
             </div>
 
             <div className="space-y-4">
@@ -147,34 +148,92 @@ const Marketplace = ({ sidebarOpen }) => {
                     <SkeletonStructure layout={marketplaceSkeletonLayout} />
                 ) : (
                     <AnimatePresence mode="popLayout">
-                        {alerts.slice(0, MIN_ALERTS).map((a, i) => (
-                            <motion.div 
-                                key={a.id}
-                                layout
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, scale: 0.95 }}
-                                className="group bg-surface_high/60 p-5 rounded-2xl border border-white/20 hover:bg-white/80 shadow-sm transition-all flex items-center justify-between gap-4"
-                            >
-                                <div className="space-y-1">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <span className="px-2 py-0.5 bg-primary/10 text-primary text-[9px] font-black uppercase tracking-widest rounded">ALERT</span>
-                                        <span className="text-[10px] font-bold text-on_surface_variant/40">
-                                            {new Date(a.created_at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
-                                        </span>
-                                    </div>
-                                    <p className="text-sm font-bold text-on_surface leading-tight">{a.message_body}</p>
-                                    {a.donor_name && <p className="text-[10px] font-black uppercase tracking-widest text-on_surface_variant opacity-50">Reported by {a.donor_name}</p>}
-                                </div>
-                                <button
-                                    disabled={claimingId === a.id}
-                                    onClick={() => claimAlert(a.id)}
-                                    className="shrink-0 bg-primaryGradient text-white px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 transform group-hover:scale-105 transition-all disabled:opacity-50"
+                        {alerts.slice(0, MIN_ALERTS).map((a, i) => {
+                            const isExpanded = expandedId === a.id;
+                            return (
+                                <motion.div 
+                                    key={a.id}
+                                    layout
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, scale: 0.95 }}
+                                    onClick={() => setExpandedId(isExpanded ? null : a.id)}
+                                    className={`group bg-white/60 backdrop-blur-md p-5 rounded-[2rem] border transition-all cursor-pointer ${
+                                        isExpanded ? "ring-2 ring-primary border-transparent shadow-xl" : "border-on_surface/5 hover:border-primary/20 hover:shadow-md"
+                                    }`}
                                 >
-                                    {claimingId === a.id ? "Processing" : "Claim"}
-                                </button>
-                            </motion.div>
-                        ))}
+                                    <div className="flex items-center justify-between gap-4">
+                                        <div className="space-y-1">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <span className="px-2 py-0.5 bg-primary/10 text-primary text-[9px] font-black uppercase tracking-widest rounded">
+                                                    {isExpanded ? "DETAILS" : "NEW ALERT"}
+                                                </span>
+                                                <span className="text-[10px] font-bold text-on_surface_variant/40">
+                                                    {new Date(a.created_at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
+                                                </span>
+                                            </div>
+                                            <h4 className="text-sm font-bold text-on_surface leading-tight">
+                                                {a.item && a.item !== "N/A" ? a.item : "Donation Pickup"}
+                                                {a.quantity && a.quantity !== "N/A" && <span className="opacity-40 ml-1">({a.quantity})</span>}
+                                            </h4>
+                                            {a.donor_name && <p className="text-[10px] font-black uppercase tracking-widest text-on_surface_variant opacity-50">From {a.donor_name}</p>}
+                                        </div>
+                                        <button
+                                            disabled={claimingId === a.id}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                claimAlert(a.id);
+                                            }}
+                                            className="shrink-0 bg-on_surface text-white px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-on_surface/10 transform transition-all hover:bg-primary active:scale-95 disabled:opacity-50"
+                                        >
+                                            {claimingId === a.id ? "..." : "Accept"}
+                                        </button>
+                                    </div>
+
+                                    <AnimatePresence>
+                                        {isExpanded && (
+                                            <motion.div
+                                                initial={{ height: 0, opacity: 0 }}
+                                                animate={{ height: "auto", opacity: 1 }}
+                                                exit={{ height: 0, opacity: 0 }}
+                                                className="overflow-hidden"
+                                            >
+                                                <div className="pt-6 mt-6 border-t border-on_surface/5 space-y-4">
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                        <div className="space-y-2">
+                                                            <p className="text-[9px] font-black uppercase tracking-widest text-primary opacity-60">Original Message</p>
+                                                            <div className="p-3 bg-surface_high/40 rounded-xl border border-on_surface/5 text-[11px] text-on_surface_variant font-medium leading-relaxed italic">
+                                                                "{a.message_body}"
+                                                            </div>
+                                                        </div>
+                                                        <div className="space-y-3">
+                                                            <p className="text-[9px] font-black uppercase tracking-widest text-primary opacity-60">Donor Details</p>
+                                                            <div className="space-y-2">
+                                                                <div className="flex items-center justify-between text-[10px]">
+                                                                    <span className="font-bold opacity-40 uppercase">Contact</span>
+                                                                    <span className="font-black">{a.phone_number || "Not listed"}</span>
+                                                                </div>
+                                                                <div className="flex items-center justify-between text-[10px]">
+                                                                    <span className="font-bold opacity-40 uppercase">Location</span>
+                                                                    <span className="font-black truncate max-w-[150px]">{a.location || "Available on request"}</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    {a.notes && a.notes !== "N/A" && (
+                                                        <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10">
+                                                            <p className="text-[9px] font-black uppercase tracking-widest text-primary mb-1">AI Summary</p>
+                                                            <p className="text-xs font-bold text-on_surface_variant leading-relaxed">{a.notes}</p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </motion.div>
+                            );
+                        })}
                     </AnimatePresence>
                 )}
             </div>

@@ -7,6 +7,7 @@ import MetricCard from "../../../components/shared/MetricCard";
 import ContentSection from "../../../components/shared/ContentSection";
 import DataRow from "../../../components/shared/DataRow";
 import SkeletonStructure from "../../../components/shared/SkeletonStructure";
+import { generateCampaignReport } from "../../../services/reportService";
 
 const CampaignHistory = () => {
   const [campaigns, setCampaigns] = useState([]);
@@ -93,6 +94,14 @@ const CampaignHistory = () => {
             </button>
           ))}
         </div>
+
+        <button 
+          onClick={() => generateCampaignReport(campaigns, "Full History")}
+          className="flex items-center gap-2 px-6 py-2.5 bg-on_surface text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg hover:shadow-black/20 hover:scale-105 active:scale-95 transition-all outline-none"
+        >
+          <span className="material-symbols-outlined text-sm">archive</span>
+          Download Full History
+        </button>
       </div>
 
       <div className="relative">
@@ -113,19 +122,30 @@ const CampaignHistory = () => {
                     return (
                         <div key={group} className="space-y-8">
                             {/* GROUP MARKER */}
-                            <div
-                                onClick={() => toggleGroup(group)}
-                                className="relative flex items-center gap-4 cursor-pointer group select-none ml-0 md:ml-8"
-                            >
-                                <div className="z-10 w-4 h-4 rounded-full bg-surface_highest border-2 border-on_surface/5 group-hover:bg-primary transition-colors flex items-center justify-center">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-on_surface_variant opacity-40" />
+                            <div className="relative flex items-center justify-between ml-0 md:ml-8 pr-4">
+                                <div
+                                    onClick={() => toggleGroup(group)}
+                                    className="flex items-center gap-4 cursor-pointer group select-none"
+                                >
+                                    <div className="z-10 w-4 h-4 rounded-full bg-surface_highest border-2 border-on_surface/5 group-hover:bg-primary transition-colors flex items-center justify-center">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-on_surface_variant opacity-40" />
+                                    </div>
+                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-on_surface_variant/60 group-hover:text-primary transition-colors">
+                                        {group} ({items.length} units)
+                                    </span>
+                                    <span className="material-symbols-outlined text-sm opacity-20 group-hover:opacity-100 transition-opacity">
+                                        {collapsed ? "keyboard_arrow_down" : "keyboard_arrow_up"}
+                                    </span>
                                 </div>
-                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-on_surface_variant/60 group-hover:text-primary transition-colors">
-                                    {group} ({items.length} units)
-                                </span>
-                                <span className="material-symbols-outlined text-sm opacity-20 group-hover:opacity-100 transition-opacity">
-                                    {collapsed ? "keyboard_arrow_down" : "keyboard_arrow_up"}
-                                </span>
+                                
+                                <button 
+                                    onClick={(e) => { e.stopPropagation(); generateCampaignReport(items, `${view.toUpperCase()}: ${group}`); }}
+                                    className="p-2 hover:bg-primary/10 text-primary rounded-lg transition-colors flex items-center gap-2"
+                                    title={`Download PDF for ${group}`}
+                                >
+                                    <span className="material-symbols-outlined text-sm">picture_as_pdf</span>
+                                    <span className="text-[8px] font-black uppercase tracking-tighter">Period Report</span>
+                                </button>
                             </div>
 
                             <AnimatePresence>
@@ -138,10 +158,7 @@ const CampaignHistory = () => {
                                     >
                                         {items.map((c) => (
                                             <div key={c.id} className="relative">
-                                                <div
-                                                    onClick={() => setExpanded(expanded === c.id ? null : c.id)}
-                                                    className="group bg-white/60 backdrop-blur-md p-8 rounded-[2.5rem] border border-on_surface/5 hover:bg-white hover:border-primary/20 hover:shadow-2xl transition-all duration-500 cursor-pointer"
-                                                >
+                                                <div className="group bg-white/60 backdrop-blur-md p-8 rounded-[2.5rem] border border-on_surface/5 hover:bg-white hover:border-primary/20 hover:shadow-2xl transition-all duration-500">
                                                     <div className="flex flex-col md:flex-row items-center justify-between gap-8">
                                                         <div className="flex items-center gap-6 flex-1">
                                                             <div className="w-16 h-16 bg-surface_high group-hover:bg-primaryGradient group-hover:text-white rounded-[1.5rem] flex items-center justify-center transition-all duration-500 shadow-sm shrink-0">
@@ -162,54 +179,25 @@ const CampaignHistory = () => {
                                                             </div>
                                                         </div>
 
-                                                        <div className="flex items-center gap-4">
+                                                        <div className="flex items-center gap-6">
                                                             <div className="text-right hidden md:block">
                                                                 <p className="text-[11px] font-black text-on_surface uppercase tracking-tight">{new Date(c.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}</p>
                                                                 <p className="text-[9px] font-bold text-on_surface_variant/40 tracking-widest text-right mt-1">Mission End</p>
                                                             </div>
-                                                            <div className="px-5 py-2.5 bg-emerald-500/10 text-emerald-600 rounded-xl text-[9px] font-black uppercase tracking-[0.2em] border border-emerald-500/20">
-                                                                Status: COMPLETED
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="px-5 py-2.5 bg-emerald-500/10 text-emerald-600 rounded-xl text-[9px] font-black uppercase tracking-[0.2em] border border-emerald-500/20">
+                                                                    COMPLETED
+                                                                </div>
+                                                                <button 
+                                                                    onClick={() => generateCampaignReport(c, `Campaign: ${c.name}`)}
+                                                                    className="p-2.5 bg-white border border-on_surface/5 rounded-xl hover:bg-primaryGradient hover:text-white hover:border-transparent transition-all shadow-sm group/btn"
+                                                                    title="Download PDF Analysis"
+                                                                >
+                                                                    <span className="material-symbols-outlined text-[18px]">download</span>
+                                                                </button>
                                                             </div>
                                                         </div>
                                                     </div>
-
-                                                    <AnimatePresence>
-                                                        {expanded === c.id && (
-                                                            <motion.div 
-                                                                initial={{ opacity: 0, scaleY: 0.95, y: -10 }}
-                                                                animate={{ opacity: 1, scaleY: 1, y: 0 }}
-                                                                exit={{ opacity: 0, scaleY: 0.95, y: -10 }}
-                                                                className="mt-10 pt-10 border-t border-on_surface/5 space-y-8"
-                                                            >
-                                                                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                                                                    <DataRow label="Target Capacity" value={`${c.target_quantity} units`} icon="track_changes" />
-                                                                    <DataRow label="Personnel Dispatched" value={`${c.volunteers_required} active`} icon="groups" />
-                                                                    <DataRow label="Required Expertise" value={c.required_skills?.join(", ") || "General Personnel"} icon="psychology" />
-                                                                </div>
-
-                                                                {c.description && (
-                                                                    <div className="p-8 bg-surface_high/50 rounded-[2rem] border border-on_surface/5">
-                                                                        <p className="text-[10px] font-black uppercase tracking-widest text-on_surface_variant/40 mb-3">Mission Intelligence Abstract</p>
-                                                                        <p className="text-xs font-bold text-on_surface_variant leading-relaxed italic">"{c.description}"</p>
-                                                                    </div>
-                                                                )}
-
-                                                                {c.items && Object.keys(c.items).length > 0 && (
-                                                                    <div className="space-y-4">
-                                                                        <p className="text-[10px] font-black uppercase tracking-widest text-on_surface_variant px-2">Logistics Distributed</p>
-                                                                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                                                                            {Object.entries(c.items).map(([k, v]) => (
-                                                                                <div key={k} className="bg-white/40 p-4 rounded-2xl border border-on_surface/5 text-center">
-                                                                                    <p className="text-[11px] font-black text-on_surface uppercase truncate mb-1">{k}</p>
-                                                                                    <p className="text-[10px] font-black text-primary">{v}</p>
-                                                                                </div>
-                                                                            ))}
-                                                                        </div>
-                                                                    </div>
-                                                                )}
-                                                            </motion.div>
-                                                        )}
-                                                    </AnimatePresence>
                                                 </div>
                                             </div>
                                         ))}

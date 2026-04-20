@@ -13,7 +13,7 @@ const NAV_ITEMS = [
   { to: "/ngo/dashboard", label: "Overview", icon: "dashboard" },
   { to: "/marketplace", label: "Marketplace", icon: "notifications_active" },
   { to: "/collection-hub", label: "Collection Hub", icon: "move_to_inbox" },
-  { to: "/campaigns", label: "Campaign Control", icon: "rocket_launch" },
+  { to: "/campaigns", label: "Campaigns", icon: "rocket_launch" },
   { to: "/volunteers", label: "Volunteers", icon: "groups" },
   { to: "/inventory", label: "Inventory", icon: "inventory_2" },
 ];
@@ -260,7 +260,7 @@ const Layout = ({ children }) => {
 
 
           <div className="hidden min-[400px]:flex items-center gap-2 overflow-hidden truncate">
-            <span className="text-on_surface_variant/40 text-[9px] sm:text-sm uppercase tracking-widest font-black shrink-0">Operations</span>
+            <span className="text-on_surface_variant/40 text-[9px] sm:text-sm uppercase tracking-widest font-black shrink-0">NGO Dashboard</span>
             <span className="material-symbols-outlined text-[10px] sm:text-xs text-on_surface_variant/40 shrink-0">chevron_right</span>
             
             {location.pathname !== "/ngo/dashboard" && (
