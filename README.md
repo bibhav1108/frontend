@@ -15,13 +15,6 @@ Sahyog Sync is a community-first platform designed to bridge the gap between peo
 - **Premium Experience**: Helping others is a high-honor task. We built a beautiful, high-fidelity interface to reflect that importance.
 - **Fast & Reliable**: From smooth page transitions to real-time status updates, the platform is built to be as dependable as the people using it.
 
-## 🚀 Getting Started
-
-If you are a developer looking to run this locally:
-
-1. **Install dependencies**: `npm install`
-2. **Setup environment**: Ensure your API connection is set in `src/services/api.js`.
-3. **Launch**: `npm run dev`
-
 ---
-*Built for the community, by the community.*
+**Visit the Platform: [sahyog-setu-frontend.vercel.app](https://sahyog-setu-frontend.vercel.app/)**
+
