@@ -282,15 +282,16 @@ const Volunteers = () => {
         title="Add Volunteer"
         maxWidth="max-w-md"
       >
-        <div className="space-y-6">
-            <p className="text-xs font-bold text-on_surface_variant/60 leading-relaxed italic border-l-4 border-primary/20 pl-4">Add a new volunteer to the team and assign them to the network.</p>
-            <div className="space-y-4">
-                <ActionInput label="Full Name" placeholder="e.g. John Doe" value={form.name} onChange={(val) => setForm({...form, name: val})} />
-                <ActionInput label="Phone Number" placeholder="+91..." value={form.phone_number} onChange={(val) => setForm({...form, phone_number: val})} />
-                <ActionInput label="Work Zone" placeholder="e.g. Central Lucknow" value={form.zone} onChange={(val) => setForm({...form, zone: val})} />
-                <button onClick={handleCreate} disabled={creating} className="w-full py-4 mt-4 bg-on_surface text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-xl hover:-translate-y-1 transition-all flex items-center justify-center gap-3">
-                    {creating && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
-                    {creating ? "Adding..." : "Add Volunteer"}
+        <div className="space-y-4">
+            <p className="text-xs font-bold text-on_surface_variant/60 leading-relaxed italic border-l-4 border-primary/20 pl-4">Add a new team member and get them started with the community.</p>
+            <div className="space-y-3">
+                <ActionInput icon="person" label="Full Name" placeholder="e.g. John Doe" value={form.name} onChange={(val) => setForm({...form, name: val})} />
+                <ActionInput icon="call" label="Phone Number" placeholder="+91..." value={form.phone_number} onChange={(val) => setForm({...form, phone_number: val})} />
+                <ActionInput icon="location_on" label="Operating Area" placeholder="e.g. Central Lucknow" value={form.zone} onChange={(val) => setForm({...form, zone: val})} />
+                <ActionInput icon="psychology" label="Skills" placeholder="e.g. Driving, First Aid..." value={form.skills} onChange={(val) => setForm({...form, skills: val})} />
+                <button onClick={handleCreate} disabled={creating} className="w-full py-3.5 bg-primaryGradient text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:-translate-y-1 transition-all flex items-center justify-center gap-3">
+                    {creating ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <span className="material-symbols-outlined text-sm">person_add</span>}
+                    {creating ? "Adding..." : "Add to Team"}
                 </button>
             </div>
         </div>

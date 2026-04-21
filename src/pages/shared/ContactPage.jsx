@@ -139,7 +139,7 @@ const ContactPage = () => {
                         <div className="space-y-3">
                             <label className="text-[10px] font-black uppercase tracking-[0.3em] opacity-30 ml-4">Category</label>
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                                {["BUG", "FEATURE", "UI", "LOGISTICS"].map(cat => (
+                                {["BUG", "FEATURE", "UI", "OTHER"].map(cat => (
                                     <button
                                         key={cat}
                                         type="button"
