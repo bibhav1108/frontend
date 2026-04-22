@@ -181,7 +181,7 @@ const NGODashboard = () => {
     );
   }
 
-  if (org?.status !== 'active') {
+  if (org?.status !== 'APPROVED') {
     const isNotOnboarded = !org;
     return (
       <div className="max-w-4xl mx-auto py-12 px-4 space-y-10 animate-fadeIn">

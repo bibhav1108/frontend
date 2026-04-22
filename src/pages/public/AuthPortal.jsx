@@ -31,8 +31,10 @@ const validatePhone = (phone) => {
 };
 
 const validatePassword = (password) => {
-  // Min 8 chars, at least one letter and one number
-  return password.length >= 8 && /[A-Za-z]/.test(password) && /\d/.test(password);
+  if (password.length < 8) return "Password must be at least 8 characters long";
+  if (!/[a-zA-Z]/.test(password)) return "Password must contain at least one letter";
+  if (!/\d/.test(password)) return "Password must contain at least one number";
+  return null;
 };
 
 const AuthPortal = () => {
@@ -427,7 +429,9 @@ const VolunteerRegForm = ({ setError, setSuccess, setLoading, loading, switchMod
 
     if (!name || !phone || !password) return setError("All fields are required");
     if (!validatePhone(phone)) return setError("Please enter a valid phone number (at least 10 digits)");
-    if (!validatePassword(password)) return setError("Password must be at least 8 characters and include both letters and numbers");
+    
+    const passError = validatePassword(password);
+    if (passError) return setError(passError);
 
     try {
       setLoading(true);
@@ -437,7 +441,13 @@ const VolunteerRegForm = ({ setError, setSuccess, setLoading, loading, switchMod
       setSuccess("Welcome aboard! Redirecting...");
       setTimeout(() => switchMode(MODES.LOGIN), 2000);
     } catch (err) {
-      setError("Registration failed. Please check your inputs.");
+      if (err.response?.status === 422) {
+        const details = err.response.data.detail;
+        const msg = Array.isArray(details) ? details[0].msg : details;
+        setError(msg);
+      } else {
+        setError(err.response?.data?.detail || "Registration failed. Please check your inputs.");
+      }
     } finally {
       setLoading(false);
     }
@@ -550,7 +560,8 @@ const NGORegForm = ({ setError, setSuccess, setLoading, loading, switchMode, MOD
   const finishRegistration = async (e) => {
     e.preventDefault();
     if (!name || !password) return setError("All fields required");
-    if (!validatePassword(password)) return setError("Password too weak");
+    const passError = validatePassword(password);
+    if (passError) return setError(passError);
 
     try {
       setLoading(true);
@@ -560,7 +571,13 @@ const NGORegForm = ({ setError, setSuccess, setLoading, loading, switchMode, MOD
       setSuccess("Admin account created! Log in to set up your NGO.");
       setTimeout(() => switchMode(MODES.LOGIN), 2500);
     } catch (err) {
-      setError(err.response?.data?.detail || "Registration failed");
+      if (err.response?.status === 422) {
+        const details = err.response.data.detail;
+        const msg = Array.isArray(details) ? (details[0].msg || details[0].message) : (details.msg || details);
+        setError(msg);
+      } else {
+        setError(err.response?.data?.detail || "Registration failed");
+      }
     } finally {
       setLoading(false);
     }

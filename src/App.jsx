@@ -67,7 +67,7 @@ function App() {
           <Route
             path="/ngo/dashboard"
             element={
-              <ProtectedRoute allowedRoles={["NGO_COORDINATOR", "NGO_ADMIN"]}>
+              <ProtectedRoute allowedRoles={["NGO_COORDINATOR", "NGO_ADMIN"]} requireVerifiedOrg={true}>
                 <Layout>
                   <NGODashboard />
                 </Layout>
@@ -78,7 +78,7 @@ function App() {
           <Route
             path="/volunteers"
             element={
-              <ProtectedRoute allowedRoles={["NGO_COORDINATOR", "NGO_ADMIN"]}>
+              <ProtectedRoute allowedRoles={["NGO_COORDINATOR", "NGO_ADMIN"]} requireVerifiedOrg={true}>
                 <Layout>
                   <Volunteers />
                 </Layout>
@@ -89,7 +89,7 @@ function App() {
           <Route
             path="/marketplace"
             element={
-              <ProtectedRoute allowedRoles={["NGO_COORDINATOR", "NGO_ADMIN"]}>
+              <ProtectedRoute allowedRoles={["NGO_COORDINATOR", "NGO_ADMIN"]} requireVerifiedOrg={true}>
                 <Layout>
                   <Marketplace />
                 </Layout>
@@ -100,7 +100,7 @@ function App() {
           <Route
             path="/marketplace-stats"
             element={
-              <ProtectedRoute allowedRoles={["NGO_COORDINATOR", "NGO_ADMIN"]}>
+              <ProtectedRoute allowedRoles={["NGO_COORDINATOR", "NGO_ADMIN"]} requireVerifiedOrg={true}>
                 <Layout>
                   <MarketplaceStatsPage />
                 </Layout>
@@ -111,7 +111,7 @@ function App() {
           <Route
             path="/alerts"
             element={
-              <ProtectedRoute allowedRoles={["NGO_COORDINATOR", "NGO_ADMIN"]}>
+              <ProtectedRoute allowedRoles={["NGO_COORDINATOR", "NGO_ADMIN"]} requireVerifiedOrg={true}>
                 <Layout>
                   <MarketplaceAlerts />
                 </Layout>
@@ -122,7 +122,7 @@ function App() {
           <Route
             path="/inventory"
             element={
-              <ProtectedRoute allowedRoles={["NGO_COORDINATOR", "NGO_ADMIN"]}>
+              <ProtectedRoute allowedRoles={["NGO_COORDINATOR", "NGO_ADMIN"]} requireVerifiedOrg={true}>
                 <Layout>
                   <Inventory />
                 </Layout>
@@ -133,7 +133,7 @@ function App() {
           <Route
             path="/needs"
             element={
-              <ProtectedRoute allowedRoles={["NGO_COORDINATOR", "NGO_ADMIN"]}>
+              <ProtectedRoute allowedRoles={["NGO_COORDINATOR", "NGO_ADMIN"]} requireVerifiedOrg={true}>
                 <Layout>
                   <ActiveNeeds />
                 </Layout>
@@ -144,7 +144,7 @@ function App() {
           <Route
             path="/dispatches"
             element={
-              <ProtectedRoute allowedRoles={["NGO_COORDINATOR", "NGO_ADMIN"]}>
+              <ProtectedRoute allowedRoles={["NGO_COORDINATOR", "NGO_ADMIN"]} requireVerifiedOrg={true}>
                 <Layout>
                   <DispatchHistory />
                 </Layout>
@@ -155,7 +155,7 @@ function App() {
           <Route
             path="/campaigns"
             element={
-              <ProtectedRoute allowedRoles={["NGO_COORDINATOR", "NGO_ADMIN"]}>
+              <ProtectedRoute allowedRoles={["NGO_COORDINATOR", "NGO_ADMIN"]} requireVerifiedOrg={true}>
                 <Layout>
                   <Campaigns />
                 </Layout>
@@ -166,7 +166,7 @@ function App() {
           <Route
             path="/campaign-history"
             element={
-              <ProtectedRoute allowedRoles={["NGO_COORDINATOR", "NGO_ADMIN"]}>
+              <ProtectedRoute allowedRoles={["NGO_COORDINATOR", "NGO_ADMIN"]} requireVerifiedOrg={true}>
                 <Layout>
                   <CampaignHistory />
                 </Layout>
@@ -176,7 +176,7 @@ function App() {
           <Route
             path="/collection-hub"
             element={
-              <ProtectedRoute allowedRoles={["NGO_COORDINATOR", "NGO_ADMIN"]}>
+              <ProtectedRoute allowedRoles={["NGO_COORDINATOR", "NGO_ADMIN"]} requireVerifiedOrg={true}>
                 <Layout>
                   <MarketplaceInventory />
                 </Layout>
@@ -186,7 +186,7 @@ function App() {
           <Route
             path="/activity-history"
             element={
-              <ProtectedRoute allowedRoles={["NGO_COORDINATOR", "NGO_ADMIN"]}>
+              <ProtectedRoute allowedRoles={["NGO_COORDINATOR", "NGO_ADMIN"]} requireVerifiedOrg={true}>
                 <Layout>
                   <ActivityHistory />
                 </Layout>

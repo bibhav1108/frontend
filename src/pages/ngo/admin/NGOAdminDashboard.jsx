@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { useNavigate, Link } from "react-router-dom";
 import API from "../../../services/api";
 import SkeletonStructure from "../../../components/shared/SkeletonStructure";
 
 const NGOAdminDashboard = () => {
+    const navigate = useNavigate();
     const [org, setOrg] = useState(null);
     const [loading, setLoading] = useState(true);
 
@@ -13,7 +14,9 @@ const NGOAdminDashboard = () => {
                 const res = await API.get("/organizations/me");
                 setOrg(res.data);
             } catch (err) {
-                console.error("Failed to load org", err);
+                if (err.response?.status !== 404) {
+                    console.error("Failed to load org", err);
+                }
             } finally {
                 setLoading(false);
             }
@@ -34,7 +37,7 @@ const NGOAdminDashboard = () => {
                     You haven't setup your NGO profile yet. Complete the onboarding to start managing your team.
                 </p>
                 <button 
-                    onClick={() => window.location.href='/ngo-admin/identity'}
+                    onClick={() => navigate('/ngo-admin/identity')}
                     className="px-8 py-4 bg-primary text-white rounded-xl text-xs font-bold uppercase tracking-widest shadow-lg hover:-translate-y-0.5 transition-all"
                 >
                     Complete NGO Profile
@@ -71,9 +74,9 @@ const NGOAdminDashboard = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <StatusCard 
                     label="NGO Status" 
-                    value={org.status === 'active' ? 'Verified' : 'Pending Approval'} 
-                    icon={org.status === 'active' ? 'verified_user' : 'schedule'} 
-                    color={org.status === 'active' ? 'text-green-600' : 'text-amber-600'}
+                    value={org.status === 'APPROVED' ? 'Verified' : 'Pending Approval'} 
+                    icon={org.status === 'APPROVED' ? 'verified_user' : 'schedule'} 
+                    color={org.status === 'APPROVED' ? 'text-green-600' : 'text-amber-600'}
                 />
                 <StatusCard 
                     label="Organization Type" 
@@ -100,7 +103,7 @@ const NGOAdminDashboard = () => {
                         Update your organization's bio, contact information, and website details.
                     </p>
                     <button 
-                        onClick={() => window.location.href='/ngo-admin/identity'}
+                        onClick={() => navigate('/ngo-admin/identity')}
                         className="w-full py-3.5 bg-on_surface/5 text-on_surface rounded-xl text-[11px] font-black uppercase tracking-widest mt-2 hover:bg-on_surface/10 transition-all active:scale-95"
                     >
                         Edit Profile
@@ -116,7 +119,7 @@ const NGOAdminDashboard = () => {
                         Add and manage coordinators who will help run your organization's daily operations.
                     </p>
                     <button 
-                         onClick={() => window.location.href='/ngo-admin/staff'}
+                         onClick={() => navigate('/ngo-admin/staff')}
                          className="w-full py-3.5 bg-primary text-white rounded-xl text-[11px] font-black uppercase tracking-widest mt-2 hover:shadow-lg transition-all active:scale-95"
                     >
                         Manage Team

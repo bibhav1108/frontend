@@ -77,6 +77,27 @@ const NGOAdminLayout = ({ children }) => {
         <nav className="flex-1 space-y-1.5 text-sm overflow-y-auto custom-scrollbar pr-1">
           {NGO_ADMIN_NAV_ITEMS.map((item) => {
             const active = location.pathname === item.to;
+            const isApproved = org?.status === "APPROVED";
+            const isDisabled = item.exitPortal && !isApproved;
+
+            if (isDisabled) {
+              return (
+                <div
+                  key={item.to}
+                  className="flex items-center gap-4 rounded-2xl px-5 py-3.5 opacity-30 cursor-not-allowed bg-surface_high text-on_surface_variant mt-10 border border-on_surface/5"
+                  title="Your NGO must be approved before accessing the mission dashboard"
+                >
+                  <span className="material-symbols-outlined text-[24px]">
+                    {item.icon}
+                  </span>
+                  <span className="font-semibold tracking-wide">
+                    {item.label}
+                  </span>
+                  <span className="material-symbols-outlined text-sm ml-auto opacity-30">lock</span>
+                </div>
+              );
+            }
+
             return (
               <Link
                 key={item.to}
@@ -143,7 +164,7 @@ const NGOAdminLayout = ({ children }) => {
         <div className="flex items-center gap-4">
             {!loading && org && (
                 <div className={`hidden sm:flex px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest ${
-                    org.status === 'active' ? 'bg-green-500/10 text-green-500' : 'bg-amber-500/10 text-amber-500 animate-pulse'
+                    org.status === 'APPROVED' ? 'bg-green-500/10 text-green-500' : 'bg-amber-500/10 text-amber-500 animate-pulse'
                 }`}>
                     {org.status}
                 </div>
