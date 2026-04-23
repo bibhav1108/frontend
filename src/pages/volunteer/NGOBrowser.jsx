@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import API from "../../services/api";
+import { resolveProfileImage, handleImageError } from "../../utils/imageUtils";
 
 // Shared UI Components
 import MetricCard from "../../components/shared/MetricCard";
@@ -180,8 +181,17 @@ const NGOBrowser = () => {
                                         >
                                             {/* Name & Icon */}
                                             <div className="col-span-1 lg:col-span-4 flex items-center gap-5">
-                                                <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-on_surface_variant shadow-sm border border-on_surface/5 group-hover:bg-primaryGradient group-hover:text-white transition-all duration-500 shrink-0">
-                                                    <span className="material-symbols-outlined text-xl">{expandedOrg === org.id ? 'expand_less' : 'handshake'}</span>
+                                                <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-on_surface_variant shadow-sm border border-on_surface/5 group-hover:bg-primaryGradient group-hover:text-white transition-all duration-500 shrink-0 overflow-hidden">
+                                                    {org.logo_url ? (
+                                                        <img 
+                                                            src={resolveProfileImage(org.logo_url)} 
+                                                            alt={org.name} 
+                                                            className="w-full h-full object-cover"
+                                                            onError={handleImageError}
+                                                        />
+                                                    ) : (
+                                                        <span className="material-symbols-outlined text-xl">{expandedOrg === org.id ? 'expand_less' : 'handshake'}</span>
+                                                    )}
                                                 </div>
                                                 <div className="min-w-0">
                                                     <h3 className="text-base font-black text-on_surface group-hover:text-primary transition-colors truncate">{org.name}</h3>

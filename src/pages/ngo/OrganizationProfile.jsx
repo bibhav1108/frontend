@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import API from "../../services/api";
 import VerificationBadge from "../../components/shared/VerificationBadge";
 import { useToast } from "../../context/ToastContext";
+import { resolveProfileImage } from "../../utils/imageUtils";
 
 // Shared UI Components
 import MetricCard from "../../components/shared/MetricCard";
@@ -15,8 +16,23 @@ const OrganizationProfile = () => {
     const [loading, setLoading] = useState(true);
     const [isEditing, setIsEditing] = useState(false);
     const [editData, setEditData] = useState({ about: "", website_url: "" });
-    const [saving, setSaving] = useState(false);
     const { addToast } = useToast();
+    const [saving, setSaving] = useState(false);
+
+    const uploadLogo = async (file) => {
+        if (!file) return;
+        const formData = new FormData();
+        formData.append("file", file);
+        try {
+            const res = await API.post("/organizations/me/logo", formData, {
+                headers: { "Content-Type": "multipart/form-data" }
+            });
+            setOrg({ ...org, logo_url: res.data.logo_url });
+            addToast("Logo updated successfully!", "success");
+        } catch (err) {
+            addToast("Failed to upload logo", "error");
+        }
+    };
 
     useEffect(() => {
         const fetchOrg = async () => {
@@ -75,8 +91,19 @@ const OrganizationProfile = () => {
                 <div className="absolute top-0 right-0 w-1/3 h-full bg-primaryGradient opacity-5 blur-[100px] -mr-32" />
                 <div className="relative flex flex-col md:flex-row items-center justify-between gap-12">
                     <div className="flex flex-col md:flex-row items-center gap-10">
-                        <div className="w-32 h-32 rounded-[2.5rem] bg-white flex items-center justify-center p-6 shadow-2xl rotate-3 group-hover:rotate-0 transition-transform duration-500">
-                             <span className="material-symbols-outlined text-primary text-[64px] font-black">corporate_fare</span>
+                        <div 
+                            onClick={() => document.getElementById("logo-upload").click()}
+                            className="w-32 h-32 rounded-[2.5rem] bg-white flex items-center justify-center p-0 shadow-2xl rotate-3 group-hover:rotate-0 transition-all duration-500 cursor-pointer overflow-hidden relative group/logo"
+                        >
+                             {org?.logo_url ? (
+                                 <img src={resolveProfileImage(org.logo_url)} alt="logo" className="w-full h-full object-cover" />
+                             ) : (
+                                 <span className="material-symbols-outlined text-primary text-[64px] font-black">corporate_fare</span>
+                             )}
+                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/logo:opacity-100 flex items-center justify-center transition-opacity">
+                                 <span className="material-symbols-outlined text-white">cloud_upload</span>
+                             </div>
+                             <input type="file" id="logo-upload" className="hidden" accept="image/*" onChange={(e) => uploadLogo(e.target.files[0])} />
                         </div>
                         <div className="text-center md:text-left space-y-3">
                             <div className="flex items-center justify-center md:justify-start gap-4">
