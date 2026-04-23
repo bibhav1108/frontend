@@ -12,7 +12,7 @@ import { useToast } from "../../../context/ToastContext";
 const NAV_ITEMS = [
   { to: "/ngo/dashboard", label: "Overview", icon: "dashboard" },
   { to: "/marketplace", label: "Marketplace", icon: "notifications_active", restricted: true },
-  { to: "/collection-hub", label: "Collection Hub", icon: "move_to_inbox", restricted: true },
+  { to: "/collection-hub", label: "Marketplace Inventory", icon: "move_to_inbox", restricted: true },
   { to: "/campaigns", label: "Campaigns", icon: "rocket_launch", restricted: true },
   { to: "/volunteers", label: "Volunteers", icon: "groups", restricted: true },
   { to: "/inventory", label: "Inventory", icon: "inventory_2", restricted: true },
