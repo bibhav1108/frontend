@@ -90,7 +90,7 @@ const OrgIdentityPage = () => {
 
     const validateField = (name, value) => {
         let error = "";
-        
+
         if (["name", "phone", "email", "registration_number", "pan_number", "office_address", "admin_phone", "id_proof_number"].includes(name)) {
             if (!value || value.trim() === "") {
                 error = "This field is required";
@@ -246,9 +246,9 @@ const OrgIdentityPage = () => {
                 id_proof_type: formData.id_proof_type,
                 id_proof_number: formData.id_proof_number
             });
-            
+
             if (!quiet) addToast("Progress saved", "success");
-            
+
             // Re-fetch to get the new org_id into local state for document uploads
             await fetchOrg();
             return true;
@@ -276,18 +276,18 @@ const OrgIdentityPage = () => {
     const handleNextStep = async () => {
         setSaving(true);
         let stepIsValid = true;
-        
+
         if (step === STEPS.BASIC) {
-            stepIsValid = validateField("name", formData.name) && 
-                         validateField("email", formData.email) && 
-                         validateField("phone", formData.phone);
+            stepIsValid = validateField("name", formData.name) &&
+                validateField("email", formData.email) &&
+                validateField("phone", formData.phone);
         } else if (step === STEPS.LEGAL) {
-            stepIsValid = validateField("registration_number", formData.registration_number) && 
-                         validateField("pan_number", formData.pan_number) &&
-                         validateField("office_address", formData.office_address);
+            stepIsValid = validateField("registration_number", formData.registration_number) &&
+                validateField("pan_number", formData.pan_number) &&
+                validateField("office_address", formData.office_address);
         } else if (step === STEPS.ADMIN) {
-            stepIsValid = validateField("admin_phone", formData.admin_phone) && 
-                         validateField("id_proof_number", formData.id_proof_number);
+            stepIsValid = validateField("admin_phone", formData.admin_phone) &&
+                validateField("id_proof_number", formData.id_proof_number);
         }
 
         if (!stepIsValid) {
@@ -304,10 +304,10 @@ const OrgIdentityPage = () => {
     if (loading) return (
         <div className="space-y-10">
             <div className="flex items-center gap-6">
-                <SkeletonStructure layout={[{type: 'circle', size: 100}]} />
-                <SkeletonStructure layout={[{type: 'stack', items: [{type: 'text', width: '40%'}, {type: 'text', width: '20%'}]}]} />
+                <SkeletonStructure layout={[{ type: 'circle', size: 100 }]} />
+                <SkeletonStructure layout={[{ type: 'stack', items: [{ type: 'text', width: '40%' }, { type: 'text', width: '20%' }] }]} />
             </div>
-            <SkeletonStructure layout={[{type: 'rect', height: 400, className: "rounded-[3.5rem]"}]} />
+            <SkeletonStructure layout={[{ type: 'rect', height: 400, className: "rounded-[3.5rem]" }]} />
         </div>
     );
 
@@ -317,10 +317,10 @@ const OrgIdentityPage = () => {
                 {/* HERO BRANDING */}
                 <div className="relative overflow-hidden rounded-[2.5rem] bg-white border border-on_surface/5 p-10 md:p-14 shadow-soft flex flex-col md:flex-row items-center gap-10">
                     <div className="absolute top-0 right-0 w-1/3 h-full bg-primaryGradient opacity-5 blur-[100px] -mr-32" />
-                    
+
                     {/* LOGO UPLOAD SECTION */}
                     <div className="group relative">
-                        <div 
+                        <div
                             onClick={() => document.getElementById("logo-upload").click()}
                             className="w-40 h-40 rounded-[2rem] bg-surface_high flex items-center justify-center shadow-inner border border-on_surface/5 overflow-hidden relative cursor-pointer ring-4 ring-primary/5 group-hover:ring-primary/20 transition-all duration-500"
                         >
@@ -329,32 +329,32 @@ const OrgIdentityPage = () => {
                             ) : (
                                 <span className="material-symbols-outlined text-primary text-[80px] font-black">corporate_fare</span>
                             )}
-                            
+
                             <div className="absolute inset-0 bg-primary/80 text-white flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
                                 <span className="material-symbols-outlined text-3xl mb-1">add_a_photo</span>
                                 <p className="text-[10px] font-black uppercase tracking-widest text-center px-4">Change Profile Picture</p>
                             </div>
                         </div>
                         <input type="file" id="logo-upload" className="hidden" accept="image/*" onChange={(e) => uploadLogo(e.target.files[0])} />
-                        
+
                         <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-white rounded-2xl shadow-xl flex items-center justify-center">
                             <span className="material-symbols-outlined text-primary text-xl">verified</span>
                         </div>
                     </div>
 
-                <div className="space-y-2">
-                    <p className="text-primary text-xs font-bold uppercase tracking-wider mb-1">
-                        NGO Profile
-                    </p>
-                    <h1 className="text-4xl md:text-5xl font-black text-on_surface tracking-tight leading-tight">Organization Profile</h1>
-                    <p className="text-sm md:text-base text-on_surface_variant max-w-lg font-medium leading-relaxed opacity-60">
-                        Manage your organization's public details and registration information.
-                    </p>
-                </div>
+                    <div className="space-y-2">
+                        <p className="text-primary text-xs font-bold uppercase tracking-wider mb-1">
+                            NGO Profile
+                        </p>
+                        <h1 className="text-4xl md:text-5xl font-black text-on_surface tracking-tight leading-tight">Organization Profile</h1>
+                        <p className="text-sm md:text-base text-on_surface_variant max-w-lg font-medium leading-relaxed opacity-60">
+                            Manage your organization's public details and registration information.
+                        </p>
+                    </div>
 
                     <div className="flex flex-col gap-3">
                         {!isEditing ? (
-                            <button 
+                            <button
                                 onClick={() => setIsEditing(true)}
                                 className="bg-primaryGradient text-white px-8 py-4 rounded-full text-xs font-bold uppercase tracking-wider shadow-lg shadow-primary/20 hover:scale-105 transition-all active:scale-95 flex items-center gap-2"
                             >
@@ -363,14 +363,14 @@ const OrgIdentityPage = () => {
                             </button>
                         ) : (
                             <div className="flex gap-2">
-                                <button 
+                                <button
                                     onClick={handleProfileUpdate}
                                     disabled={saving}
                                     className="bg-primaryGradient text-white px-8 py-4 rounded-full text-xs font-bold uppercase tracking-wider shadow-lg shadow-primary/20 active:scale-95"
                                 >
                                     {saving ? "Saving..." : "Save Changes"}
                                 </button>
-                                <button 
+                                <button
                                     onClick={() => {
                                         setIsEditing(false);
                                         setEditData({
@@ -403,7 +403,7 @@ const OrgIdentityPage = () => {
                                     {isEditing ? (
                                         <textarea
                                             value={editData.about}
-                                            onChange={(e) => setEditData({...editData, about: e.target.value})}
+                                            onChange={(e) => setEditData({ ...editData, about: e.target.value })}
                                             className="w-full min-h-[160px] p-6 bg-surface_high border-2 border-transparent focus:border-primary/20 rounded-2xl text-sm font-medium outline-none transition-all shadow-inner"
                                             placeholder="Tell volunteers about your work and mission..."
                                         />
@@ -418,9 +418,9 @@ const OrgIdentityPage = () => {
                                     <div className="space-y-4">
                                         <p className="text-xs font-bold uppercase tracking-wider text-on_surface_variant/60">Website Link</p>
                                         {isEditing ? (
-                                            <input 
+                                            <input
                                                 value={editData.website_url}
-                                                onChange={(e) => setEditData({...editData, website_url: e.target.value})}
+                                                onChange={(e) => setEditData({ ...editData, website_url: e.target.value })}
                                                 className="w-full p-4 bg-surface_high border-2 border-transparent focus:border-primary/20 rounded-xl text-sm font-bold outline-none"
                                                 placeholder="https://yourwebsite.org"
                                             />
@@ -435,9 +435,9 @@ const OrgIdentityPage = () => {
                                     <div className="space-y-4">
                                         <p className="text-xs font-bold uppercase tracking-wider text-on_surface_variant/60">Registration Type</p>
                                         {isEditing ? (
-                                            <select 
+                                            <select
                                                 value={editData.ngo_type}
-                                                onChange={(e) => setEditData({...editData, ngo_type: e.target.value})}
+                                                onChange={(e) => setEditData({ ...editData, ngo_type: e.target.value })}
                                                 className="w-full p-4 bg-surface_high border-2 border-transparent focus:border-primary/20 rounded-xl text-sm font-bold outline-none appearance-none"
                                             >
                                                 <option value="TRUST">Trust</option>
@@ -452,10 +452,10 @@ const OrgIdentityPage = () => {
                                     <div className="space-y-4 md:col-span-2">
                                         <p className="text-xs font-bold uppercase tracking-wider text-on_surface_variant/60">Office Address</p>
                                         {isEditing ? (
-                                            <input 
+                                            <input
                                                 type="text"
                                                 value={editData.office_address}
-                                                onChange={(e) => setEditData({...editData, office_address: e.target.value})}
+                                                onChange={(e) => setEditData({ ...editData, office_address: e.target.value })}
                                                 className="w-full p-4 bg-surface_high border-2 border-transparent focus:border-primary/20 rounded-xl text-sm font-bold outline-none"
                                                 placeholder="Full street address, city, and state"
                                             />
@@ -480,10 +480,10 @@ const OrgIdentityPage = () => {
                             <div className="space-y-2 p-4 bg-surface_high rounded-xl">
                                 <p className="text-xs font-bold uppercase tracking-wider text-on_surface_variant/60">Contact Phone</p>
                                 {isEditing ? (
-                                    <input 
+                                    <input
                                         type="tel"
                                         value={editData.contact_phone}
-                                        onChange={(e) => setEditData({...editData, contact_phone: e.target.value})}
+                                        onChange={(e) => setEditData({ ...editData, contact_phone: e.target.value })}
                                         className="w-full p-2 bg-transparent border-b-2 border-primary/20 text-sm font-bold outline-none"
                                     />
                                 ) : (
@@ -529,7 +529,7 @@ const OrgIdentityPage = () => {
                     <h1 className="text-4xl md:text-6xl font-black text-on_surface tracking-tighter leading-[0.9]">Organization Setup</h1>
                     <p className="text-on_surface_variant mt-2 font-medium opacity-60 italic">Complete these simple steps to activate your NGO presence.</p>
                 </header>
-                
+
                 {/* Progress Bar */}
                 <div className="mt-8 flex items-center justify-center gap-2">
                     {Object.values(STEPS).map(s => (
@@ -554,10 +554,10 @@ const OrgIdentityPage = () => {
                             </div>
                             <div className="space-y-1.5">
                                 <label className="text-[10px] font-black uppercase tracking-[0.3em] text-on_surface_variant/40 ml-4">NGO Type</label>
-                                <select 
+                                <select
                                     className="w-full px-6 py-4 bg-surface_high text-sm font-bold border-2 border-transparent focus:border-primary/20 focus:ring-4 focus:ring-primary/5 outline-none rounded-2xl appearance-none"
                                     value={formData.ngo_type}
-                                    onChange={e => setFormData({...formData, ngo_type: e.target.value})}
+                                    onChange={e => setFormData({ ...formData, ngo_type: e.target.value })}
                                 >
                                     <option value="TRUST">Trust</option>
                                     <option value="SOCIETY">Society</option>
@@ -580,10 +580,9 @@ const OrgIdentityPage = () => {
                             <ActionInput label="NGO Darpan ID" value={formData.ngo_darpan_id} onChange={v => updateField('ngo_darpan_id', v)} error={errors.ngo_darpan_id} placeholder="KA/..." />
                             <div className="space-y-1.5">
                                 <label className={`text-[10px] font-black uppercase tracking-[0.3em] ml-4 ${errors.office_address ? 'text-red-500' : 'text-on_surface_variant/40'}`}>Registered Office Address</label>
-                                <textarea 
-                                    className={`w-full px-6 py-4 bg-surface_high text-sm font-bold border-2 transition-all rounded-2xl min-h-[100px] outline-none ${
-                                        errors.office_address ? 'border-red-500/50 focus:border-red-500' : 'border-transparent focus:border-primary/20'
-                                    }`}
+                                <textarea
+                                    className={`w-full px-6 py-4 bg-surface_high text-sm font-bold border-2 transition-all rounded-2xl min-h-[100px] outline-none ${errors.office_address ? 'border-red-500/50 focus:border-red-500' : 'border-transparent focus:border-primary/20'
+                                        }`}
                                     value={formData.office_address}
                                     onChange={e => updateField('office_address', e.target.value)}
                                     placeholder="Complete address as per registration docs..."
@@ -600,11 +599,11 @@ const OrgIdentityPage = () => {
                                 Admin Verification
                             </h2>
                             <ActionInput label="Admin Personal Phone" value={formData.admin_phone} onChange={v => updateField('admin_phone', v)} error={errors.admin_phone} placeholder="+91..." />
-                            
+
                             <div className="grid grid-cols-2 gap-6">
                                 <div className="space-y-1.5">
                                     <label className="text-[10px] font-black uppercase tracking-[0.3em] text-on_surface_variant/40 ml-4">ID Proof Type</label>
-                                    <select 
+                                    <select
                                         className="w-full px-6 py-4 bg-surface_high text-sm font-bold border-2 border-transparent focus:border-primary/20 outline-none rounded-2xl appearance-none"
                                         value={formData.id_proof_type}
                                         onChange={e => updateField('id_proof_type', e.target.value)}
@@ -622,7 +621,7 @@ const OrgIdentityPage = () => {
 
                     {step === STEPS.MANDATORY_DOCS && (
                         <motion.div key="docs-m" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8">
-                             <h2 className="text-2xl font-black text-on_surface mb-6 flex items-center gap-3">
+                            <h2 className="text-2xl font-black text-on_surface mb-6 flex items-center gap-3">
                                 <span className="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center text-lg font-black">4</span>
                                 Mandatory Proofs
                             </h2>
@@ -639,7 +638,7 @@ const OrgIdentityPage = () => {
 
                     {step === STEPS.OPTIONAL_DOCS && (
                         <motion.div key="docs-o" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8">
-                             <h2 className="text-2xl font-black text-on_surface mb-6 flex items-center gap-3">
+                            <h2 className="text-2xl font-black text-on_surface mb-6 flex items-center gap-3">
                                 <span className="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center text-lg font-black">5</span>
                                 High-Trust Documents
                             </h2>
@@ -675,12 +674,12 @@ const OrgIdentityPage = () => {
                                     <span className="text-sm font-black text-primary">{documents.length} Files</span>
                                 </div>
                             </div>
-                            
+
                             <div className="p-6 bg-amber-50 rounded-2xl border border-amber-100 flex items-start gap-4">
                                 <span className="material-symbols-outlined text-amber-600">report</span>
                                 <p className="text-xs font-medium text-amber-800 leading-relaxed italic">
-                                    By submitting, you declare that all information and documents provided are genuine. 
-                                    Any mismatch found during manual verification may lead to account suspension.
+                                    By submitting, you declare that all information and documents provided are genuine.
+                                    Any mismatch found during manual verification may lead to application rejection.
                                 </p>
                             </div>
                         </motion.div>
@@ -689,7 +688,7 @@ const OrgIdentityPage = () => {
 
                 {/* Footer Actions */}
                 <div className="mt-12 pt-8 border-t border-on_surface/5 flex justify-between items-center">
-                    <button 
+                    <button
                         disabled={step === 1 || saving}
                         onClick={() => setStep(step - 1)}
                         className="px-8 py-3 text-[11px] font-black uppercase tracking-widest text-on_surface_variant hover:text-primary transition-colors disabled:opacity-30 flex items-center gap-2"
@@ -699,7 +698,7 @@ const OrgIdentityPage = () => {
                     </button>
 
                     {step < STEPS.REVIEW ? (
-                        <button 
+                        <button
                             disabled={saving}
                             onClick={handleNextStep}
                             className="px-10 py-4 bg-primary text-white text-[11px] font-black uppercase tracking-widest rounded-full shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 disabled:bg-primary/40 disabled:scale-100 disabled:cursor-not-allowed"
@@ -717,7 +716,7 @@ const OrgIdentityPage = () => {
                             )}
                         </button>
                     ) : (
-                        <button 
+                        <button
                             disabled={saving}
                             onClick={handleFinalSubmit}
                             className="px-12 py-4 bg-primaryGradient text-white text-[11px] font-black uppercase tracking-widest rounded-full shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-2 disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed"
@@ -766,7 +765,7 @@ const UploadCard = ({ title, type, onUpload, isMandatory, documents }) => {
                     </a>
                 )}
             </div>
-            
+
             <label className={`
                 w-full py-4 rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer transition-all
                 ${doc ? 'bg-white/80' : 'bg-white group-hover:bg-primary/5'}
