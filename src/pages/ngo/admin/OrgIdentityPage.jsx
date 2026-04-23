@@ -261,11 +261,11 @@ const OrgIdentityPage = () => {
                                 {org?.name}
                             </h1>
                             <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${org.status === 'APPROVED' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
-                                {org.status}
+                                {org.status === 'APPROVED' ? 'Verified' : 'Review Pending'}
                             </div>
                         </div>
                         <p className="text-sm font-bold text-on_surface_variant/60 max-w-xl">
-                            Verified organization identity. Your details are synchronized with the volunteer network.
+                            Your organization's information is verified and visible to the volunteer community.
                         </p>
                     </div>
 
@@ -275,8 +275,8 @@ const OrgIdentityPage = () => {
                                 onClick={() => setIsEditing(true)}
                                 className="bg-on_surface text-white px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl hover:bg-primary transition-all active:scale-95 flex items-center gap-2"
                             >
-                                <span className="material-symbols-outlined text-sm">edit_note</span>
-                                Edit Profile
+                                <span className="material-symbols-outlined text-sm">edit</span>
+                                Update Information
                             </button>
                         ) : (
                             <div className="flex gap-2">
@@ -311,46 +311,46 @@ const OrgIdentityPage = () => {
                     <div className="col-span-12 lg:col-span-8 space-y-10">
                         <div className="bg-white rounded-[3rem] border border-on_surface/5 shadow-sm overflow-hidden">
                             <div className="bg-surface_high px-10 py-6 border-b border-on_surface/5 flex items-center gap-3">
-                                <span className="material-symbols-outlined text-primary">public</span>
-                                <span className="text-[10px] font-black uppercase tracking-widest text-on_surface_variant">Public Profile Parameters</span>
+                                <span className="material-symbols-outlined text-primary">person</span>
+                                <span className="text-[10px] font-black uppercase tracking-widest text-on_surface_variant">Basic Information</span>
                             </div>
                             <div className="p-10 space-y-12">
                                 <div className="space-y-4">
-                                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">Mission Statement</p>
+                                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">About the Organization</p>
                                     {isEditing ? (
                                         <textarea
                                             value={editData.about}
                                             onChange={(e) => setEditData({...editData, about: e.target.value})}
                                             className="w-full min-h-[160px] p-6 bg-surface_high border-2 border-transparent focus:border-primary/20 rounded-[2.5rem] text-sm font-medium outline-none transition-all shadow-inner"
-                                            placeholder="Describe your organization's mission..."
+                                            placeholder="Tell volunteers about your work and mission..."
                                         />
                                     ) : (
-                                        <p className="text-lg font-bold text-on_surface_variant leading-relaxed italic">
-                                            "{org?.about || "Enter your organization's mission..."}"
+                                        <p className="text-lg font-bold text-on_surface_variant leading-relaxed">
+                                            {org?.about || "Add a description to tell volunteers about your organization's work."}
                                         </p>
                                     )}
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10 pt-8 border-t border-on_surface/5">
                                     <div className="space-y-4">
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-on_surface_variant/40">Official Website</p>
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-on_surface_variant/40">Website Link</p>
                                         {isEditing ? (
                                             <input 
                                                 value={editData.website_url}
                                                 onChange={(e) => setEditData({...editData, website_url: e.target.value})}
                                                 className="w-full p-4 bg-surface_high border-2 border-transparent focus:border-primary/20 rounded-2xl text-sm font-bold outline-none"
-                                                placeholder="https://..."
+                                                placeholder="https://yourwebsite.org"
                                             />
                                         ) : (
                                             <a href={org?.website_url} target="_blank" rel="noreferrer" className="text-sm font-black text-primary hover:underline flex items-center gap-2">
                                                 <span className="material-symbols-outlined text-xs">link</span>
-                                                {org?.website_url || "Not listed"}
+                                                {org?.website_url || "Not added yet"}
                                             </a>
                                         )}
                                     </div>
 
                                     <div className="space-y-4">
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-on_surface_variant/40">NGO Category</p>
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-on_surface_variant/40">Registration Type</p>
                                         {isEditing ? (
                                             <select 
                                                 value={editData.ngo_type}
@@ -374,10 +374,10 @@ const OrgIdentityPage = () => {
                                                 value={editData.office_address}
                                                 onChange={(e) => setEditData({...editData, office_address: e.target.value})}
                                                 className="w-full p-4 bg-surface_high border-2 border-transparent focus:border-primary/20 rounded-2xl text-sm font-bold outline-none"
-                                                placeholder="Enter complete office address"
+                                                placeholder="Full street address, city, and state"
                                             />
                                         ) : (
-                                            <p className="text-sm font-bold text-on_surface leading-relaxed uppercase">
+                                            <p className="text-sm font-bold text-on_surface leading-relaxed">
                                                 {org?.office_address || "No address provided"}
                                             </p>
                                         )}
@@ -390,12 +390,12 @@ const OrgIdentityPage = () => {
                     <div className="col-span-12 lg:col-span-4 space-y-10">
                         <div className="bg-white rounded-[3rem] border border-on_surface/5 shadow-sm p-10 space-y-8">
                             <div className="flex items-center gap-3 mb-4">
-                                <span className="material-symbols-outlined text-primary">shield_lock</span>
-                                <span className="text-[10px] font-black uppercase tracking-widest text-on_surface_variant">Legal Identity Tokens</span>
+                                <span className="material-symbols-outlined text-primary">description</span>
+                                <span className="text-[10px] font-black uppercase tracking-widest text-on_surface_variant">Official Details</span>
                             </div>
 
                             <div className="space-y-3 p-4 bg-surface_high rounded-3xl">
-                                <p className="text-[9px] font-black uppercase tracking-widest text-on_surface_variant/40">Public Contact</p>
+                                <p className="text-[9px] font-black uppercase tracking-widest text-on_surface_variant/40">Contact Phone</p>
                                 {isEditing ? (
                                     <input 
                                         type="tel"
@@ -409,32 +409,23 @@ const OrgIdentityPage = () => {
                             </div>
 
                             <div className="space-y-1 px-4">
-                                <p className="text-[9px] font-black uppercase tracking-widest text-on_surface_variant/40">Registry Email</p>
+                                <p className="text-[9px] font-black uppercase tracking-widest text-on_surface_variant/40">Registration Email</p>
                                 <p className="text-sm font-bold text-on_surface/60">{org?.contact_email}</p>
                             </div>
 
                             <div className="space-y-1 px-4">
-                                <p className="text-[9px] font-black uppercase tracking-widest text-on_surface_variant/40">Registration #</p>
+                                <p className="text-[9px] font-black uppercase tracking-widest text-on_surface_variant/40">Registration Number</p>
                                 <p className="text-sm font-bold text-on_surface/60">{org?.registration_number}</p>
                             </div>
 
                             <div className="space-y-1 px-4">
-                                <p className="text-[9px] font-black uppercase tracking-widest text-on_surface_variant/40">PAN Identifier</p>
+                                <p className="text-[9px] font-black uppercase tracking-widest text-on_surface_variant/40">PAN Number</p>
                                 <p className="text-sm font-bold text-on_surface/60">{org?.pan_number}</p>
                             </div>
 
                             <div className="space-y-1 px-4">
-                                <p className="text-[9px] font-black uppercase tracking-widest text-on_surface_variant/40">Darpan ID</p>
-                                <p className="text-sm font-bold text-on_surface/60">{org?.ngo_darpan_id || "N/A"}</p>
-                            </div>
-                        </div>
-
-                        <div className="bg-on_surface rounded-[3rem] p-10 text-white text-center shadow-2xl relative overflow-hidden group">
-                            <div className="absolute inset-0 bg-primaryGradient opacity-0 group-hover:opacity-10 transition-opacity duration-700" />
-                            <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-50 mb-2">Registry ID</p>
-                            <h4 className="text-4xl font-outfit font-black italic tracking-tighter uppercase mb-6">UNIT-V2</h4>
-                            <div className="inline-block px-6 py-2.5 bg-white/5 rounded-2xl text-[10px] font-black tracking-widest border border-white/10 uppercase">
-                                VERIFIED ON-CHAIN
+                                <p className="text-[9px] font-black uppercase tracking-widest text-on_surface_variant/40">NGO Darpan ID</p>
+                                <p className="text-sm font-bold text-on_surface/60">{org?.ngo_darpan_id || "Not available"}</p>
                             </div>
                         </div>
                     </div>
