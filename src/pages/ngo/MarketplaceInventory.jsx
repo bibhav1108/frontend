@@ -86,7 +86,7 @@ const MarketplaceInventory = () => {
             <div className="flex flex-col lg:flex-row justify-between items-center lg:items-center gap-8 text-center lg:text-left">
                 <div>
                     <p className="text-primary text-[10px] sm:text-[10px] font-black uppercase tracking-[0.3em] mb-1">Incoming Supplies</p>
-                    <h1 className="text-3xl sm:text-4xl font-outfit font-black text-on_surface tracking-tight">Collection Hub</h1>
+                    <h1 className="text-3xl sm:text-4xl font-outfit font-black text-on_surface tracking-tight">Marketplace Inventory</h1>
                     <p className="text-xs font-bold text-on_surface_variant/60 mt-1">Move items collected from the marketplace into your main inventory.</p>
                 </div>
                 <div className="flex justify-center w-full lg:w-auto">
