@@ -3,6 +3,7 @@ import { useNavigate, useLocation, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import API from "../../services/api";
 import logo from "../../assets/logo.png";
+import { formatErrorMessage } from "../../utils/errorUtils";
 
 /**
  * AUTH PORTAL MODES
@@ -186,29 +187,40 @@ const AuthPortal = () => {
               )}
             </AnimatePresence>
 
-            {/* ERROR / SUCCESS ALERTS */}
-            <AnimatePresence>
-               {error && (
-                 <motion.div 
-                   initial={{ height: 0, opacity: 0 }}
-                   animate={{ height: "auto", opacity: 1 }}
-                   className="mb-6 p-4 bg-red-50 border border-red-100 text-red-600 text-sm rounded-xl font-medium flex items-center gap-2"
-                 >
-                   <span className="material-symbols-outlined text-lg">error</span>
-                   {error}
-                 </motion.div>
-               )}
-               {success && (
-                 <motion.div 
-                   initial={{ height: 0, opacity: 0 }}
-                   animate={{ height: "auto", opacity: 1 }}
-                   className="mb-6 p-4 bg-green-50 border border-green-100 text-green-600 text-sm rounded-xl font-medium flex items-center gap-2"
-                 >
-                   <span className="material-symbols-outlined text-lg">check_circle</span>
-                   {success}
-                 </motion.div>
-               )}
-            </AnimatePresence>
+            {/* 🔝 STATUS MESSAGES (Mutually Exclusive) */}
+            <div className="min-h-[60px] flex items-end">
+              <AnimatePresence mode="wait">
+                {error ? (
+                  <motion.div 
+                    key="error-box"
+                    initial={{ height: 0, opacity: 0, y: 10 }}
+                    animate={{ height: "auto", opacity: 1, y: 0 }}
+                    exit={{ height: 0, opacity: 0, y: -10 }}
+                    className="w-full mb-6 p-4 bg-red-50 border border-red-100 text-red-600 text-xs rounded-2xl font-bold flex items-center gap-3 shadow-sm shadow-red-500/5 overflow-hidden"
+                  >
+                    <span className="material-symbols-outlined text-lg shrink-0">error</span>
+                    <span className="leading-tight shrink-0 flex-1">{error}</span>
+                    <button onClick={() => setError("")} className="shrink-0 p-1 hover:bg-black/5 rounded-lg transition-colors">
+                      <span className="material-symbols-outlined text-base leading-none">close</span>
+                    </button>
+                  </motion.div>
+                ) : success ? (
+                  <motion.div 
+                    key="success-box"
+                    initial={{ height: 0, opacity: 0, y: 10 }}
+                    animate={{ height: "auto", opacity: 1, y: 0 }}
+                    exit={{ height: 0, opacity: 0, y: -10 }}
+                    className="w-full mb-6 p-4 bg-emerald-50 border border-emerald-100 text-emerald-600 text-xs rounded-2xl font-bold flex items-center gap-3 shadow-sm shadow-emerald-500/5 overflow-hidden"
+                  >
+                    <span className="material-symbols-outlined text-lg shrink-0">check_circle</span>
+                    <span className="leading-tight shrink-0 flex-1">{success}</span>
+                    <button onClick={() => setSuccess("")} className="shrink-0 p-1 hover:bg-black/5 rounded-lg transition-colors">
+                      <span className="material-symbols-outlined text-base leading-none">close</span>
+                    </button>
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
+            </div>
 
             {/* 🧩 FORM CONTENT VIEWS */}
             <div className="relative">
@@ -258,11 +270,16 @@ const AuthPortal = () => {
  */
 const LoginForm = ({ email, setEmail, password, setPassword, setError, setLoading, loading, setMode, MODES }) => {
   const navigate = useNavigate();
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setSuccess("");
     setError("");
-    if (!email || !password) return setError("Please fill in all fields");
+    setFieldErrors({});
+    
+    if (!email) return setFieldErrors({ email: "Username is required" });
+    if (!password) return setFieldErrors({ password: "Password is required" });
 
     try {
       setLoading(true);
@@ -285,9 +302,9 @@ const LoginForm = ({ email, setEmail, password, setPassword, setError, setLoadin
       else navigate("/ngo/dashboard");
     } catch (err) {
       if (err.response?.status === 403) {
-        setError("Your organization registration is currently pending admin approval. Please wait for activation.");
+        setError("Your organization is pending approval. Please wait for an admin to activate your account.");
       } else {
-        setError(err.response?.data?.detail || "Login failed. Check credentials.");
+        setError(formatErrorMessage(err));
       }
     } finally {
       setLoading(false);
@@ -302,8 +319,8 @@ const LoginForm = ({ email, setEmail, password, setPassword, setError, setLoadin
       onSubmit={handleLogin} 
       className="space-y-5"
     >
-      <AuthInput label="Email or Username" value={email} setValue={setEmail} icon="person" />
-      <AuthInput label="Password" value={password} setValue={setPassword} type="password" icon="lock" />
+      <AuthInput label="Email or Username" value={email} setValue={setEmail} icon="person" error={fieldErrors.email} />
+      <AuthInput label="Password" value={password} setValue={setPassword} type="password" icon="lock" error={fieldErrors.password} />
       
       <div className="flex justify-end">
         <button 
@@ -391,33 +408,42 @@ const VolunteerRegForm = ({ setError, setSuccess, setLoading, loading, switchMod
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const handleSendOTP = async () => {
-    if (!email || !username) return setError("Email and Username required");
-    if (!validateEmail(email)) return setError("Please enter a valid email address");
+    setSuccess("");
+    setError("");
+    setFieldErrors({});
+
+    if (!username) return setFieldErrors({ username: "Pick a username" });
+    if (!email) return setFieldErrors({ email: "Email is required" });
+    if (!validateEmail(email)) return setFieldErrors({ email: "That doesn't look like a valid email" });
 
     try {
       setLoading(true);
       await API.post("/volunteers/register/send-otp", { email, username });
       setStep(2);
-      setSuccess("OTP sent to your email!");
+      setSuccess("We've sent a code to your email!");
     } catch (err) {
-      setError(err.response?.data?.detail || "Failed to send OTP");
+      setError(formatErrorMessage(err));
     } finally {
       setLoading(false);
     }
   };
 
   const handleVerifyOTP = async () => {
-    if (!otp) return setError("Enter OTP");
+    setSuccess("");
+    setError("");
+    setFieldErrors({});
+    if (!otp) return setFieldErrors({ otp: "Enter the code" });
     try {
       setLoading(true);
       const res = await API.post("/volunteers/register/verify-otp", { email, otp });
       setVerifiedToken(res.data.verified_token);
       setStep(3);
-      setSuccess("Email verified! Finalize your profile.");
+      setSuccess("Perfect! Now just a few final details.");
     } catch (err) {
-      setError(err.response?.data?.detail || "Invalid OTP");
+      setError(formatErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -425,29 +451,27 @@ const VolunteerRegForm = ({ setError, setSuccess, setLoading, loading, switchMod
 
   const finishRegistration = async (e) => {
     e.preventDefault();
+    setSuccess("");
     setError("");
+    setFieldErrors({});
 
-    if (!name || !phone || !password) return setError("All fields are required");
-    if (!validatePhone(phone)) return setError("Please enter a valid phone number (at least 10 digits)");
+    if (!name) return setFieldErrors({ name: "Full name is required" });
+    if (!phone) return setFieldErrors({ phone: "Phone number is required" });
+    if (!validatePhone(phone)) return setFieldErrors({ phone: "Min 10 digits required" });
+    if (!password) return setFieldErrors({ password: "Pick a password" });
     
     const passError = validatePassword(password);
-    if (passError) return setError(passError);
+    if (passError) return setFieldErrors({ password: passError });
 
     try {
       setLoading(true);
       await API.post("/volunteers/register/register", {
         name, username, phone_number: phone, password, verified_token: verifiedToken
       });
-      setSuccess("Welcome aboard! Redirecting...");
-      setTimeout(() => switchMode(MODES.LOGIN), 2000);
+      setSuccess("Welcome to Sahyog! Logging you in...");
+      setTimeout(() => switchMode(MODES.LOGIN), 1500);
     } catch (err) {
-      if (err.response?.status === 422) {
-        const details = err.response.data.detail;
-        const msg = Array.isArray(details) ? details[0].msg : details;
-        setError(msg);
-      } else {
-        setError(err.response?.data?.detail || "Registration failed. Please check your inputs.");
-      }
+      setError(formatErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -457,8 +481,8 @@ const VolunteerRegForm = ({ setError, setSuccess, setLoading, loading, switchMod
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-5">
       {step === 1 && (
         <div className="space-y-4">
-          <AuthInput label="Username" value={username} setValue={setUsername} icon="alternate_email" />
-          <AuthInput label="Email Address" value={email} setValue={setEmail} type="email" icon="mail" />
+          <AuthInput label="Username" value={username} setValue={setUsername} icon="alternate_email" error={fieldErrors.username} />
+          <AuthInput label="Email Address" value={email} setValue={setEmail} type="email" icon="mail" error={fieldErrors.email} />
           <button 
              onClick={handleSendOTP} 
              disabled={loading} 
@@ -476,7 +500,7 @@ const VolunteerRegForm = ({ setError, setSuccess, setLoading, loading, switchMod
       {step === 2 && (
         <div className="space-y-4">
           <p className="text-xs text-center text-on_surface_variant">Enter the 6-digit code sent to <b>{email}</b></p>
-          <AuthInput label="OTP Code" value={otp} setValue={setOtp} icon="password" />
+          <AuthInput label="OTP Code" value={otp} setValue={setOtp} icon="password" error={fieldErrors.otp} />
           <button 
              onClick={handleVerifyOTP} 
              disabled={loading} 
@@ -493,9 +517,9 @@ const VolunteerRegForm = ({ setError, setSuccess, setLoading, loading, switchMod
       )}
       {step === 3 && (
         <form onSubmit={finishRegistration} className="space-y-4">
-           <AuthInput label="Full Name" value={name} setValue={setName} icon="person" />
-           <AuthInput label="Phone Number" value={phone} setValue={setPhone} icon="phone" />
-           <AuthInput label="Create Password" value={password} setValue={setPassword} type="password" icon="lock" />
+           <AuthInput label="Full Name" value={name} setValue={setName} icon="person" error={fieldErrors.name} />
+           <AuthInput label="Phone Number" value={phone} setValue={setPhone} icon="phone" error={fieldErrors.phone} />
+           <AuthInput label="Create Password" value={password} setValue={setPassword} type="password" icon="lock" error={fieldErrors.password} />
            <button 
              type="submit" 
              disabled={loading} 
@@ -525,33 +549,41 @@ const NGORegForm = ({ setError, setSuccess, setLoading, loading, switchMode, MOD
   const [verifiedToken, setVerifiedToken] = useState("");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const handleSendOTP = async () => {
-    if (!email || !username) return setError("Email and Username required");
-    if (!validateEmail(email)) return setError("Invalid email address");
+    setSuccess("");
+    setError("");
+    setFieldErrors({});
+    if (!username) return setFieldErrors({ username: "Pick a username" });
+    if (!email) return setFieldErrors({ email: "Admin email is required" });
+    if (!validateEmail(email)) return setFieldErrors({ email: "Invalid email format" });
 
     try {
       setLoading(true);
       await API.post("/volunteers/register/send-otp", { email, username });
       setStep(2);
-      setSuccess("Verification code sent to your email!");
+      setSuccess("We've sent a verification code to your email.");
     } catch (err) {
-      setError(err.response?.data?.detail || "Failed to send OTP");
+      setError(formatErrorMessage(err));
     } finally {
       setLoading(false);
     }
   };
 
   const handleVerifyOTP = async () => {
-    if (!otp) return setError("Enter code");
+    setSuccess("");
+    setError("");
+    setFieldErrors({});
+    if (!otp) return setFieldErrors({ otp: "Enter code" });
     try {
       setLoading(true);
       const res = await API.post("/volunteers/register/verify-otp", { email, otp });
       setVerifiedToken(res.data.verified_token);
       setStep(3);
-      setSuccess("Account verified!");
+      setSuccess("Email verified successfully!");
     } catch (err) {
-      setError(err.response?.data?.detail || "Invalid code");
+      setError(formatErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -559,25 +591,24 @@ const NGORegForm = ({ setError, setSuccess, setLoading, loading, switchMode, MOD
 
   const finishRegistration = async (e) => {
     e.preventDefault();
-    if (!name || !password) return setError("All fields required");
+    setSuccess("");
+    setError("");
+    setFieldErrors({});
+
+    if (!name) return setFieldErrors({ name: "Admin name is required" });
+    if (!password) return setFieldErrors({ password: "Security password required" });
     const passError = validatePassword(password);
-    if (passError) return setError(passError);
+    if (passError) return setFieldErrors({ password: passError });
 
     try {
       setLoading(true);
       await API.post("/ngo-admin/register", {
         full_name: name, username, password, verified_token: verifiedToken
       });
-      setSuccess("Admin account created! Log in to set up your NGO.");
+      setSuccess("Admin account created! You can now log in.");
       setTimeout(() => switchMode(MODES.LOGIN), 2500);
     } catch (err) {
-      if (err.response?.status === 422) {
-        const details = err.response.data.detail;
-        const msg = Array.isArray(details) ? (details[0].msg || details[0].message) : (details.msg || details);
-        setError(msg);
-      } else {
-        setError(err.response?.data?.detail || "Registration failed");
-      }
+      setError(formatErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -587,8 +618,8 @@ const NGORegForm = ({ setError, setSuccess, setLoading, loading, switchMode, MOD
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-5">
       {step === 1 && (
         <div className="space-y-4">
-          <AuthInput label="Admin Username" value={username} setValue={setUsername} icon="alternate_email" />
-          <AuthInput label="Admin Email" value={email} setValue={setEmail} type="email" icon="mail" />
+          <AuthInput label="Admin Username" value={username} setValue={setUsername} icon="alternate_email" error={fieldErrors.username} />
+          <AuthInput label="Admin Email" value={email} setValue={setEmail} type="email" icon="mail" error={fieldErrors.email} />
           <button 
              onClick={handleSendOTP} 
              disabled={loading} 
@@ -601,7 +632,7 @@ const NGORegForm = ({ setError, setSuccess, setLoading, loading, switchMode, MOD
       {step === 2 && (
         <div className="space-y-4">
           <p className="text-xs text-center text-on_surface_variant">Enter code sent to <b>{email}</b></p>
-          <AuthInput label="Verification Code" value={otp} setValue={setOtp} icon="password" />
+          <AuthInput label="Verification Code" value={otp} setValue={setOtp} icon="password" error={fieldErrors.otp} />
           <button 
              onClick={handleVerifyOTP} 
              disabled={loading} 
@@ -613,8 +644,8 @@ const NGORegForm = ({ setError, setSuccess, setLoading, loading, switchMode, MOD
       )}
       {step === 3 && (
         <form onSubmit={finishRegistration} className="space-y-4">
-           <AuthInput label="Full Administrator Name" value={name} setValue={setName} icon="person" />
-           <AuthInput label="Set Secure Password" value={password} setValue={setPassword} type="password" icon="lock" />
+           <AuthInput label="Full Administrator Name" value={name} setValue={setName} icon="person" error={fieldErrors.name} />
+           <AuthInput label="Set Secure Password" value={password} setValue={setPassword} type="password" icon="lock" error={fieldErrors.password} />
            <button 
              type="submit" 
              disabled={loading} 
@@ -640,18 +671,26 @@ const ForgotPassForm = ({ email, setEmail, setError, setSuccess, setLoading, loa
     const isEmail = validateEmail(email);
     const isPhone = validatePhone(email); // using email state for input
 
+    setSuccess("");
+    setError("");
     if (!isEmail && !isPhone) return setError("Please enter a valid email address or phone number");
     
     try {
       setLoading(true);
       const payload = isEmail ? { email } : { phone_number: email };
       const res = await API.post("/auth/forgot-password", payload);
-      setSuccess(res.data.message);
+      setSuccess(res.data.message || "We've sent a recovery code to your device.");
       setOtpSent(true);
-    } catch { setError("Failed to send OTP"); } finally { setLoading(false); }
+    } catch (err) { 
+      setError(formatErrorMessage(err)); 
+    } finally { 
+      setLoading(false); 
+    }
   };
 
   const handleReset = async () => {
+    setSuccess("");
+    setError("");
     const passError = validatePassword(newPass);
     if (passError) return setError(passError);
     const isEmail = validateEmail(email);
@@ -664,9 +703,13 @@ const ForgotPassForm = ({ email, setEmail, setError, setSuccess, setLoading, loa
         new_password: newPass 
       };
       await API.post("/auth/reset-password", payload);
-      setSuccess("Password reset success! Redirecting...");
+      setSuccess("Your password has been reset! Sign in now.");
       setTimeout(() => setMode(MODES.LOGIN), 2000);
-    } catch { setError("Reset failed"); } finally { setLoading(false); }
+    } catch (err) { 
+      setError(formatErrorMessage(err)); 
+    } finally { 
+      setLoading(false); 
+    }
   };
 
   return (
@@ -693,7 +736,7 @@ const ForgotPassForm = ({ email, setEmail, setError, setSuccess, setLoading, loa
 /**
  * 🖋️ SHARED INPUT COMPONENT
  */
-const AuthInput = ({ label, value, setValue, type = "text", icon = null, disabled = false }) => {
+const AuthInput = ({ label, value, setValue, type = "text", icon = null, disabled = false, error = null }) => {
   const [showPassword, setShowPassword] = useState(false);
   const isActive = value && value.length > 0;
   
@@ -707,16 +750,18 @@ const AuthInput = ({ label, value, setValue, type = "text", icon = null, disable
         value={value}
         disabled={disabled}
         onChange={(e) => setValue(e.target.value)}
-        className="
+        className={`
           peer w-full px-4 pt-6 pb-2 rounded-2xl
-          bg-surface_high text-sm border-2 border-transparent
-          focus:border-primary/20 focus:outline-none focus:ring-4 focus:ring-primary/5
-          transition-all duration-300
-        "
+          bg-surface_high text-sm border-2 transition-all duration-300
+          focus:outline-none focus:ring-4
+          ${error 
+            ? "border-red-500/50 focus:border-red-500 focus:ring-red-500/5 bg-red-50/50" 
+            : "border-transparent focus:border-primary/20 focus:ring-primary/5"}
+        `}
       />
       
       {icon && !isPassword && (
-        <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-on_surface_variant/20 group-focus-within:text-primary transition-colors text-lg">
+        <span className={`material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-lg transition-colors text-on_surface_variant/20 ${error ? 'text-red-400' : 'group-focus-within:text-primary'}`}>
           {icon}
         </span>
       )}
@@ -726,7 +771,7 @@ const AuthInput = ({ label, value, setValue, type = "text", icon = null, disable
           type="button"
           tabIndex="-1"
           onClick={() => setShowPassword(!showPassword)}
-          className="absolute right-4 top-1/2 -translate-y-1/2 text-on_surface_variant/40 hover:text-primary transition-colors focus:outline-none"
+          className={`absolute right-4 top-1/2 -translate-y-1/2 transition-colors focus:outline-none ${error ? 'text-red-400' : 'text-on_surface_variant/40 hover:text-primary'}`}
           title={showPassword ? "Hide password" : "Show password"}
         >
           <span className="material-symbols-outlined text-lg">
@@ -738,13 +783,24 @@ const AuthInput = ({ label, value, setValue, type = "text", icon = null, disable
       <label
         className={`
           absolute left-4 transition-all duration-300
-          pointer-events-none text-on_surface_variant/60
-          ${isActive ? "top-1.5 text-[10px] font-black uppercase tracking-widest text-primary" : "top-1/2 -translate-y-1/2 text-sm"}
-          peer-focus:top-1.5 peer-focus:translate-y-0 peer-focus:text-[10px] peer-focus:font-black peer-focus:uppercase peer-focus:tracking-widest peer-focus:text-primary
+          pointer-events-none
+          ${isActive ? "top-1.5 text-[10px] font-black uppercase tracking-widest" : "top-1/2 -translate-y-1/2 text-sm"}
+          ${error ? "text-red-500" : "text-on_surface_variant/60"}
+          peer-focus:top-1.5 peer-focus:translate-y-0 peer-focus:text-[10px] peer-focus:font-black peer-focus:uppercase peer-focus:tracking-widest
+          ${error ? "peer-focus:text-red-500" : "peer-focus:text-primary"}
         `}
       >
         {label}
       </label>
+
+      {error && (
+        <motion.p 
+          initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }}
+          className="text-[10px] font-bold text-red-500 ml-4 mt-1"
+        >
+          {error}
+        </motion.p>
+      )}
     </div>
   );
 };
