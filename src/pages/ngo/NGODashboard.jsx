@@ -195,7 +195,9 @@ const NGODashboard = () => {
           <p className="text-on_surface_variant max-w-lg mx-auto font-medium">
             {isNotOnboarded 
               ? "You have successfully registered as an administrator. Your next step is to establish your organization's identity on the network."
-              : "Welcome to the Sahyog Sync Network. Your administrator account is active, but your organization's campaign capabilities are currently locked."}
+              : org?.status === 'REJECTED'
+                ? "Your organization's verification request was carefully reviewed but could not be approved at this time. Please update your details or re-upload the correct documents."
+                : "Welcome to the Sahyog Sync Network. Your administrator account is active, but your organization's campaign capabilities are currently locked."}
           </p>
         </div>
 
@@ -221,12 +223,14 @@ const NGODashboard = () => {
                 {isNotOnboarded ? 'Status: ACTION REQUIRED' : `Current Status: ${org?.status || 'PENDING'}`}
               </span>
             </div>
-            {isNotOnboarded && (
+            {(isNotOnboarded || org?.status === 'REJECTED') && (
                 <button 
                   onClick={() => window.location.href='/ngo/onboarding'}
-                  className="w-full mt-4 py-4 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg hover:-translate-y-1 transition-all"
+                  className={`w-full mt-4 py-4 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg hover:-translate-y-1 transition-all ${
+                    org?.status === 'REJECTED' ? 'bg-red-600 shadow-red-500/20' : 'bg-primary'
+                  }`}
                 >
-                    Launch Onboarding
+                    {org?.status === 'REJECTED' ? 'Fix Issues & Resubmit' : 'Launch Onboarding'}
                 </button>
             )}
           </div>

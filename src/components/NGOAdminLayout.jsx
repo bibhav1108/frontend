@@ -43,10 +43,14 @@ const NGOAdminLayout = ({ children }) => {
     };
 
     loadData();
+    const interval = setInterval(loadData, 10000);
     
     const handleSync = () => loadData();
     window.addEventListener('user-profile-updated', handleSync);
-    return () => window.removeEventListener('user-profile-updated', handleSync);
+    return () => {
+      window.removeEventListener('user-profile-updated', handleSync);
+      clearInterval(interval);
+    };
   }, []);
 
   const logout = () => {
@@ -196,9 +200,13 @@ const NGOAdminLayout = ({ children }) => {
         <div className="flex items-center gap-4">
             {!loading && org && (
                 <div className={`hidden min-[500px]:flex px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-white/5 ${
-                    org.status === 'APPROVED' ? 'bg-green-500/10 text-green-600' : 'bg-amber-500/10 text-amber-600'
+                    org.status === 'APPROVED' ? 'bg-green-500/10 text-green-600' : 
+                    org.status === 'REJECTED' ? 'bg-red-500/10 text-red-600' :
+                    'bg-amber-500/10 text-amber-600'
                 }`}>
-                    {org.status === 'APPROVED' ? 'Verified Partner' : 'Review In Progress'}
+                    {org.status === 'APPROVED' ? 'Verified Partner' : 
+                     org.status === 'REJECTED' ? 'Registration Rejected' :
+                     'Review In Progress'}
                 </div>
             )}
 
@@ -270,22 +278,37 @@ const NGOAdminLayout = ({ children }) => {
           sidebarOpen ? "md:ml-64 ml-0" : "ml-0"
         }`}
       >
-        {org?.status === "pending" && (
+        {(org?.status === "VERIFICATION_REQUESTED" || org?.status === "REJECTED") && (
           <div 
-            className="bg-primary/10 border-b border-primary/20 px-6 py-3 flex items-center justify-between"
+            className={`${org.status === 'REJECTED' ? 'bg-red-50 border-red-100' : 'bg-primary/10 border-primary/20'} border-b px-6 py-3 flex items-center justify-between`}
           >
             <div className="flex items-center gap-3">
-              <span className="material-symbols-outlined text-primary text-xl">verified_user</span>
-              <p className="text-sm font-medium text-primary">
-                <b>Organization Verification Pending:</b> Some dashboard features are restricted until an administrator approves your profile.
+              <span className={`material-symbols-outlined ${org.status === 'REJECTED' ? 'text-red-500' : 'text-primary'} text-xl`}>
+                {org.status === 'REJECTED' ? 'report' : 'verified_user'}
+              </span>
+              <p className={`text-sm font-medium ${org.status === 'REJECTED' ? 'text-red-600' : 'text-primary'}`}>
+                {org.status === 'REJECTED' ? (
+                  <><b>Registration Rejected:</b> Your application requires corrections. Please visit your dashboard to fix the issues.</>
+                ) : (
+                  <><b>Organization Verification Pending:</b> Some dashboard features are restricted until an administrator approves your profile.</>
+                )}
               </p>
             </div>
-            <button 
-              onClick={() => window.location.reload()}
-              className="text-[10px] font-black uppercase tracking-widest bg-primary text-white px-3 py-1.5 rounded-full hover:bg-primary_container transition shadow-sm"
-            >
-              Refresh
-            </button>
+            {org.status === 'REJECTED' ? (
+              <Link
+                to="/ngo-admin/identity"
+                className="text-[10px] font-black uppercase tracking-widest bg-red-600 text-white px-3 py-1.5 rounded-full hover:bg-red-700 transition shadow-sm"
+              >
+                Go to Profile
+              </Link>
+            ) : (
+              <button 
+                onClick={() => loadData()}
+                className="text-[10px] font-black uppercase tracking-widest bg-primary text-white px-3 py-1.5 rounded-full hover:bg-primary_container transition shadow-sm"
+              >
+                Check Sync
+              </button>
+            )}
           </div>
         )}
         <div className="p-3 sm:p-6 md:p-10 max-w-7xl mx-auto">
