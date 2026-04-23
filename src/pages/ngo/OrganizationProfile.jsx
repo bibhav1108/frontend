@@ -42,7 +42,10 @@ const OrganizationProfile = () => {
                 setOrg(res.data);
                 setEditData({
                     about: res.data.about || "",
-                    website_url: res.data.website_url || ""
+                    website_url: res.data.website_url || "",
+                    ngo_type: res.data.ngo_type || "TRUST",
+                    office_address: res.data.office_address || "",
+                    contact_phone: res.data.contact_phone || ""
                 });
             } catch (err) {
                 console.error("Failed to load org profile", err);
@@ -59,9 +62,9 @@ const OrganizationProfile = () => {
             const res = await API.patch("/organizations/me", editData);
             setOrg(res.data);
             setIsEditing(false);
-            addToast("Unit profile updated successfully! 🛡️", "success");
+            addToast("Proflie updated successfully!", "success");
         } catch (err) {
-            addToast("Failed to upgrade profile parameters", "error");
+            addToast("Failed to save changes", "error");
         } finally {
             setSaving(false);
         }
@@ -87,102 +90,158 @@ const OrganizationProfile = () => {
     return (
         <div className="max-w-6xl mx-auto p-4 md:p-8 space-y-12 pb-32 selection:bg-primary/10 animate-fadeIn">
             {/* HERO BRANDING */}
-            <div className="relative overflow-hidden rounded-[4rem] bg-surface_high border border-white p-12 md:p-16 shadow-2xl">
+            <div className="relative overflow-hidden rounded-[4rem] bg-surface_high border border-white p-10 md:p-14 shadow-2xl flex flex-col md:flex-row items-center gap-10">
                 <div className="absolute top-0 right-0 w-1/3 h-full bg-primaryGradient opacity-5 blur-[100px] -mr-32" />
-                <div className="relative flex flex-col md:flex-row items-center justify-between gap-12">
-                    <div className="flex flex-col md:flex-row items-center gap-10">
-                        <div 
-                            onClick={() => document.getElementById("logo-upload").click()}
-                            className="w-32 h-32 rounded-[2.5rem] bg-white flex items-center justify-center p-0 shadow-2xl rotate-3 group-hover:rotate-0 transition-all duration-500 cursor-pointer overflow-hidden relative group/logo"
-                        >
-                             {org?.logo_url ? (
-                                 <img src={resolveProfileImage(org.logo_url)} alt="logo" className="w-full h-full object-cover" />
-                             ) : (
-                                 <span className="material-symbols-outlined text-primary text-[64px] font-black">corporate_fare</span>
-                             )}
-                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/logo:opacity-100 flex items-center justify-center transition-opacity">
-                                 <span className="material-symbols-outlined text-white">cloud_upload</span>
-                             </div>
-                             <input type="file" id="logo-upload" className="hidden" accept="image/*" onChange={(e) => uploadLogo(e.target.files[0])} />
-                        </div>
-                        <div className="text-center md:text-left space-y-3">
-                            <div className="flex items-center justify-center md:justify-start gap-4">
-                                <h1 className="text-5xl font-outfit font-black text-on_surface tracking-tight">
-                                    {org?.name}
-                                </h1>
-                                <VerificationBadge status={org?.status} />
-                            </div>
-                            <p className="text-sm font-bold text-on_surface_variant/60 italic max-w-lg">
-                                "{org?.description || "Strategic partner in humanitarian operations and community asset management."}"
-                            </p>
+                
+                {/* LOGO UPLOAD SECTION */}
+                <div className="group relative">
+                    <div 
+                        onClick={() => document.getElementById("logo-upload").click()}
+                        className="w-40 h-40 rounded-[3rem] bg-white flex items-center justify-center shadow-2xl border-4 border-white overflow-hidden relative cursor-pointer ring-4 ring-primary/5 group-hover:ring-primary/20 transition-all duration-500"
+                    >
+                        {org?.logo_url ? (
+                            <img src={resolveProfileImage(org.logo_url)} alt="logo" className="w-full h-full object-cover" />
+                        ) : (
+                            <span className="material-symbols-outlined text-primary text-[80px] font-black">corporate_fare</span>
+                        )}
+                        
+                        {/* Hover Overlay */}
+                        <div className="absolute inset-0 bg-primary/80 text-white flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+                            <span className="material-symbols-outlined text-3xl mb-1">add_a_photo</span>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-center px-4">Change Profile Picture</p>
                         </div>
                     </div>
+                    <input type="file" id="logo-upload" className="hidden" accept="image/*" onChange={(e) => uploadLogo(e.target.files[0])} />
+                    
+                    {/* Status Pip */}
+                    <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-white rounded-2xl shadow-xl flex items-center justify-center">
+                        <span className="material-symbols-outlined text-primary text-xl">verified</span>
+                    </div>
+                </div>
+
+                <div className="text-center md:text-left flex-1 space-y-4">
+                    <div className="flex flex-col md:flex-row items-center md:items-baseline gap-4">
+                        <h1 className="text-4xl md:text-5xl font-outfit font-black text-on_surface tracking-tight leading-none">
+                            {org?.name}
+                        </h1>
+                        <VerificationBadge status={org?.status} />
+                    </div>
+                    <p className="text-sm font-bold text-on_surface_variant/60 max-w-xl">
+                        Official organization profile. Keep your information updated to maintain trust with volunteers.
+                    </p>
+                </div>
+
+                <div className="flex flex-col gap-3">
+                    {!isEditing ? (
+                        <button 
+                            onClick={() => setIsEditing(true)}
+                            className="bg-on_surface text-white px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl hover:bg-primary transition-all active:scale-95 flex items-center gap-2"
+                        >
+                            <span className="material-symbols-outlined text-sm">edit_note</span>
+                            Edit Public Profile
+                        </button>
+                    ) : (
+                        <div className="flex gap-2">
+                             <button 
+                                onClick={handleSave}
+                                disabled={saving}
+                                className="bg-primaryGradient text-white px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl active:scale-95 flex items-center gap-2"
+                            >
+                                {saving ? "Saving..." : "Save Changes"}
+                            </button>
+                            <button 
+                                onClick={() => {
+                                    setIsEditing(false);
+                                    setEditData({
+                                        about: org.about || "",
+                                        website_url: org.website_url || "",
+                                        ngo_type: org.ngo_type || "TRUST",
+                                        office_address: org.office_address || "",
+                                        contact_phone: org.contact_phone || ""
+                                    });
+                                }}
+                                className="bg-surface_high text-error px-6 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest border border-error/10"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
 
             <div className="grid grid-cols-12 gap-10">
                 <div className="col-span-12 lg:col-span-8 space-y-10">
-                    <ContentSection title="Organizational Details" icon="public" noPadding>
-                        <div className="p-10 space-y-10">
-                            <div className="flex justify-between items-start">
-                                <div>
-                                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-2">About Organization</p>
-                                    <h2 className="text-3xl font-outfit font-black text-on_surface mb-4 tracking-tight">Organization Bio</h2>
-                                    <p className="text-sm text-on_surface_variant leading-relaxed font-medium">
-                                        {org?.about || "No summary provided yet."}
+                    <ContentSection title="Public Information" icon="public" noPadding>
+                        <div className="p-10 space-y-12">
+                            {/* Mission / Bio */}
+                            <div className="space-y-4">
+                                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">Mission Statement & About</p>
+                                {isEditing ? (
+                                    <textarea
+                                        value={editData.about}
+                                        onChange={(e) => setEditData({...editData, about: e.target.value})}
+                                        className="w-full min-h-[160px] p-6 bg-surface_high border-2 border-transparent focus:border-primary/20 rounded-[2.5rem] text-sm font-medium outline-none transition-all shadow-inner"
+                                        placeholder="Describe your organization's mission and impact..."
+                                    />
+                                ) : (
+                                    <p className="text-lg font-bold text-on_surface_variant leading-relaxed">
+                                        {org?.about || "Enter your organization's mission to help volunteers understand your cause."}
                                     </p>
-                                </div>
-                                {!isEditing && (
-                                    <button onClick={() => setIsEditing(true)} className="px-6 py-2.5 bg-primary/10 text-primary border border-primary/20 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-primary transition-all hover:text-white">
-                                        Update Bio
-                                    </button>
                                 )}
                             </div>
 
-                            {isEditing ? (
-                                <div className="space-y-8 animate-fadeIn">
-                                    <h3 className="text-lg font-black text-on_surface">
-                                        Update About Summary
-                                    </h3>
-                                    <p className="text-xs font-bold text-on_surface_variant/60 mb-6">Define your organization's primary goals and community service areas.</p>
-                                    
-                                    <div className="space-y-4">
-                                        <textarea
-                                            value={editData.about}
-                                            onChange={(e) => setEditData({...editData, about: e.target.value})}
-                                            className="w-full min-h-[160px] p-6 bg-surface_high border-2 border-transparent focus:border-primary/20 rounded-[2rem] text-sm font-medium outline-none transition-all shadow-inner"
-                                            placeholder="Define your organization's primary goals and local impact..."
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-10 pt-8 border-t border-on_surface/5">
+                                {/* Website */}
+                                <div className="space-y-4">
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-on_surface_variant/40">Website</p>
+                                    {isEditing ? (
+                                        <ActionInput 
+                                            placeholder="https://yourwebsite.org" 
+                                            value={editData.website_url} 
+                                            onChange={(val) => setEditData({...editData, website_url: val})} 
                                         />
-                                        <ActionInput label="Official Operations Hub (Website)" placeholder="https://..." value={editData.website_url} onChange={(val) => setEditData({...editData, website_url: val})} />
-                                        <button 
-                                            onClick={handleSave}
-                                            disabled={saving}
-                                            className="w-full py-4 bg-on_surface text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-xl hover:bg-primary transition-all flex items-center justify-center gap-3"
-                                        >
-                                            {saving ? "Updating..." : "Apply Changes"}
-                                        </button>
-                                        <button onClick={() => { setIsEditing(false); setEditData({ about: org?.about || "", website_url: org?.website_url || "" }); }} className="px-8 py-4 text-red-500 text-[10px] font-black uppercase tracking-widest">
-                                            Cancel
-                                        </button>
-                                    </div>
+                                    ) : (
+                                        <a href={org?.website_url} target="_blank" rel="noreferrer" className="text-sm font-black text-primary hover:underline flex items-center gap-2">
+                                            <span className="material-symbols-outlined text-xs">link</span>
+                                            {org?.website_url || "Not listed"}
+                                        </a>
+                                    )}
                                 </div>
-                            ) : (
-                                <p className="text-lg font-bold text-on_surface_variant/80 leading-relaxed max-w-2xl">
-                                    {org?.about || "We operate as a core logistics node in the humanitarian supply chain, leveraging shared intelligence to maximize the impact of every deployment."}
-                                </p>
-                            )}
 
-                            <div className="pt-10 border-t border-on_surface/5 flex flex-wrap gap-12">
-                                <div className="space-y-1">
-                                    <p className="text-[9px] font-black uppercase tracking-widest text-on_surface_variant/40">Launch Operations Hub</p>
-                                    <a href={org?.website_url || "#"} className="text-sm font-black text-primary hover:underline flex items-center gap-2">
-                                        <span className="material-symbols-outlined text-xs">open_in_new</span>
-                                        {org?.website_url || "hub.sahyogsync.org"}
-                                    </a>
+                                {/* NGO Type */}
+                                <div className="space-y-4">
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-on_surface_variant/40">Organization Category</p>
+                                    {isEditing ? (
+                                        <select 
+                                            value={editData.ngo_type}
+                                            onChange={(e) => setEditData({...editData, ngo_type: e.target.value})}
+                                            className="w-full p-4 bg-surface_high border-2 border-transparent focus:border-primary/20 rounded-2xl text-sm font-bold outline-none"
+                                        >
+                                            <option value="TRUST">Trust</option>
+                                            <option value="SOCIETY">Society</option>
+                                            <option value="SECTION_8">Section 8 Company</option>
+                                        </select>
+                                    ) : (
+                                        <p className="text-sm font-black text-on_surface uppercase">{org?.ngo_type || "N/A"}</p>
+                                    )}
                                 </div>
-                                <div className="space-y-1">
-                                    <p className="text-[9px] font-black uppercase tracking-widest text-on_surface_variant/40">Institutional Sector</p>
-                                    <p className="text-sm font-black text-on_surface">Strategic Humanitarian Group</p>
+
+                                {/* Office Address */}
+                                <div className="space-y-4 md:col-span-2">
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-on_surface_variant/40">Registered Office Address</p>
+                                    {isEditing ? (
+                                        <input 
+                                            type="text"
+                                            value={editData.office_address}
+                                            onChange={(e) => setEditData({...editData, office_address: e.target.value})}
+                                            className="w-full p-4 bg-surface_high border-2 border-transparent focus:border-primary/20 rounded-2xl text-sm font-bold outline-none"
+                                            placeholder="Enter complete office address"
+                                        />
+                                    ) : (
+                                        <p className="text-sm font-bold text-on_surface leading-relaxed">
+                                            {org?.office_address || "No address provided"}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -190,30 +249,41 @@ const OrganizationProfile = () => {
                 </div>
 
                 <div className="col-span-12 lg:col-span-4 space-y-10">
-                    <ContentSection title="Verified Contact" icon="verified_user">
-                        <div className="space-y-6">
-                            <div className="flex items-center gap-5 group">
-                                 <div className="w-12 h-12 rounded-2xl bg-surface_high flex items-center justify-center text-primary group-hover:bg-primaryGradient group-hover:text-white transition-all shadow-sm">
-                                     <span className="material-symbols-outlined text-xl">mail</span>
-                                 </div>
-                                 <div>
-                                     <p className="text-[9px] font-black uppercase tracking-widest text-on_surface_variant/40 mb-0.5">Primary Intel</p>
-                                     <p className="font-bold text-sm text-on_surface truncate max-w-[200px]">{org?.contact_email}</p>
-                                 </div>
+                    {/* PRIVATE RECORDS (Read Only except phone maybe) */}
+                    <ContentSection title="Administrative Records" icon="shield_lock">
+                        <div className="space-y-8">
+                             {/* Phone */}
+                             <div className="space-y-3 p-4 bg-white/40 rounded-3xl border border-white/60">
+                                <p className="text-[9px] font-black uppercase tracking-widest text-on_surface_variant/40">Public Contact Line</p>
+                                {isEditing ? (
+                                    <input 
+                                        type="tel"
+                                        value={editData.contact_phone}
+                                        onChange={(e) => setEditData({...editData, contact_phone: e.target.value})}
+                                        className="w-full p-2 bg-transparent border-b-2 border-primary/20 text-sm font-black outline-none"
+                                    />
+                                ) : (
+                                    <p className="text-sm font-black text-on_surface">{org?.contact_phone}</p>
+                                )}
                             </div>
-                            <div className="flex items-center gap-5 group">
-                                 <div className="w-12 h-12 rounded-2xl bg-surface_high flex items-center justify-center text-primary group-hover:bg-primaryGradient group-hover:text-white transition-all shadow-sm">
-                                     <span className="material-symbols-outlined text-xl">call</span>
-                                 </div>
-                                 <div>
-                                     <p className="text-[9px] font-black uppercase tracking-widest text-on_surface_variant/40 mb-0.5">Secure Line</p>
-                                     <p className="font-bold text-sm text-on_surface">{org?.contact_phone}</p>
-                                 </div>
+
+                            {/* Email */}
+                            <div className="space-y-1 px-4">
+                                <p className="text-[9px] font-black uppercase tracking-widest text-on_surface_variant/40">Registration Email</p>
+                                <p className="text-sm font-bold text-on_surface/60 italic">{org?.contact_email}</p>
+                                <p className="text-[8px] font-bold text-error/40 uppercase">Locked Contact Identifier</p>
                             </div>
-                            <div className="pt-6 border-t border-on_surface/5">
-                                <p className="text-[10px] font-bold text-on_surface_variant/40 leading-relaxed">
-                                    Security clearance required for contact modifications. Submit formal request to HQ.
-                                </p>
+
+                            {/* Reg Num */}
+                            <div className="space-y-1 px-4">
+                                <p className="text-[9px] font-black uppercase tracking-widest text-on_surface_variant/40">NGO Registration Num</p>
+                                <p className="text-sm font-bold text-on_surface/60">{org?.registration_number || "Awaiting Verification"}</p>
+                            </div>
+
+                             {/* pan */}
+                             <div className="space-y-1 px-4">
+                                <p className="text-[9px] font-black uppercase tracking-widest text-on_surface_variant/40">PAN Identifier</p>
+                                <p className="text-sm font-bold text-on_surface/60">{org?.pan_number || "Sensitive Data"}</p>
                             </div>
                         </div>
                     </ContentSection>
@@ -221,10 +291,10 @@ const OrganizationProfile = () => {
                     {/* STATUS CARD */}
                     <div className="bg-on_surface rounded-[2.5rem] p-10 text-white text-center shadow-2xl relative overflow-hidden group">
                         <div className="absolute inset-0 bg-primaryGradient opacity-0 group-hover:opacity-10 transition-opacity duration-700" />
-                        <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-50 mb-2">Sync Identity Protocol</p>
-                        <h4 className="text-4xl font-outfit font-black italic tracking-tighter uppercase mb-6">Verified</h4>
+                        <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-50 mb-2">Registry Token</p>
+                        <h4 className="text-4xl font-outfit font-black italic tracking-tighter uppercase mb-6">UNIT-V2</h4>
                         <div className="inline-block px-6 py-2.5 bg-white/5 rounded-2xl text-[10px] font-black tracking-widest border border-white/10">
-                            UNIT-ID-{String(org?.id || 0).padStart(4, '0')}
+                            ID: {String(org?.id || 0).padStart(5, '0')}
                         </div>
                     </div>
                 </div>
