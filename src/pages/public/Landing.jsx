@@ -33,16 +33,17 @@ const Landing = () => {
 
 
 
-          {/* ================= TELEGRAM DONATION BANNER ================= */}
-          <div className="w-full bg-gradient-to-r from-[#0088cc] to-[#00a2ff] text-white">
-          <div className="max-w-7xl mx-auto px-6 md:px-16 py-3 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
-
-              <div>
-                <p className="font-bold text-sm md:text-base">
-                  💙 Support real causes directly through our Telegram donation bot
+          {/* ================= TELEGRAM DONATION TOP BAR ================= */}
+          <div className="w-full bg-surface border-b border-primary/10 backdrop-blur-md">
+            <div className="max-w-7xl mx-auto px-6 md:px-16 py-2.5 flex flex-col md:flex-row items-center justify-between gap-4">
+          
+              <div className="text-center md:text-left">
+                <p className="font-semibold text-sm md:text-base text-on_surface">
+                  Support verified causes through our Telegram donation bot
                 </p>
-                <p className="text-xs md:text-sm text-white/80">
-                  Fast, secure and simple donations that reach where help is needed.
+          
+                <p className="text-xs md:text-sm text-on_surface_variant">
+                  Secure, quick and transparent giving in just one tap.
                 </p>
               </div>
           
@@ -50,9 +51,9 @@ const Landing = () => {
                 href="https://t.me/SahyogSyncBot#"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-white text-[#0088cc] px-5 py-2 rounded-xl font-bold hover:scale-105 transition-all shadow-md"
+                className="bg-primary text-white px-5 py-2 rounded-full font-semibold text-sm hover:bg-primary_container transition-all duration-300 shadow-soft hover:-translate-y-0.5"
               >
-                Donate Now →
+                Donate via Telegram
               </a>
           
             </div>
