@@ -23,17 +23,8 @@ const Landing = () => {
     <div className="min-h-screen bg-surface text-on_surface font-inter overflow-hidden">
       <PublicNavbar />
       <main>
-        {/* ================= HERO ================= */}
-        <section className="relative min-h-[90vh] flex items-center px-6 md:px-16 pt-32 pb-12 md:pt-40 md:pb-16">
-          <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-primary/10 blur-[100px] rounded-full -z-10" />
-          <div className="absolute bottom-[-10%] left-[-5%] w-[400px] h-[400px] bg-azure/10 blur-[100px] rounded-full -z-10" />
 
-
-
-
-
-
-          {/* ================= TOP DONATION BAR ================= */}
+        {/* ================= TOP DONATION BAR ================= */}
           <div className="w-full bg-primary text-white">
             <div className="max-w-7xl mx-auto px-6 md:px-16 h-12 flex items-center justify-between gap-4">
           
@@ -54,10 +45,11 @@ const Landing = () => {
           </div>
 
 
-
-
-
-
+        
+        {/* ================= HERO ================= */}
+        <section className="relative min-h-[90vh] flex items-center px-6 md:px-16 pt-32 pb-12 md:pt-40 md:pb-16">
+          <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-primary/10 blur-[100px] rounded-full -z-10" />
+          <div className="absolute bottom-[-10%] left-[-5%] w-[400px] h-[400px] bg-azure/10 blur-[100px] rounded-full -z-10" />
 
           
           <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
