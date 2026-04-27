@@ -24,7 +24,7 @@ const Landing = () => {
       <PublicNavbar />
 
         {/* ================= DONATION BAR ================= */}
-      <div className="w-full bg-primary text-white mt-24 md:mt-28 mb-4">
+      <div className="w-full bg-primary text-white mt-24 md:mt-28 mb-1">
         <div className="max-w-7xl mx-auto px-6 md:px-16 h-12 flex items-center justify-between gap-4">
 
           <p className="text-sm font-medium truncate">
@@ -48,7 +48,7 @@ const Landing = () => {
       <main>
         
         {/* ================= HERO ================= */}
-        <section className="relative min-h-[90vh] flex items-center px-6 md:px-16 pt-20 pb-12 md:pt-24 md:pb-16">
+        <section className="relative min-h-[90vh] flex items-center px-6 md:px-16 pt-12 pb-12 md:pt-16 md:pb-16">
           <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-primary/10 blur-[100px] rounded-full -z-10" />
           <div className="absolute bottom-[-10%] left-[-5%] w-[400px] h-[400px] bg-azure/10 blur-[100px] rounded-full -z-10" />
 
