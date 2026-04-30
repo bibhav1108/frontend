@@ -16,5 +16,5 @@ Sahyog Sync is a community-first platform designed to bridge the gap between peo
 - **Fast & Reliable**: From smooth page transitions to real-time status updates, the platform is built to be as dependable as the people using it.
 
 ---
-**Visit the Platform: [sahyog-setu-frontend.vercel.app](https://sahyog-setu-frontend.vercel.app/)**
+**Visit the Platform: [sahyog-setu-frontend.vercel.app](https://sahyog-sync-frontend.vercel.app/)**
 
