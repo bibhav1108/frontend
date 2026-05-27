@@ -46,6 +46,7 @@ const ProtectedRoute = ({ children, allowedRoles, requireVerifiedOrg = false }) 
     if (role === "SYSTEM_ADMIN") return <Navigate to="/admin/dashboard" replace />;
     if (role === "VOLUNTEER") return <Navigate to="/volunteer/dashboard" replace />;
     if (role === "NGO_ADMIN") return <Navigate to="/ngo-admin/dashboard" replace />;
+    if (role === "NGO_COORDINATOR") return <Navigate to="/ngo/dashboard" replace />;
     return <Navigate to="/login" replace />;
   }
 
