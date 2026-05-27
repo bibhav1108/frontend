@@ -28,10 +28,10 @@ L.Marker.prototype.options.icon = DefaultIcon;
 
 // Custom Marker Generator for Needs
 const createNeedIcon = (urgency) => {
-  const urgencyClass = urgency === "HIGH" ? "marker-high marker-pulse" : 
-                       urgency === "MEDIUM" ? "marker-medium" : 
-                       "marker-low";
-  
+  const urgencyClass = urgency === "HIGH" ? "marker-high marker-pulse" :
+    urgency === "MEDIUM" ? "marker-medium" :
+      "marker-low";
+
   return L.divIcon({
     className: "need-marker-container",
     html: `<div class="need-marker-content ${urgencyClass}">N</div>`,
@@ -124,7 +124,7 @@ const NGODashboard = () => {
     const focusKey = location.key + location.state?.focusId;
     if (location.state?.focusId && !loading && focusProcessedRef.current !== focusKey) {
       const { focusId, focusType } = location.state;
-      const target = focusType === 'alert' 
+      const target = focusType === 'alert'
         ? alerts.find(a => a.id === focusId)
         : needs.find(n => n.id === focusId);
 
@@ -144,10 +144,12 @@ const NGODashboard = () => {
 
   const dashboardSkeletonLayout = [
     { type: 'grid', cols: 3, item: { type: 'rect', height: 140 } },
-    { type: 'grid', cols: 12, gap: 8, items: [
+    {
+      type: 'grid', cols: 12, gap: 8, items: [
         { type: 'rect', height: 420, className: "lg:col-span-8" },
         { type: 'rect', height: 420, className: "lg:col-span-4" }
-    ]},
+      ]
+    },
     { type: 'grid', cols: 1, item: { type: 'rect', height: 300 } }
   ];
 
@@ -175,14 +177,17 @@ const NGODashboard = () => {
 
   if (loading) {
     return (
-        <div className="space-y-8 mt-10">
-            <SkeletonStructure layout={dashboardSkeletonLayout} />
-        </div>
+      <div className="space-y-8 mt-10">
+        <SkeletonStructure layout={dashboardSkeletonLayout} />
+      </div>
     );
   }
 
   if (org?.status !== 'APPROVED') {
     const isNotOnboarded = !org;
+    const storedRole = localStorage.getItem("role");
+    const isNgoAdmin = storedRole === "NGO_ADMIN";
+
     return (
       <div className="max-w-4xl mx-auto py-12 px-4 space-y-10 animate-fadeIn">
         <div className="text-center space-y-4">
@@ -193,8 +198,10 @@ const NGODashboard = () => {
             {isNotOnboarded ? 'Action Required: NGO Profile' : 'Administrative Initialization'}
           </h1>
           <p className="text-on_surface_variant max-w-lg mx-auto font-medium">
-            {isNotOnboarded 
-              ? "You have successfully registered as an administrator. Your next step is to establish your organization's identity on the network."
+            {isNotOnboarded
+              ? isNgoAdmin 
+                ? "You have successfully registered as an administrator. Your next step is to establish your organization's identity on the network."
+                : "Your organization has not yet been onboarded by the administrator. Please contact your admin to set up the NGO Profile."
               : org?.status === 'REJECTED'
                 ? "Your organization's verification request was carefully reviewed but could not be approved at this time. Please update your details or re-upload the correct documents."
                 : "Welcome to the Sahyog Sync Network. Your administrator account is active, but your organization's campaign capabilities are currently locked."}
@@ -202,9 +209,8 @@ const NGODashboard = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className={`p-8 rounded-[2.5rem] border space-y-4 transition-all ${
-            isNotOnboarded ? 'bg-primary/5 border-primary/20 scale-[1.02] shadow-xl' : 'bg-surface_high/50 border-white/20'
-          }`}>
+          <div className={`p-8 rounded-[2.5rem] border space-y-4 transition-all ${isNotOnboarded ? 'bg-primary/5 border-primary/20 scale-[1.02] shadow-xl' : 'bg-surface_high/50 border-white/20'
+            }`}>
             <div className="flex items-center gap-3 text-primary text-[10px] font-black uppercase tracking-widest">
               <span className="material-symbols-outlined text-sm">{isNotOnboarded ? 'notification_important' : 'hourglass_empty'}</span>
               Step 1: {isNotOnboarded ? 'NGO Onboarding' : 'Verification'}
@@ -213,8 +219,8 @@ const NGODashboard = () => {
               {isNotOnboarded ? 'Establish Identity' : 'Review in Progress'}
             </h3>
             <p className="text-sm text-on_surface_variant leading-relaxed">
-              {isNotOnboarded 
-              ? "Provide your organization's base details, about statement, and official contact channels to begin the verification process."
+              {isNotOnboarded
+                ? "Provide your organization's base details, about statement, and official contact channels to begin the verification process."
                 : "System administrators are currently verifying your institutional credentials. This process ensures all organizations on the network are legitimate and secure."}
             </p>
             <div className="pt-4 flex items-center gap-3">
@@ -224,14 +230,23 @@ const NGODashboard = () => {
               </span>
             </div>
             {(isNotOnboarded || org?.status === 'REJECTED') && (
-                <button 
-                  onClick={() => window.location.href='/ngo-admin/identity'}
-                  className={`w-full mt-4 py-4 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg hover:-translate-y-1 transition-all ${
-                    org?.status === 'REJECTED' ? 'bg-red-600 shadow-red-500/20' : 'bg-primary'
-                  }`}
+              isNgoAdmin ? (
+                <button
+                  onClick={() => window.location.href = '/ngo-admin/identity'}
+                  className={`w-full mt-4 py-4 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg hover:-translate-y-1 transition-all ${org?.status === 'REJECTED' ? 'bg-red-600 shadow-red-500/20' : 'bg-primary'
+                    }`}
                 >
-                    {org?.status === 'REJECTED' ? 'Fix Issues & Resubmit' : 'Launch Onboarding'}
+                  {org?.status === 'REJECTED' ? 'Fix Issues & Resubmit' : 'Launch Onboarding'}
                 </button>
+              ) : (
+                <button
+                  disabled
+                  className="w-full mt-4 py-4 bg-white/5 border border-white/10 text-on_surface_variant/40 rounded-xl text-[10px] font-black uppercase tracking-widest cursor-not-allowed"
+                  title="Onboarding must be completed by the NGO Administrator"
+                >
+                  Waiting for Admin Onboarding
+                </button>
+              )
             )}
           </div>
 
@@ -244,12 +259,22 @@ const NGODashboard = () => {
             <p className="text-sm text-white/60 leading-relaxed">
               Once approved, a <b>'Add Coordinator'</b> option will manifest in your Management Hub. You can then begin deploying your staff to the network.
             </p>
-            <Link 
-              to="/ngo-admin/staff"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] transition-all"
-            >
-              Go to Management Hub <span className="material-symbols-outlined text-sm">arrow_forward</span>
-            </Link>
+            {isNgoAdmin ? (
+              <Link
+                to="/ngo-admin/staff"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] transition-all"
+              >
+                Go to Management Hub <span className="material-symbols-outlined text-sm">arrow_forward</span>
+              </Link>
+            ) : (
+              <button
+                disabled
+                className="inline-flex items-center gap-2 px-6 py-3 bg-white/5 border border-white/10 text-on_surface_variant/40 rounded-xl text-[10px] font-black uppercase tracking-widest cursor-not-allowed"
+                title="Management Hub access is restricted to administrators"
+              >
+                Admin Privilege Required
+              </button>
+            )}
           </div>
         </div>
 
@@ -278,12 +303,11 @@ const NGODashboard = () => {
           <MetricCard label="Total Volunteers" value={volunteers.length} icon="groups" highlight delay="300ms" />
         </div>
 
-        <div className={`transition-all duration-500 overflow-hidden ${
-          isMapFullscreen 
-            ? "fixed inset-0 z-[2000] p-4 sm:p-10 bg-black/60 backdrop-blur-xl h-screen w-screen" 
+        <div className={`transition-all duration-500 overflow-hidden ${isMapFullscreen
+            ? "fixed inset-0 z-[2000] p-4 sm:p-10 bg-black/60 backdrop-blur-xl h-screen w-screen"
             : "relative z-0 h-[300px] sm:h-[420px] rounded-[1.5rem] sm:rounded-[2rem] bg-surface_high/60 border-2 border-white/20 shadow-soft animate-fadeIn"
-        }`}>
-          
+          }`}>
+
           {/* Map Controls */}
           <div className="absolute top-4 sm:top-8 right-4 sm:right-8 z-[1000] flex gap-2 items-center">
             <div className="flex bg-white/80 backdrop-blur-md p-1 rounded-xl border border-white/20 shadow-lg">
@@ -295,11 +319,10 @@ const NGODashboard = () => {
                 <button
                   key={mode.id}
                   onClick={() => setMapView(mode.id)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
-                    mapView === mode.id 
-                      ? "bg-primary text-white shadow-md shadow-primary/20" 
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${mapView === mode.id
+                      ? "bg-primary text-white shadow-md shadow-primary/20"
                       : "text-on_surface_variant hover:bg-black/5"
-                  }`}
+                    }`}
                 >
                   <span className="material-symbols-outlined text-[14px]">{mode.icon}</span>
                   <span className="hidden sm:inline">{mode.label}</span>
@@ -307,167 +330,165 @@ const NGODashboard = () => {
               ))}
             </div>
 
-            <button 
-                onClick={() => setIsMapFullscreen(!isMapFullscreen)}
-                className="p-2.5 bg-on_surface text-white rounded-xl shadow-xl hover:scale-110 active:scale-95 transition-all"
-                title={isMapFullscreen ? "Exit Fullscreen" : "Enlarge Map"}
+            <button
+              onClick={() => setIsMapFullscreen(!isMapFullscreen)}
+              className="p-2.5 bg-on_surface text-white rounded-xl shadow-xl hover:scale-110 active:scale-95 transition-all"
+              title={isMapFullscreen ? "Exit Fullscreen" : "Enlarge Map"}
             >
-                <span className="material-symbols-outlined text-[20px]">
-                    {isMapFullscreen ? 'close_fullscreen' : 'expand_content'}
-                </span>
+              <span className="material-symbols-outlined text-[20px]">
+                {isMapFullscreen ? 'close_fullscreen' : 'expand_content'}
+              </span>
             </button>
           </div>
 
           <div className="h-full w-full">
             <MapContainer center={center} zoom={mapZoom} className="z-0 h-full w-full outline-none">
-                <MapController center={mapCenter} zoom={mapZoom} isFullscreen={isMapFullscreen} />
-                <TileLayer 
-                url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}" 
+              <MapController center={mapCenter} zoom={mapZoom} isFullscreen={isMapFullscreen} />
+              <TileLayer
+                url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}"
                 attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
-                />
-            
-            {/* Render Needs */}
-            {(mapView === 'all' || mapView === 'needs') && activeNeeds.filter(n => n.latitude && n.longitude).map((n) => (
-              <Marker 
-                key={`need-${n.id}`} 
-                position={[parseFloat(n.latitude), parseFloat(n.longitude)]} 
-                icon={createNeedIcon(n.urgency)}
-                eventHandlers={{
-                  add: (e) => {
-                    if (expandedMarkerId === `need-${n.id}`) {
-                      e.target.openPopup();
-                    }
-                  }
-                }}
-              >
-                <Popup className="premium-popup">
-                  <div className="p-3 min-w-[220px] space-y-3">
-                    <div className="flex items-center justify-between gap-2">
-                       <div className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
-                        <p className="font-outfit font-black text-sm uppercase tracking-tight text-primary">{n.type}</p>
-                       </div>
-                       <span className={`text-[8px] font-black px-1.5 py-0.5 rounded uppercase ${
-                        n.urgency === 'HIGH' ? 'bg-red-500 text-white' : 'bg-primary/10 text-primary'
-                       }`}>{n.urgency}</span>
-                    </div>
-                    
-                    <div className="space-y-1">
-                      <p className="text-xs font-bold text-on_surface">{n.quantity}</p>
-                      <p className="text-[10px] leading-relaxed text-on_surface_variant line-clamp-2 italic opacity-80">
-                        {n.description || "No additional details provided."}
-                      </p>
-                    </div>
+              />
 
-                    <div className="pt-2 border-t border-on_surface/5 space-y-1.5">
-                      <p className="text-[9px] flex items-center gap-1.5 text-on_surface_variant font-medium">
+              {/* Render Needs */}
+              {(mapView === 'all' || mapView === 'needs') && activeNeeds.filter(n => n.latitude && n.longitude).map((n) => (
+                <Marker
+                  key={`need-${n.id}`}
+                  position={[parseFloat(n.latitude), parseFloat(n.longitude)]}
+                  icon={createNeedIcon(n.urgency)}
+                  eventHandlers={{
+                    add: (e) => {
+                      if (expandedMarkerId === `need-${n.id}`) {
+                        e.target.openPopup();
+                      }
+                    }
+                  }}
+                >
+                  <Popup className="premium-popup">
+                    <div className="p-3 min-w-[220px] space-y-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+                          <p className="font-outfit font-black text-sm uppercase tracking-tight text-primary">{n.type}</p>
+                        </div>
+                        <span className={`text-[8px] font-black px-1.5 py-0.5 rounded uppercase ${n.urgency === 'HIGH' ? 'bg-red-500 text-white' : 'bg-primary/10 text-primary'
+                          }`}>{n.urgency}</span>
+                      </div>
+
+                      <div className="space-y-1">
+                        <p className="text-xs font-bold text-on_surface">{n.quantity}</p>
+                        <p className="text-[10px] leading-relaxed text-on_surface_variant line-clamp-2 italic opacity-80">
+                          {n.description || "No additional details provided."}
+                        </p>
+                      </div>
+
+                      <div className="pt-2 border-t border-on_surface/5 space-y-1.5">
+                        <p className="text-[9px] flex items-center gap-1.5 text-on_surface_variant font-medium">
                           <span className="material-symbols-outlined text-[12px]">location_on</span>
                           {n.pickup_address || "Location TBD"}
-                      </p>
-                      <p className="text-[9px] flex items-center gap-1.5 text-on_surface_variant/60 font-medium">
+                        </p>
+                        <p className="text-[9px] flex items-center gap-1.5 text-on_surface_variant/60 font-medium">
                           <span className="material-symbols-outlined text-[12px]">schedule</span>
                           Requested {new Date(n.created_at).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-                </Popup>
-              </Marker>
-            ))}
-
-            {/* Render Alerts */}
-            {(mapView === 'all' || mapView === 'alerts') && alerts.filter(a => a.latitude && a.longitude).map((a) => (
-              <Marker 
-                key={`alert-${a.id}`} 
-                position={[parseFloat(a.latitude), parseFloat(a.longitude)]} 
-                icon={createAlertIcon()}
-                eventHandlers={{
-                  add: (e) => {
-                    if (expandedMarkerId === `alert-${a.id}`) {
-                      e.target.openPopup();
-                    }
-                  }
-                }}
-              >
-                <Popup className="premium-popup alert-popup">
-                  <div className="p-3 min-w-[240px] space-y-3">
-                    <div className="flex items-center justify-between">
-                       <div className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
-                        <p className="font-outfit font-black text-sm uppercase tracking-tight text-indigo-600">Signal: {a.item || "Unidentified"}</p>
-                       </div>
-                    </div>
-
-                    {a.notes && a.notes !== "N/A" ? (
-                      <div className="p-2 bg-indigo-50 rounded-lg border border-indigo-100">
-                        <p className="text-[9px] text-indigo-700 font-bold leading-tight line-clamp-2">AI: {a.notes}</p>
+                        </p>
                       </div>
-                    ) : (
-                      <p className="text-[10px] leading-relaxed text-on_surface_variant italic">"{a.message_body?.slice(0, 80)}..."</p>
-                    )}
+                    </div>
+                  </Popup>
+                </Marker>
+              ))}
 
-                    <div className="space-y-1.5 pt-2 border-t border-on_surface/5">
+              {/* Render Alerts */}
+              {(mapView === 'all' || mapView === 'alerts') && alerts.filter(a => a.latitude && a.longitude).map((a) => (
+                <Marker
+                  key={`alert-${a.id}`}
+                  position={[parseFloat(a.latitude), parseFloat(a.longitude)]}
+                  icon={createAlertIcon()}
+                  eventHandlers={{
+                    add: (e) => {
+                      if (expandedMarkerId === `alert-${a.id}`) {
+                        e.target.openPopup();
+                      }
+                    }
+                  }}
+                >
+                  <Popup className="premium-popup alert-popup">
+                    <div className="p-3 min-w-[240px] space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
+                          <p className="font-outfit font-black text-sm uppercase tracking-tight text-indigo-600">Signal: {a.item || "Unidentified"}</p>
+                        </div>
+                      </div>
+
+                      {a.notes && a.notes !== "N/A" ? (
+                        <div className="p-2 bg-indigo-50 rounded-lg border border-indigo-100">
+                          <p className="text-[9px] text-indigo-700 font-bold leading-tight line-clamp-2">AI: {a.notes}</p>
+                        </div>
+                      ) : (
+                        <p className="text-[10px] leading-relaxed text-on_surface_variant italic">"{a.message_body?.slice(0, 80)}..."</p>
+                      )}
+
+                      <div className="space-y-1.5 pt-2 border-t border-on_surface/5">
                         <div className="flex items-center justify-between text-[9px] font-medium text-on_surface_variant">
                           <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[12px]">person</span> {a.donor_name || "Citizen"}</span>
-                          <span className="opacity-60">{new Date(a.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                          <span className="opacity-60">{new Date(a.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                         </div>
                         <p className="text-[9px] flex items-center gap-1.5 text-on_surface_variant font-medium">
                           <span className="material-symbols-outlined text-[12px]">near_me</span>
                           {a.location || "Coordinates Received"}
                         </p>
-                    </div>
+                      </div>
 
-                    <Link to="/marketplace" className="claim-btn block w-full text-center py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">
-                      Claim This Donation
-                    </Link>
-                  </div>
-                </Popup>
-              </Marker>
-            ))}
-          </MapContainer>
+                      <Link to="/marketplace" className="claim-btn block w-full text-center py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">
+                        Claim This Donation
+                      </Link>
+                    </div>
+                  </Popup>
+                </Marker>
+              ))}
+            </MapContainer>
           </div>
         </div>
 
         <ContentSection title="Top Performing Volunteers" icon="star" delay="500ms">
-            <div className="space-y-6">
-                {volunteers
-                .sort((a, b) => (b.completions || 0) - (a.completions || 0))
-                .slice(0, 5)
-                .map((v, i) => {
-                    const progress = Math.min(((v.completions || 0) / 10) * 100, 100);
-                    return (
-                        <div key={v.id} className="space-y-2 group">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-soft group-hover:scale-110 transition-transform">
-                                        <img src={resolveProfileImage(v.profile_image_url)} alt={v.name} className="w-full h-full object-cover" />
-                                    </div>
-                                    <div>
-                                        <div className="flex items-center gap-2 font-bold text-on_surface">
-                                            <span>{v.name}</span>
-                                            <VerificationBadge trustTier={v.trust_tier} telegramActive={v.telegram_active} />
-                                        </div>
-                                        <p className="text-[10px] text-on_surface_variant uppercase font-black tracking-widest opacity-60">
-                                            {v.completions || 0} Campaigns Completed
-                                        </p>
-                                    </div>
-                                </div>
-                                <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ${
-                                    v.trust_tier === 'ELITE' ? 'bg-amber-100 text-amber-600' : 'bg-primary/10 text-primary'
-                                }`}>
-                                    {v.trust_tier}
-                                </span>
-                            </div>
-                            <div className="h-1.5 w-full rounded-full bg-surface_highest overflow-hidden">
-                                <motion.div 
-                                    initial={{ width: 0 }} 
-                                    animate={{ width: `${progress}%` }} 
-                                    className="h-full bg-primaryGradient rounded-full" 
-                                />
-                            </div>
+          <div className="space-y-6">
+            {volunteers
+              .sort((a, b) => (b.completions || 0) - (a.completions || 0))
+              .slice(0, 5)
+              .map((v, i) => {
+                const progress = Math.min(((v.completions || 0) / 10) * 100, 100);
+                return (
+                  <div key={v.id} className="space-y-2 group">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-soft group-hover:scale-110 transition-transform">
+                          <img src={resolveProfileImage(v.profile_image_url)} alt={v.name} className="w-full h-full object-cover" />
                         </div>
-                    );
-                })}
-            </div>
+                        <div>
+                          <div className="flex items-center gap-2 font-bold text-on_surface">
+                            <span>{v.name}</span>
+                            <VerificationBadge trustTier={v.trust_tier} telegramActive={v.telegram_active} />
+                          </div>
+                          <p className="text-[10px] text-on_surface_variant uppercase font-black tracking-widest opacity-60">
+                            {v.completions || 0} Campaigns Completed
+                          </p>
+                        </div>
+                      </div>
+                      <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ${v.trust_tier === 'ELITE' ? 'bg-amber-100 text-amber-600' : 'bg-primary/10 text-primary'
+                        }`}>
+                        {v.trust_tier}
+                      </span>
+                    </div>
+                    <div className="h-1.5 w-full rounded-full bg-surface_highest overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${progress}%` }}
+                        className="h-full bg-primaryGradient rounded-full"
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
         </ContentSection>
       </div>
 
@@ -483,12 +504,12 @@ const NGODashboard = () => {
           <div className="space-y-6 pr-2">
             {auditLogs.length > 0 ? (
               auditLogs.slice(0, 5).map((log, i) => (
-                <DataRow 
-                    key={log.id}
-                    label={log.notes}
-                    description={`${new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • ${new Date(log.created_at).toLocaleDateString([], { day: 'numeric', month: 'short' })}`}
-                    icon={getEventIcon(log.event_type)}
-                    className="hover:translate-x-1"
+                <DataRow
+                  key={log.id}
+                  label={log.notes}
+                  description={`${new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • ${new Date(log.created_at).toLocaleDateString([], { day: 'numeric', month: 'short' })}`}
+                  icon={getEventIcon(log.event_type)}
+                  className="hover:translate-x-1"
                 />
               ))
             ) : (
