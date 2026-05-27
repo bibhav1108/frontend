@@ -225,7 +225,7 @@ const NGODashboard = () => {
             </div>
             {(isNotOnboarded || org?.status === 'REJECTED') && (
                 <button 
-                  onClick={() => window.location.href='/ngo/onboarding'}
+                  onClick={() => window.location.href='/ngo-admin/identity'}
                   className={`w-full mt-4 py-4 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg hover:-translate-y-1 transition-all ${
                     org?.status === 'REJECTED' ? 'bg-red-600 shadow-red-500/20' : 'bg-primary'
                   }`}
@@ -245,7 +245,7 @@ const NGODashboard = () => {
               Once approved, a <b>'Add Coordinator'</b> option will manifest in your Management Hub. You can then begin deploying your staff to the network.
             </p>
             <Link 
-              to="/ngo/management"
+              to="/ngo-admin/staff"
               className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] transition-all"
             >
               Go to Management Hub <span className="material-symbols-outlined text-sm">arrow_forward</span>
